@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import TurndownService from 'turndown';
 import matter from 'gray-matter';
+import { downloadToLocal } from './media-adapters.js';
 
 /**
  * Converts HTML content to Markdown using turndown.
@@ -47,16 +48,35 @@ export async function writePostAndAuthorFiles(post: any, outDir: string) {
   // Author handling: attach author object in frontmatter and emit author file
   if (post.author) {
     const author = typeof post.author === 'string' ? { name: post.author } : post.author;
-    fm.author = { name: author.name };
-    if (author.image) fm.author.image = author.image;
+    // derive slug from author name
+    const authorSlug = slugify(author.name || 'author');
+    fm.author = { name: author.name, slug: authorSlug };
     if (author.bio) fm.author.bio = author.bio;
+    // collect website/url if available from various possible properties
+    const website = author.website || author.url || author.website_url || author.user_url || null;
+    if (website) fm.author.website = website;
+
+    // handle image: attempt to download remote image into site assets and reference local path
+    if (author.image) {
+      try {
+        const assetsDir = path.join(outDir, 'site', 'assets', 'authors');
+        await fs.ensureDir(assetsDir);
+        const downloaded = await downloadToLocal(author.image, assetsDir);
+        // make a site-root-relative URL path (posix)
+        const rel = path.relative(path.join(outDir, 'site'), downloaded).split(path.sep).join('/');
+        fm.author.image = '/' + rel;
+      } catch (err) {
+        // if download fails, fall back to original URL
+        fm.author.image = author.image;
+      }
+    }
 
     // write/update author file using YAML
-    const authorSlug = slugify(author.name || 'author');
     const authorFile = path.join(authorsDir, `${authorSlug}.md`);
-    const authorFrontObj: Record<string, any> = { name: author.name };
-    if (author.image) authorFrontObj.image = author.image;
+    const authorFrontObj: Record<string, any> = { name: author.name, slug: authorSlug };
+    if (fm.author.image) authorFrontObj.image = fm.author.image;
     if (author.bio) authorFrontObj.bio = author.bio;
+    if (website) authorFrontObj.website = website;
     // Normalize author frontmatter to a single trailing newline to match existing file style
     const authorFm = matter.stringify('', authorFrontObj);
     const newAuthorContent = authorFm.replace(/\s+$/, '') + '\n';
