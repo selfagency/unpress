@@ -22,7 +22,14 @@ cli.help();
 
 cli.command('', async flags => {
   try {
-    const config = await loadConfig(flags);
+    // Normalize flags (support both kebab-case and camelCase) to a known shape
+    const normalized = {
+      wpUrl: flags.wpUrl || flags['wp-url'] || flags['wp_url'],
+      wpUser: flags.wpUser || flags['wp-user'] || flags['wp_user'],
+      wpAppPassword: flags.wpAppPassword || flags['wp-app-password'] || flags['wp_app_password'],
+      downloadMedia: typeof flags.downloadMedia === 'boolean' ? flags.downloadMedia : flags['download-media'] || false,
+    };
+    const config = await loadConfig(normalized);
     // Placeholder: print config for now
     console.log('Loaded config:', config);
 

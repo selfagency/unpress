@@ -72,16 +72,20 @@ export class WordPressApi {
       let items: any[] = [];
       let total = 0;
       while (true) {
-        const res = await fetch(`${this.baseUrl}${endpoint}?per_page=${perPage ?? 100}&page=${page}`, {
-          headers: {
-            Authorization: this.getAuthHeader(),
-            Accept: 'application/json',
-          },
-        });
-        if (!res.ok) throw new Error(`Failed to fetch ${key} page ${page}`);
-        const data = (await res.json()) as any[];
+        // reuse this.fetch to ensure consistent headers/auth and centralized error handling
+        const data = (await this.fetch(`${endpoint}?per_page=${perPage ?? 100}&page=${page}`)) as any[];
+        // attempt to read total pages from header via a raw fetch for first page
         if (page === 1) {
-          total = parseInt(res.headers.get('X-WP-TotalPages') || '1', 10);
+          try {
+            const head = await fetch(`${this.baseUrl}${endpoint}?per_page=${perPage ?? 100}&page=1`, {
+              method: 'HEAD',
+              headers: { Authorization: this.getAuthHeader(), Accept: 'application/json' },
+            });
+            const h = head.headers.get('X-WP-TotalPages') || head.headers.get('x-wp-totalpages');
+            total = parseInt(h || '1', 10);
+          } catch {
+            total = 1;
+          }
         }
         items.push(...data);
         if (onProgress) onProgress(key, page, total);

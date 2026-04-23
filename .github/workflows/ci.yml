@@ -17,6 +17,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Cache pnpm
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -81,8 +88,12 @@ jobs:
         run: pnpm dev:cli -- --generate-site --out-dir ./out
       - name: Serve generated site
         run: npx http-server ./out/site -p 8080 &
+      - name: Wait for server
+        run: npx wait-on http://127.0.0.1:8080 -t 30000
       - name: Run pa11y scan
-        run: npx pa11y http://127.0.0.1:8080 || exit 1
+        run: npx pa11y http://127.0.0.1:8080
+      - name: Lint markdown
+        run: pnpm run lint:md
 name: CI
 
 on:

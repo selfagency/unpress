@@ -11,15 +11,19 @@ export interface UnpressConfig {
   downloadMedia: boolean;
 }
 
-export async function loadConfig(flags: Partial<UnpressConfig>): Promise<UnpressConfig> {
+export async function loadConfig(flags: Partial<Record<string, any>>): Promise<UnpressConfig> {
   dotenv.config();
 
   // Load from env
-  let wpUrl = flags.wpUrl || process.env.WP_URL;
-  let wpUser = flags.wpUser || process.env.WP_USER;
-  let wpAppPassword = flags.wpAppPassword || process.env.WP_APP_PASSWORD;
+  let wpUrl = flags.wpUrl || flags['wp-url'] || process.env.WP_URL;
+  let wpUser = flags.wpUser || flags['wp-user'] || process.env.WP_USER;
+  let wpAppPassword = flags.wpAppPassword || flags['wp-app-password'] || process.env.WP_APP_PASSWORD;
   let downloadMedia =
-    typeof flags.downloadMedia === 'boolean' ? flags.downloadMedia : process.env.DOWNLOAD_MEDIA === 'true';
+    typeof flags.downloadMedia === 'boolean'
+      ? flags.downloadMedia
+      : typeof flags['download-media'] === 'boolean'
+      ? flags['download-media']
+      : process.env.DOWNLOAD_MEDIA === 'true';
 
   // Prompt for missing values
   if (!wpUrl) {
@@ -50,7 +54,7 @@ export async function loadConfig(flags: Partial<UnpressConfig>): Promise<Unpress
 
   // Final validation
   if (!wpUrl || !wpUser || !wpAppPassword) {
-    throw new Error(chalk.red('Missing required configuration.'));
+    throw new Error(chalk.red('Missing required configuration. Use flags or environment variables.'));
   }
 
   return { wpUrl, wpUser, wpAppPassword, downloadMedia };
