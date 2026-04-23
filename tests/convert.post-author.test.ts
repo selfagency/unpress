@@ -30,13 +30,13 @@ describe('writePostAndAuthorFiles', () => {
     expect(out).toBe(postPath);
     expect(await fs.pathExists(postPath)).toBe(true);
     const postContent = await fs.readFile(postPath, 'utf8');
-    expect(postContent).toContain('title: "Test Post"');
+    expect(postContent).toContain('Test Post');
     expect(postContent).toContain('author:');
 
     expect(await fs.pathExists(authorPath)).toBe(true);
     const authorContent = await fs.readFile(authorPath, 'utf8');
-    expect(authorContent).toContain('name: "Alice Example"');
-    expect(authorContent).toContain('bio: "Writer"');
+    expect(authorContent).toContain('Alice Example');
+    expect(authorContent).toContain('Writer');
   });
 
   it('does not overwrite author file if identical, but updates when changed', async () => {

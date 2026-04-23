@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import TurndownService from 'turndown';
+import YAML from 'yaml';
 
 /**
  * Converts HTML content to Markdown using turndown.
@@ -34,30 +35,29 @@ export async function writePostAndAuthorFiles(post: any, outDir: string) {
 
   const markdown = htmlToMarkdown(post.content || post.excerpt || '');
 
-  // Frontmatter — include common metadata
-  const frontmatterLines = ['---', `title: "${(post.title || '').replace(/"/g, '\"')}"`];
-  if (post.date) frontmatterLines.push(`date: "${new Date(post.date).toISOString()}"`);
-  if (post.slug) frontmatterLines.push(`slug: "${post.slug}"`);
-  if (post.tags && Array.isArray(post.tags)) frontmatterLines.push(`tags: ${JSON.stringify(post.tags)}`);
-  if (post.categories && Array.isArray(post.categories))
-    frontmatterLines.push(`categories: ${JSON.stringify(post.categories)}`);
-  if (post.custom && typeof post.custom === 'object') frontmatterLines.push(`custom: ${JSON.stringify(post.custom)}`);
+  // Build frontmatter object and serialize with YAML for correctness
+  const fm: Record<string, any> = {};
+  if (post.title) fm.title = post.title;
+  if (post.date) fm.date = new Date(post.date).toISOString();
+  if (post.slug) fm.slug = post.slug;
+  if (post.tags && Array.isArray(post.tags)) fm.tags = post.tags;
+  if (post.categories && Array.isArray(post.categories)) fm.categories = post.categories;
+  if (post.custom && typeof post.custom === 'object') fm.custom = post.custom;
 
   // Author handling: attach author object in frontmatter and emit author file
   if (post.author) {
     const author = typeof post.author === 'string' ? { name: post.author } : post.author;
-    frontmatterLines.push('author:');
-    frontmatterLines.push(`  name: "${(author.name || '').replace(/"/g, '\"')}"`);
-    if (author.image) frontmatterLines.push(`  image: "${author.image}"`);
-    if (author.bio) frontmatterLines.push(`  bio: "${(author.bio || '').replace(/"/g, '\"')}"`);
+    fm.author = { name: author.name };
+    if (author.image) fm.author.image = author.image;
+    if (author.bio) fm.author.bio = author.bio;
 
-    // write/update author file
+    // write/update author file using YAML
     const authorSlug = slugify(author.name || 'author');
     const authorFile = path.join(authorsDir, `${authorSlug}.md`);
-    const authorFront = ['---', `name: "${(author.name || '').replace(/"/g, '\"')}"`];
-    if (author.image) authorFront.push(`image: "${author.image}"`);
-    if (author.bio) authorFront.push(`bio: "${(author.bio || '').replace(/"/g, '\"')}"`);
-    authorFront.push('---', '');
+    const authorFrontObj: Record<string, any> = { name: author.name };
+    if (author.image) authorFrontObj.image = author.image;
+    if (author.bio) authorFrontObj.bio = author.bio;
+    const newAuthorContent = `---\n${YAML.stringify(authorFrontObj)}---\n`;
 
     // Only overwrite if content differs to avoid stomping manual edits
     let existing = null;
@@ -66,17 +66,15 @@ export async function writePostAndAuthorFiles(post: any, outDir: string) {
     } catch (e) {
       /* missing file */
     }
-    const newAuthorContent = authorFront.join('\n');
     if (existing !== newAuthorContent) {
       await fs.writeFile(authorFile, newAuthorContent, 'utf8');
     }
   }
 
-  frontmatterLines.push('---', '');
-
   const outSlug = post.slug ? slugify(post.slug) : slugify(post.title || 'post');
   const outPath = path.join(postsDir, `${outSlug}.md`);
-  const contentToWrite = frontmatterLines.join('\n') + '\n' + markdown + '\n';
+  const frontmatter = `---\n${YAML.stringify(fm)}---\n\n`;
+  const contentToWrite = frontmatter + markdown + '\n';
   await fs.writeFile(outPath, contentToWrite, 'utf8');
 
   return outPath;

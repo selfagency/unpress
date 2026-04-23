@@ -12,16 +12,22 @@ interface MeiliConfig {
 
 async function readMarkdownFrontmatter(filePath: string) {
   const raw = await fs.readFile(filePath, 'utf8');
-  if (!raw.startsWith('---')) return { data: {}, content: raw };
-  const parts = raw.split('---');
-  // parts: ['', yaml, rest]
-  const yamlRaw = parts[1] || '';
-  const content = parts.slice(2).join('---').trim();
+  // Match only a leading YAML frontmatter block delimited by `---` at the file start
+  const fmMatch = raw.match(/^---\s*\n([\s\S]*?)\n---\s*\n?/);
+  if (!fmMatch) {
+    return { data: {}, content: raw };
+  }
+  const yamlRaw = fmMatch[1] || '';
+  const content = raw.slice(fmMatch[0].length).trim();
   const data = YAML.parse(yamlRaw) || {};
   return { data, content };
 }
 
 export async function indexPostsFromDir(postsDir: string, cfg: MeiliConfig) {
+  if (!(await fs.pathExists(postsDir))) {
+    warn(`Posts directory does not exist: ${postsDir} — skipping indexing.`);
+    return { indexed: 0 };
+  }
   const files = await fs.readdir(postsDir);
   const docs: any[] = [];
   for (const f of files) {
@@ -47,28 +53,43 @@ export async function indexPostsFromDir(postsDir: string, cfg: MeiliConfig) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (cfg.apiKey) headers['X-Meili-API-Key'] = cfg.apiKey;
 
-  // create index (safe to call)
+  async function safePost(url: string, body: any, attempts = 3) {
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        return res;
+      } catch (err) {
+        const wait = 1000 * Math.pow(2, i);
+        warn(`POST ${url} failed (attempt ${i + 1}/${attempts}):`, err instanceof Error ? err.message : err);
+        if (i < attempts - 1) await new Promise(r => setTimeout(r, wait));
+      }
+    }
+    throw new Error(`Failed POST ${url} after ${attempts} attempts`);
+  }
+
   try {
-    await fetch(`${cfg.host}/indexes`, { method: 'POST', headers, body: JSON.stringify({ uid: index }) });
+    await safePost(`${cfg.host}/indexes`, { uid: index }, 2);
   } catch (e) {
-    // ignore - index may already exist or host unreachable
+    // ignore creation failure if index exists or service unavailable
     warn('create index request failed (ignored):', e instanceof Error ? e.message : e);
   }
 
   // push documents in batches
-  const batchSize = 1000;
+  const batchSize = 500;
+  if (docs.length === 0) {
+    info(`No markdown documents found in ${postsDir}`);
+    return { indexed: 0 };
+  }
   for (let i = 0; i < docs.length; i += batchSize) {
     const batch = docs.slice(i, i + batchSize);
     progress(`uploading documents ${i}-${i + batch.length}`, (i + batch.length) / docs.length);
-    const res = await fetch(`${cfg.host}/indexes/${index}/documents`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(batch),
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      error('Meilisearch indexing failed:', res.status, text);
-      throw new Error(`Meilisearch indexing failed: ${res.status} ${text}`);
+    try {
+      await safePost(`${cfg.host}/indexes/${index}/documents`, batch, 3);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      error('Meilisearch indexing failed for batch:', msg);
+      throw new Error(`Meilisearch indexing failed: ${msg}`);
     }
   }
   return { indexed: docs.length };
