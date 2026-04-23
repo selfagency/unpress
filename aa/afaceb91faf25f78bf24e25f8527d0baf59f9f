@@ -1,0 +1,47 @@
+.beans/unpress-ud3r--handle-pagination-batching-and-progress-reporting.md
+  h_5cf1e2c1161853 4
+.beans/unpress-ak08--store-progress-in-a-resumable-state-file-in-output.md
+  h_5cf1e2c1161853 4
+bin/cli.ts
+  h_5cf1e2c1161853 1-27
+.beans/unpress-ay85--fetch-all-posts-pages-and-taxonomies-categoriestag.md
+  h_5cf1e2c1161853 4
+src/config.ts
+  h_5cf1e2c1161853 1-57
+.beans/unpress-w3ga--wordpress-api-integration.md
+  h_5cf1e2c1161853 4,24-28
+src/index.ts
+  h_5cf1e2c1161853 1
+package.json
+  h_5cf1e2c1161853 23-24,66-68
+  ac6faab085d48216 30-36,40
+src/wordpress.ts
+  h_5cf1e2c1161853 1-112
+.beans/unpress-o4j1--support-yaml-definition-files-for-postspagestaxono.md
+  h_5cf1e2c1161853 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "aaafaceb91faf25f78bf24e25f8527d0baf59f9f",
+  "prompts": {
+    "ac6faab085d48216": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "47e97f1d-a111-425d-9a62-6a0c0a188567",
+        "model": "copilot/auto"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 14,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}

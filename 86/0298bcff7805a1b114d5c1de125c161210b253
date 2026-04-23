@@ -1,0 +1,58 @@
+package.json
+  ac6faab085d48216 36
+src/convert.ts
+  h_5cf1e2c1161853 1-86
+tests/convert.test.ts
+  h_5cf1e2c1161853 1-22
+tests/generator.test.ts
+  h_5cf1e2c1161853 1-23
+vitest.config.ts
+  h_5cf1e2c1161853 7
+templates/11ty/tags.njk
+  h_5cf1e2c1161853 1-28
+src/media.ts
+  h_5cf1e2c1161853 1-50
+tests/frontmatter.test.ts
+  h_5cf1e2c1161853 1-47
+src/generator.ts
+  h_5cf1e2c1161853 1-155
+templates/11ty/_includes/layouts/base.njk
+  h_5cf1e2c1161853 1-27
+src/frontmatter.ts
+  h_5cf1e2c1161853 1-43
+templates/11ty/categories.njk
+  h_5cf1e2c1161853 1-15
+templates/11ty/authors.njk
+  h_5cf1e2c1161853 1-24
+templates/11ty/author.njk
+  h_5cf1e2c1161853 1-40
+tests/media.test.ts
+  h_5cf1e2c1161853 1-29
+README.md
+  h_5cf1e2c1161853 1-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "860298bcff7805a1b114d5c1de125c161210b253",
+  "prompts": {
+    "ac6faab085d48216": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "47e97f1d-a111-425d-9a62-6a0c0a188567",
+        "model": "copilot/auto"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}

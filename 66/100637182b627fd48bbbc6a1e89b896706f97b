@@ -1,0 +1,30 @@
+src/frontmatter.ts
+  h_5cf1e2c1161853 1,27-32
+src/convert.ts
+  h_5cf1e2c1161853 4,60-62,78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "66100637182b627fd48bbbc6a1e89b896706f97b",
+  "prompts": {
+    "87e5dfe43d35069c": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9ee92979-155c-4a90-9e39-1536bb16fac4",
+        "model": "copilot/gpt-5-mini"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 8,
+      "accepted_lines": 102,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
