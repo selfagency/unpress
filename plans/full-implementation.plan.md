@@ -78,7 +78,7 @@ This plan details a TypeScript utility, executable via `npx`, to migrate WordPre
 | TASK-016 | Generate 11ty project structure (config, content, layouts)                  |           |            |
 | TASK-017 | Write all posts/pages as Markdown files with correct frontmatter            |           |            |
 | TASK-018 | Generate tag/category index pages                                           |           |            |
-| TASK-019 | Copy/generate default 11ty layouts/templates                               |           |            |
+| TASK-019 | Copy/generate default 11ty layouts/templates                                |           |            |
 | TASK-020 | Add README.md with usage instructions                                       |           |            |
 
 ### Implementation Phase 4

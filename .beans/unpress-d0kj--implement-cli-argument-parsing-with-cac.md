@@ -1,13 +1,14 @@
 ---
 # unpress-d0kj
 title: Implement CLI argument parsing with `cac`
-status: todo
+status: completed
 type: feature
+priority: normal
 created_at: 2026-04-23T02:42:14Z
-updated_at: 2026-04-23T02:42:14Z
+updated_at: 2026-04-23T02:55:55Z
 parent: unpress-tokl
-id: unpress-d0kj
 ---
+
 Use the `cac` library to implement CLI argument parsing for all required flags and options.
 
 ## Tasks

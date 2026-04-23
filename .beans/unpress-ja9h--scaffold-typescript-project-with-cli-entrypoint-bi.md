@@ -1,13 +1,14 @@
 ---
 # unpress-ja9h
 title: Scaffold TypeScript project with CLI entrypoint (`bin/cli.ts`)
-status: todo
-type: feature
+status: scrapped
+type: milestone
+priority: normal
 created_at: 2026-04-23T02:42:14Z
-updated_at: 2026-04-23T02:42:14Z
+updated_at: 2026-04-23T02:45:31Z
 parent: unpress-tokl
-id: unpress-ja9h
 ---
+
 Create the initial TypeScript project structure with a CLI entrypoint at `bin/cli.ts`.
 
 ## Tasks

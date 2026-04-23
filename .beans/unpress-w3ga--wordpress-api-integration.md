@@ -1,13 +1,16 @@
 ---
 # unpress-w3ga
 title: WordPress API integration
-status: todo
+status: completed
 type: epic
+priority: high
 created_at: 2026-04-23T02:41:59Z
-updated_at: 2026-04-23T02:41:59Z
+updated_at: 2026-04-23T03:11:41Z
 parent: unpress-9vhq
-id: unpress-w3ga
+blocking:
+    - unpress-ammp
 ---
+
 Implements authenticated REST API access to WordPress, fetching posts, pages, and taxonomies, with YAML-based extensibility and resumable export.
 
 ## Features
@@ -18,8 +21,8 @@ Implements authenticated REST API access to WordPress, fetching posts, pages, an
 - Resumable state file
 
 ## Tasks
-- [ ] Use `node-fetch` for authenticated REST API access (app password)
-- [ ] Fetch all posts, pages, and taxonomies (categories/tags)
-- [ ] Support YAML definition files for posts/pages/taxonomies (default + extensible)
-- [ ] Handle pagination, batching, and progress reporting
-- [ ] Store progress in a resumable state file in output dir
+- [x] Use `node-fetch` for authenticated REST API access (app password)
+- [x] Fetch all posts, pages, and taxonomies (categories/tags)
+- [x] Support YAML definition files for posts/pages/taxonomies (default + extensible)
+- [x] Handle pagination, batching, and progress reporting
+- [x] Store progress in a resumable state file in output dir

@@ -3,6 +3,7 @@
   "hooks": {
     "postToolUse": [
       {
+        "type": "command",
         "bash": "node ./scripts/hooks/copilot-post-tool-fix.mjs",
         "powershell": "node ./scripts/hooks/copilot-post-tool-fix.mjs",
         "cwd": ".",

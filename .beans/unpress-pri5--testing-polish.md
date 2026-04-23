@@ -3,11 +3,12 @@
 title: Testing & polish
 status: todo
 type: epic
+priority: medium
 created_at: 2026-04-23T02:41:59Z
-updated_at: 2026-04-23T02:41:59Z
+updated_at: 2026-04-23T02:44:22Z
 parent: unpress-9vhq
-id: unpress-pri5
 ---
+
 Implements unit/integration tests, error handling, accessibility review, and final polish for the migration utility and generated site.
 
 ## Features

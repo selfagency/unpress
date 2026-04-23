@@ -3,11 +3,14 @@
 title: Content conversion & 11ty generation
 status: todo
 type: epic
+priority: high
 created_at: 2026-04-23T02:41:59Z
-updated_at: 2026-04-23T02:41:59Z
+updated_at: 2026-04-23T02:44:22Z
 parent: unpress-9vhq
-id: unpress-ammp
+blocking:
+    - unpress-erf0
 ---
+
 Converts WordPress content to Markdown with metadata, downloads media, and generates a complete 11ty project structure.
 
 ## Features

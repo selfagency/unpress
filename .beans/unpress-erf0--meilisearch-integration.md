@@ -3,11 +3,14 @@
 title: Meilisearch integration
 status: todo
 type: epic
+priority: medium
 created_at: 2026-04-23T02:41:59Z
-updated_at: 2026-04-23T02:41:59Z
+updated_at: 2026-04-23T02:44:22Z
 parent: unpress-9vhq
-id: unpress-erf0
+blocking:
+    - unpress-pri5
 ---
+
 Integrates Meilisearch for local search, adds Docker Compose, indexing script, and a minimal search UI for the 11ty site.
 
 ## Features
