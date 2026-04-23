@@ -1,0 +1,18 @@
+README.md
+  h_5cf1e2c1161853 73-97
+src/wordpress.ts
+  h_5cf1e2c1161853 32-36,38-39,41-44,46-65,67,87
+.github/workflows/ci.yml
+  h_5cf1e2c1161853 35-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "0b24a835539124144a214fc96de0d1e48e7a24ed",
+  "prompts": {},
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
