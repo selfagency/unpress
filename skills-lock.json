@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "beans-mcp-workflow": {
+      "source": "selfagency/skills",
+      "sourceType": "github",
+      "computedHash": "52bf3717de82499edcfd6ea090a9776d3c56fce6198bb7c1106ba65533305a27"
+    },
+    "git-mcp-workflow": {
+      "source": "selfagency/skills",
+      "sourceType": "github",
+      "computedHash": "ece4473ccb54ad62a08676e3d2a0966bf346f8568ca0611b11aadc32a69ab4af"
+    }
+  }
+}

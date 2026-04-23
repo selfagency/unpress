@@ -1,0 +1,11 @@
+[global]
+# Disable rules that might be too strict for contributors
+disable = [
+  "MD013", # Line length (can be restrictive)
+  "MD033", # Inline HTML (often needed for badges/formatting)
+  "MD041", # First line heading (README might start with badges)
+]
+
+# Include all documentation but exclude dependencies
+include = ["**/*.md"]
+exclude = ["node_modules/**", "vendor/**", ".git/**", "coverage/**", ".agents/**"]

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "bash": "node ./scripts/hooks/copilot-post-tool-fix.mjs",
+        "powershell": "node ./scripts/hooks/copilot-post-tool-fix.mjs",
+        "cwd": ".",
+        "timeoutSec": 120
+      }
+    ]
+  }
+}

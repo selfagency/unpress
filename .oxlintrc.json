@@ -1,0 +1,45 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["unicorn", "typescript", "oxc", "import", "promise", "node", "vitest"],
+  "categories": {},
+  "rules": {
+    "jest/valid-expect": "off",
+    "vitest/require-mock-type-parameters": "off",
+    "eslint-plugin-jest/require-to-throw-message": "off"
+  },
+  "settings": {
+    "jsdoc": {
+      "ignorePrivate": false,
+      "ignoreInternal": false,
+      "ignoreReplacesDocs": true,
+      "overrideReplacesDocs": true,
+      "augmentsExtendsReplacesDocs": false,
+      "implementsReplacesDocs": false,
+      "exemptDestructuredRootsFromChecks": false,
+      "tagNamePreference": {}
+    },
+    "vitest": {
+      "typecheck": false
+    }
+  },
+  "env": {
+    "builtin": true
+  },
+  "globals": {},
+  "ignorePatterns": [
+    ".agents",
+    ".beans",
+    ".beans.yml",
+    ".github",
+    ".vscode",
+    "devnet",
+    "docs",
+    "node_modules",
+    "dist",
+    "coverage",
+    "playwright-report",
+    "test-results",
+    "src/lexicons",
+    "plans"
+  ]
+}
