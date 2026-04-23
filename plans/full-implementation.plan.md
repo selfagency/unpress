@@ -71,7 +71,7 @@ This plan details a TypeScript utility, executable via `npx`, to migrate WordPre
 
 | Task     | Description                                                                 | Completed | Date       |
 |----------|-----------------------------------------------------------------------------|-----------|------------|
-| TASK-011A | Add `--config` CLI flag and `src/config.ts` to load/merge YAML config and flags | ✅         | 2026-04-23 |
+| TASK-011A | Add `--config` CLI flag and `src/config.ts` to load/merge YAML config and flags |           |            |
 | TASK-011B | Define canonical `types.yml` schema and `src/content-types.ts` validator     |           |            |
 | TASK-011C | Implement XML import adapter `src/source-xml.ts` (streaming, resumable)     |           |            |
 | TASK-011D | Implement media modes: `local`, `reupload` (S3/SFTP), and `leave`          |           |            |
