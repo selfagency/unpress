@@ -65,6 +65,19 @@ This plan details a TypeScript utility, executable via `npx`, to migrate WordPre
 | TASK-010 | Handle pagination, batching, and progress reporting                         |           |            |
 | TASK-011 | Store progress in a resumable state file in output dir                      |           |            |
 
+### Implementation Phase 2.5
+
+- GOAL-002.5: Support custom content types, YAML config, XML import, media modes
+
+| Task     | Description                                                                 | Completed | Date       |
+|----------|-----------------------------------------------------------------------------|-----------|------------|
+| TASK-011A | Add `--config` CLI flag and `src/config.ts` to load/merge YAML config and flags | ✅         | 2026-04-23 |
+| TASK-011B | Define canonical `types.yml` schema and `src/content-types.ts` validator     |           |            |
+| TASK-011C | Implement XML import adapter `src/source-xml.ts` (streaming, resumable)     |           |            |
+| TASK-011D | Implement media modes: `local`, `reupload` (S3/SFTP), and `leave`          |           |            |
+| TASK-011E | Wire media adapter into conversion pipeline and relink URLs                 |           |            |
+| TASK-011F | Ensure resume/state works for API and XML sources (checkpoints, stateDir)  |           |            |
+
 ### Implementation Phase 3
 
 - GOAL-003: Content conversion and 11ty project generation
