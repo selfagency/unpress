@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import TurndownService from 'turndown';
-import YAML from 'yaml';
+import matter from 'gray-matter';
 
 /**
  * Converts HTML content to Markdown using turndown.
@@ -57,7 +57,9 @@ export async function writePostAndAuthorFiles(post: any, outDir: string) {
     const authorFrontObj: Record<string, any> = { name: author.name };
     if (author.image) authorFrontObj.image = author.image;
     if (author.bio) authorFrontObj.bio = author.bio;
-    const newAuthorContent = `---\n${YAML.stringify(authorFrontObj)}---\n`;
+    // Normalize author frontmatter to a single trailing newline to match existing file style
+    const authorFm = matter.stringify('', authorFrontObj);
+    const newAuthorContent = authorFm.replace(/\s+$/, '') + '\n';
 
     // Only overwrite if content differs to avoid stomping manual edits
     let existing = null;
@@ -73,8 +75,7 @@ export async function writePostAndAuthorFiles(post: any, outDir: string) {
 
   const outSlug = post.slug ? slugify(post.slug) : slugify(post.title || 'post');
   const outPath = path.join(postsDir, `${outSlug}.md`);
-  const frontmatter = `---\n${YAML.stringify(fm)}---\n\n`;
-  const contentToWrite = frontmatter + markdown + '\n';
+  const contentToWrite = matter.stringify(markdown, fm);
   await fs.writeFile(outPath, contentToWrite, 'utf8');
 
   return outPath;

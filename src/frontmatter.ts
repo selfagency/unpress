@@ -1,4 +1,4 @@
-import YAML from 'yaml';
+import matter from 'gray-matter';
 
 /**
  * Converts a WordPress post/page object to Markdown frontmatter (YAML).
@@ -24,5 +24,10 @@ export function metadataToFrontmatter(meta: Record<string, any>): string {
   };
   // Remove undefined/null
   Object.keys(frontmatter).forEach(k => (frontmatter[k] == null || frontmatter[k] === '') && delete frontmatter[k]);
-  return `---\n${YAML.stringify(frontmatter)}---`;
+  // Use gray-matter to produce a consistent frontmatter block.
+  // Trim trailing newline so callers expecting `---` at the end still work.
+  const out = matter.stringify('', frontmatter);
+  // Trim all trailing whitespace/newlines so callers that expect the closing `---`
+  // to be the last characters still work (tests rely on this).
+  return out.replace(/\s+$/, '');
 }
