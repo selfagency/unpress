@@ -38,6 +38,26 @@ Meilisearch is optional. You can either:
 
 If you don't enable Meilisearch, the generated site still works; search UI will be disabled or should fallback to client-side solutions.
 
+How to enable Meilisearch (quick start)
+
+1. Start Meilisearch via Docker Compose (recommended):
+
+```bash
+cd docs/meilisearch
+docker compose up -d
+```
+
+2. Index generated posts (example):
+
+```js
+import { indexPostsFromDir } from './src/meilisearch';
+await indexPostsFromDir('out/site/content/posts', { host: 'http://127.0.0.1:7700' });
+```
+
+3. Configure the generated site to know the Meilisearch URL by setting `window.MEILI_CONFIG` in a small inline script in your base layout or via environment-specific templating.
+
+If you prefer not to run Meilisearch, skip the steps above — search UI will display a message that search is not configured.
+
 Contributing
 
 This project is a work-in-progress. Please open issues or PRs for improvements.

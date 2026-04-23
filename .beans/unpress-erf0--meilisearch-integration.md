@@ -1,11 +1,11 @@
 ---
 # unpress-erf0
-title: Meilisearch integration
-status: todo
+title: "Meilisearch integration"
+status: done
 type: epic
 priority: medium
 created_at: 2026-04-23T02:41:59Z
-updated_at: 2026-04-23T02:44:22Z
+updated_at: 2026-04-23T05:45:00Z
 parent: unpress-9vhq
 blocking:
     - unpress-pri5
@@ -20,7 +20,11 @@ Integrates Meilisearch for local search, adds Docker Compose, indexing script, a
 - Documentation for Meilisearch usage
 
 ## Tasks
-- [ ] Add Docker Compose file for Meilisearch service
-- [ ] Implement script to index all posts/pages into Meilisearch
-- [ ] Add minimal search UI to 11ty site (client-side fetch to Meilisearch)
-- [ ] Document Meilisearch usage in README.md
+- [x] Add Docker Compose file for Meilisearch service
+- [x] Implement script to index all posts/pages into Meilisearch
+- [x] Add minimal search UI to 11ty site (client-side fetch)
+- [x] Document Meilisearch usage in README.md
+
+## Notes
+- Meilisearch integration is optional. Users can run Meilisearch locally (native) or via Docker Compose (`docs/meilisearch/docker-compose.yml`).
+- Use `src/meilisearch.ts` to index generated markdown files into a Meilisearch index.
