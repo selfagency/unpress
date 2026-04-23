@@ -1,8 +1,9 @@
 import fs from 'fs-extra';
+import matter from 'gray-matter';
 import fetch from 'node-fetch';
+import PQueue from 'p-queue';
 import path from 'path';
-import YAML from 'yaml';
-import { error, progress, warn } from './logger';
+import { error, info, progress, warn } from './logger.js';
 
 interface MeiliConfig {
   host: string; // e.g. http://127.0.0.1:7700
@@ -12,18 +13,15 @@ interface MeiliConfig {
 
 async function readMarkdownFrontmatter(filePath: string) {
   const raw = await fs.readFile(filePath, 'utf8');
-  // Match only a leading YAML frontmatter block delimited by `---` at the file start
-  const fmMatch = raw.match(/^---\s*\n([\s\S]*?)\n---\s*\n?/);
-  if (!fmMatch) {
-    return { data: {}, content: raw };
-  }
-  const yamlRaw = fmMatch[1] || '';
-  const content = raw.slice(fmMatch[0].length).trim();
-  const data = YAML.parse(yamlRaw) || {};
-  return { data, content };
+  // Use gray-matter to parse frontmatter robustly (supports YAML, TOML, etc.)
+  const parsed = matter(raw);
+  return { data: parsed.data || {}, content: parsed.content || '' };
 }
 
-export async function indexPostsFromDir(postsDir: string, cfg: MeiliConfig) {
+export async function indexPostsFromDir(
+  postsDir: string,
+  cfg: MeiliConfig & { concurrency?: number; intervalCap?: number; interval?: number },
+) {
   if (!(await fs.pathExists(postsDir))) {
     warn(`Posts directory does not exist: ${postsDir} — skipping indexing.`);
     return { indexed: 0 };
@@ -81,17 +79,29 @@ export async function indexPostsFromDir(postsDir: string, cfg: MeiliConfig) {
     info(`No markdown documents found in ${postsDir}`);
     return { indexed: 0 };
   }
+  // Use PQueue to control concurrent uploads and rate (intervalCap/interval)
+  const pqOpts: any = { concurrency: cfg.concurrency || 1 };
+  if (typeof cfg.intervalCap === 'number' && cfg.intervalCap > 0) pqOpts.intervalCap = cfg.intervalCap;
+  if (typeof cfg.interval === 'number' && cfg.interval > 0) pqOpts.interval = cfg.interval;
+  const queue = new PQueue(pqOpts as any);
+
+  const uploadPromises: Promise<any>[] = [];
   for (let i = 0; i < docs.length; i += batchSize) {
     const batch = docs.slice(i, i + batchSize);
-    progress(`uploading documents ${i}-${i + batch.length}`, (i + batch.length) / docs.length);
-    try {
-      await safePost(`${cfg.host}/indexes/${index}/documents`, batch, 3);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      error('Meilisearch indexing failed for batch:', msg);
-      throw new Error(`Meilisearch indexing failed: ${msg}`);
-    }
+    progress(`scheduling upload documents ${i}-${i + batch.length}`, (i + batch.length) / docs.length);
+    const task = () =>
+      safePost(`${cfg.host}/indexes/${index}/documents`, batch, 3).catch(err => {
+        const msg = err instanceof Error ? err.message : String(err);
+        error('Meilisearch indexing failed for batch:', msg);
+        throw new Error(`Meilisearch indexing failed: ${msg}`);
+      });
+    uploadPromises.push(queue.add(task));
   }
+
+  // wait for all uploads to complete
+  await queue.onIdle();
+  // ensure any rejections surface
+  await Promise.all(uploadPromises);
   return { indexed: docs.length };
 }
 

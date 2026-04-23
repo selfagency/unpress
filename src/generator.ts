@@ -154,7 +154,7 @@ img { max-width: 100%; height: auto; }
   await fs.writeFile(path.join(root, 'assets', 'styles.css'), styles, 'utf8');
   // progress message
   try {
-    const { progress } = await import('./logger');
+    const { progress } = await import('./logger.js');
     progress('templates written');
   } catch {
     /* ignore */

@@ -36,7 +36,7 @@ export class WordPressApi {
     const headers: Record<string, string> = {
       Accept: 'application/json',
       Authorization: this.getAuthHeader(),
-      ...(init.headers as Record<string, string> || {}),
+      ...((init.headers as Record<string, string>) || {}),
     };
 
     const timer = setTimeout(() => controller.abort(), timeout);
@@ -56,7 +56,7 @@ export class WordPressApi {
     let lastErr: any = null;
     for (let i = 0; i < attempts; i++) {
       try {
-        return await this.fetch(path, { method: 'GET', timeout: perTryTimeout });
+        return await this.fetch(path, { method: 'GET', timeout: perTryTimeout } as any);
       } catch (err) {
         lastErr = err;
         // simple backoff

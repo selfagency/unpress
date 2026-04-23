@@ -22,8 +22,8 @@ export async function loadConfig(flags: Partial<Record<string, any>>): Promise<U
     typeof flags.downloadMedia === 'boolean'
       ? flags.downloadMedia
       : typeof flags['download-media'] === 'boolean'
-      ? flags['download-media']
-      : process.env.DOWNLOAD_MEDIA === 'true';
+        ? flags['download-media']
+        : process.env.DOWNLOAD_MEDIA === 'true';
 
   // Prompt for missing values
   if (!wpUrl) {

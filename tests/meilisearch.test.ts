@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'fs-extra';
+import fetch from 'node-fetch';
 import path from 'path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('node-fetch');
-import fetch from 'node-fetch';
 
 import { indexPostsFromDir } from '../src/meilisearch';
 

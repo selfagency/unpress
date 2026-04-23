@@ -29,7 +29,7 @@ export function findMediaUrls(markdown: string): string[] {
   const urls: string[] = [];
   let match;
   while ((match = urlPattern.exec(markdown))) {
-    urls.push(match[1]);
+    if (match[1]) urls.push(match[1]);
   }
   return urls;
 }

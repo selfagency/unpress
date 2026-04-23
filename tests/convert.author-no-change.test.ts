@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
+import { describe, expect, it } from 'vitest';
 import { writePostAndAuthorFiles } from '../src/convert';
 
 describe('writePostAndAuthorFiles author preservation', () => {

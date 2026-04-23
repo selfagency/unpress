@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
+import { describe, expect, it, vi } from 'vitest';
 
 // mock node-fetch used by meilisearch
 import fetch from 'node-fetch';
