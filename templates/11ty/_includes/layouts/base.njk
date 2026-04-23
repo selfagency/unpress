@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{% if title %}{{ title }} - {% endif %}{{ site.title | safe }}</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <header role="banner">
+      <h1>{{ site.title }}</h1>
+      <nav aria-label="Main navigation">
+        <a href="/">Home</a>
+        <a href="/tags/">Tags</a>
+        <a href="/categories/">Categories</a>
+        <a href="/authors/">Authors</a>
+      </nav>
+    </header>
+    <main id="maincontent" role="main">
+      {{ content | safe }}
+    </main>
+
+    <footer role="contentinfo">
+      <p>&copy; {{ now | date: "%Y" }} {{ site.title }}</p>
+    </footer>
+  </body>
+</html>
