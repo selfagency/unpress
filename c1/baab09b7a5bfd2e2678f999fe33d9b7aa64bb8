@@ -1,0 +1,20 @@
+src/media-adapters.ts
+  h_5cf1e2c1161853 3,9,16-17,39,69,74-81,86-94,105-111,117-123
+src/xml-parser.ts
+  h_5cf1e2c1161853 1,32,35-38,147
+src/types/ssh2-sftp-client.d.ts
+  h_5cf1e2c1161853 1
+package.json
+  h_5cf1e2c1161853 30,41,52,64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "c1baab09b7a5bfd2e2678f999fe33d9b7aa64bb8",
+  "prompts": {},
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}

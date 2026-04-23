@@ -1,0 +1,76 @@
+.beans/archive/unpress-w3ga--wordpress-api-integration.md
+  87e5dfe43d35069c 17,25
+.beans/unpress-e4ev--copygenerate-default-11ty-layoutstemplates.md
+  87e5dfe43d35069c 15
+.beans/unpress-el2j--add-docker-compose-file-for-meilisearch-service.md
+  87e5dfe43d35069c 15
+.beans/unpress-erf0--meilisearch-integration.md
+  87e5dfe43d35069c 17,24,31
+src/index.ts
+  h_5cf1e2c1161853 2
+.beans/unpress-t2h1--add-minimal-search-ui-to-11ty-site-client-side-fet.md
+  87e5dfe43d35069c 15
+README.md
+  h_5cf1e2c1161853 93-97
+.beans/unpress-ammp--content-conversion-11ty-generation.md
+  87e5dfe43d35069c 17,26,38
+.beans/unpress-rv8s--write-all-postspages-as-markdown-files-with-correc.md
+  87e5dfe43d35069c 15
+.beans/unpress-428d--add-readmemd-with-usage-instructions.md
+  87e5dfe43d35069c 15
+assets/search.js
+  h_5cf1e2c1161853 27
+.beans/unpress-uqic--implement-script-to-index-all-postspages-into-meil.md
+  87e5dfe43d35069c 15
+.beans/unpress-2ffz--document-meilisearch-usage-in-readmemd.md
+  87e5dfe43d35069c 15
+.beans/archive/unpress-ja9h--scaffold-typescript-project-with-cli-entrypoint-bi.md
+  87e5dfe43d35069c 15
+.beans/unpress-9vhq--wordpress-to-11ty-migration-utility.md
+  87e5dfe43d35069c 14,20
+.beans/unpress-pri5--testing-polish.md
+  87e5dfe43d35069c 15,25,35
+src/convert.ts
+  h_5cf1e2c1161853 66
+.beans/archive/unpress-d0kj--implement-cli-argument-parsing-with-cac.md
+  87e5dfe43d35069c 15
+.beans/archive/unpress-axay--validate-and-sanitize-all-user-input.md
+  87e5dfe43d35069c 15
+.beans/archive/unpress-tokl--project-scaffolding-cli.md
+  87e5dfe43d35069c 20,28
+.beans/archive/unpress-zbyh--implement-interactive-prompt-fallback-with-inquire.md
+  87e5dfe43d35069c 15
+.beans/unpress-yxhu--generate-tagcategory-index-pages.md
+  87e5dfe43d35069c 15
+.beans/archive/unpress-h36n--set-up-packagejson-with-npx-executable-config-bin.md
+  87e5dfe43d35069c 15
+src/generator.ts
+  h_5cf1e2c1161853 159
+.beans/archive/unpress-wbee--support-env-var-loading-for-credentials-dotenv.md
+  87e5dfe43d35069c 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "8fe0a1819c7c946bd78e7af9b21c86f735cf2637",
+  "prompts": {
+    "87e5dfe43d35069c": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "9ee92979-155c-4a90-9e39-1536bb16fac4",
+        "model": "copilot/gpt-5-mini"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 126,
+      "total_deletions": 1,
+      "accepted_lines": 126,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}

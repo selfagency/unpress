@@ -1,0 +1,18 @@
+tests/meilisearch.integration.test.ts
+  h_5cf1e2c1161853 1-32
+.github/workflows/ci.yml
+  h_5cf1e2c1161853 4-87
+package.json
+  h_5cf1e2c1161853 50-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "f45ac8b1aea52785f2d4424918a3a5c26d2a0c55",
+  "prompts": {},
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}

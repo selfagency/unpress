@@ -1,0 +1,22 @@
+README.md
+  h_5cf1e2c1161853 41-60
+docs/meilisearch/docker-compose.yml
+  h_5cf1e2c1161853 1-12
+src/meilisearch.ts
+  h_5cf1e2c1161853 1-68
+templates/11ty/_includes/search.njk
+  h_5cf1e2c1161853 1-15
+assets/search.js
+  h_5cf1e2c1161853 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "ba8092d255e045ee67d917433c70c155b64b9e41",
+  "prompts": {},
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
