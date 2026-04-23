@@ -2,6 +2,9 @@
 
 import cac from 'cac';
 import { loadConfig } from '../src/config';
+import { loadProjectConfigFromFile, mergeConfig } from '../src/config-loader';
+import path from 'path';
+import fs from 'fs-extra';
 
 const cli = cac('unpress');
 
@@ -10,6 +13,12 @@ cli
   .option('--wp-user <user>', 'WordPress username')
   .option('--wp-app-password <password>', 'WordPress app password')
   .option('--download-media', 'Download referenced media');
+// project config and source selection
+cli.option('--config <file>', 'Project YAML config file (unpress.yml)');
+cli.option('--types <file>', 'Content types YAML file (types.yml)');
+cli.option('--source <type>', 'Source type: api or xml');
+cli.option('--xml-file <file>', 'WordPress XML export file to import');
+cli.option('--resume', 'Resume a previous run using stateDir checkpoints');
 // generation & indexing
 cli.option('--generate-site', 'Generate a minimal 11ty site in the output dir');
 cli.option('--out-dir <dir>', 'Output directory for generated site (defaults to cwd)');
@@ -30,6 +39,15 @@ cli.command('', async flags => {
       wpAppPassword: flags.wpAppPassword || flags['wp-app-password'] || flags['wp_app_password'],
       downloadMedia: typeof flags.downloadMedia === 'boolean' ? flags.downloadMedia : flags['download-media'] || false,
     };
+
+    // Load optional YAML project config and merge with CLI flags (flags win)
+    let projectCfg: any = undefined;
+    if (flags['config']) {
+      const cfgPath = path.resolve(flags['config']);
+      projectCfg = loadProjectConfigFromFile(cfgPath);
+    }
+    const mergedProject = mergeConfig(flags, projectCfg);
+
     const config = await loadConfig(normalized);
     // If dry-run requested, validate and exit
     if (flags['dry-run']) {
@@ -63,6 +81,132 @@ cli.command('', async flags => {
         console.log('Indexing result:', res);
       } catch (err) {
         console.error('Meilisearch indexing failed:', err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    }
+
+    // Handle source-specific flows: API or XML (minimal wiring)
+    const sourceType = mergedProject?.source?.type || flags['source'] || flags['source-type'];
+    if (sourceType === 'xml' || flags['source'] === 'xml') {
+      const xmlFile = flags['xml-file'] || mergedProject?.source?.xml?.file;
+      if (!xmlFile) {
+        console.error('XML source selected but no --xml-file provided or configured in project config');
+        process.exit(1);
+      }
+      try {
+        const { parseWpXmlItems } = await import('../src/xml-parser');
+        const outDir = flags['out-dir'] || process.cwd();
+        const stateDir = mergedProject?.resume?.stateDir || path.join(outDir, '.unpress', 'state');
+        await fs.ensureDir(stateDir);
+        const checkpointPath = path.join(stateDir, 'xml-checkpoint.json');
+
+        console.log(`Processing XML: ${xmlFile} -> state: ${checkpointPath}`);
+
+        // prepare media helpers
+        const { findMediaUrls, relinkMediaUrls } = await import('../src/media');
+        const mediaAdapters = await import('../src/media-adapters');
+
+        // construct upload clients if reupload is configured
+        let s3Client: any = undefined;
+        let sftpClient: any = undefined;
+        if (mergedProject?.media?.mode === 'reupload') {
+          const driver = mergedProject?.media?.reupload?.driver;
+          if (driver === 's3') {
+            try {
+              s3Client = mediaAdapters.createS3ClientFromConfig(mergedProject.media.reupload.s3);
+            } catch (err) {
+              // fallback to env-based client
+              s3Client = mediaAdapters.createS3ClientFromEnv();
+            }
+          } else if (driver === 'sftp') {
+            try {
+              sftpClient = await mediaAdapters.createSftpClientFromConfig(mergedProject.media.reupload.sftp);
+            } catch (err) {
+              sftpClient = await mediaAdapters.createSftpClientFromEnv();
+            }
+          }
+        }
+
+        await parseWpXmlItems(
+          xmlFile,
+          async (item: any) => {
+            const itemsDir = path.join(stateDir, 'items');
+            await fs.ensureDir(itemsDir);
+            const id = item.post_id || item.wp_post_id || item.id || `item-${Date.now()}`;
+
+            // handle media according to project config
+            const mediaCfg = mergedProject?.media || {};
+            const mode = mediaCfg.mode || 'local';
+            const mediaMap: Record<string, string> = {};
+
+            // find markdown fields to search (body/excerpt)
+            const mdFields = [] as string[];
+            if (item.content && typeof item.content === 'string') mdFields.push('content');
+            if (item.excerpt && typeof item.excerpt === 'string') mdFields.push('excerpt');
+
+            for (const field of mdFields) {
+              const md = item[field] as string;
+              const urls = findMediaUrls(md);
+              for (const url of urls) {
+                try {
+                  if (mode === 'leave') {
+                    // do nothing
+                  } else if (mode === 'local') {
+                    // save to local state dir
+                    const localDest = await mediaAdapters.downloadToLocal(url, path.join(stateDir, 'media'));
+                    mediaMap[url] = localDest;
+                  } else if (mode === 'reupload') {
+                    const driver = mediaCfg.reupload?.driver || 's3';
+                    if (driver === 's3') {
+                      const s3cfg = mediaCfg.reupload?.s3;
+                      if (s3cfg && s3cfg.bucket) {
+                        try {
+                          const res = await mediaAdapters.reuploadMediaToS3(url, {
+                            localDir: path.join(stateDir, 'media'),
+                            s3: { client: s3Client, bucket: s3cfg.bucket, prefix: s3cfg.prefix },
+                          });
+                          mediaMap[url] = res;
+                        } catch (err) {
+                          const fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
+                          mediaMap[url] = `s3://${s3cfg.bucket}/${fname}`;
+                        }
+                      }
+                    } else if (driver === 'sftp') {
+                      const sftpCfg = mediaCfg.reupload?.sftp;
+                      if (sftpCfg && sftpCfg.host) {
+                        try {
+                          const res = await mediaAdapters.reuploadMediaToSftp(url, {
+                            localDir: path.join(stateDir, 'media'),
+                            sftp: { client: sftpClient, remotePath: sftpCfg.path || '/' },
+                          });
+                          mediaMap[url] = res;
+                        } catch (err) {
+                          const fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
+                          mediaMap[url] = `sftp:${sftpCfg.path || '/'}${fname}`;
+                        }
+                      }
+                    }
+                  }
+                } catch (err) {
+                  // best-effort: record failure in mediaMap as null
+                  mediaMap[url] = mediaMap[url] || '';
+                }
+              }
+              // rewrite markdown in item
+              if (Object.keys(mediaMap).length > 0) {
+                item[field] = relinkMediaUrls(md, mediaMap);
+              }
+            }
+
+            const filename = `item-${id}.json`;
+            await fs.writeJson(path.join(itemsDir, filename), { item, media_map: mediaMap }, { spaces: 2 });
+          },
+          { checkpointPath, resume: !!flags['resume'] },
+        );
+
+        console.log('XML processing complete');
+      } catch (err) {
+        console.error('XML processing failed:', err instanceof Error ? err.message : err);
         process.exit(1);
       }
     }

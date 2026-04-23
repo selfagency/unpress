@@ -1,0 +1,13 @@
+# Sample content types definition
+- name: post
+  source: post
+  slug_field: slug
+  title_field: title
+  body_field: content
+  excerpt_field: excerpt
+  date_field: date
+  fields:
+    - name: author
+      source: author
+    - name: featured_image
+      source: featured_media

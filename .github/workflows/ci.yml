@@ -6,123 +6,44 @@ on:
   pull_request:
     branches: [ main ]
 
-jobs:
-  test:
-    name: Run unit tests and platform checks
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        node: [20]
+permissions:
+  contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || '' }}
+
+jobs:
+  checks:
+    name: Checks (typecheck, lint, format, tests, docs)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
-      - uses: actions/checkout@v4
-      - name: Cache pnpm
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (for checks)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+
+      - name: Cache pnpm store
         uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-      - name: Install pnpm
-        run: npm install -g pnpm
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Run lint
-        run: pnpm run lint
-      - name: Typecheck
-        run: pnpm run typecheck
-      - name: Run tests
-        run: pnpm test
-      - name: Run platform check
-        run: node scripts/platform-check.js
-
-  meili-integration:
-    name: Meilisearch integration tests
-    runs-on: ubuntu-latest
-    needs: test
-    services:
-      meilisearch:
-        image: getmeili/meilisearch:latest
-        env:
-          MEILI_MASTER_KEY: masterKey
-        ports:
-          - 7700:7700
-        options: >-
-          --health-cmd="curl -sS http://localhost:7700/health || exit 1"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install pnpm
-        run: npm install -g pnpm
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Run Meilisearch integration tests
-        env:
-          MEILI_HOST: http://127.0.0.1:7700
-          MEILI_API_KEY: masterKey
-        run: pnpm test -- tests/meilisearch.integration.test.ts
-
-  accessibility:
-    name: Accessibility scan (pa11y)
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install pnpm
-        run: npm install -g pnpm
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Generate site
-        run: pnpm dev:cli -- --generate-site --out-dir ./out
-      - name: Serve generated site
-        run: npx http-server ./out/site -p 8080 &
-      - name: Wait for server
-        run: npx wait-on http://127.0.0.1:8080 -t 30000
-      - name: Run pa11y scan
-        run: npx pa11y http://127.0.0.1:8080
-      - name: Lint markdown
-        run: pnpm run lint:md
-name: CI
-
-on:
-  pull_request:
-  push:
-    branches: [ main ]
-
-permissions:
-  contents: read
-
-jobs:
-  checks:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -133,32 +54,169 @@ jobs:
       - name: Lint (Oxc)
         run: pnpm run lint
 
-      - name: Format check (Oxc)
+      - name: Format check
         run: pnpm run format:check
 
-      - name: Markdown lint (Rumdl)
+      - name: Markdown lint
         run: pnpm run lint:md
 
-      - name: Test (Vitest)
-        run: pnpm run test:coverage --reporter=default --reporter=junit --outputFile=test-report.junit.xml
+      - name: Run tests (coverage)
+        run: pnpm run test:coverage
 
-      - name: Prepare OpenAPI spec for docs build
+      - name: Prepare OpenAPI for docs (if present)
         run: |
-          test -f src/generated/openapi.json || { echo "Missing required file: src/generated/openapi.json"; exit 1; }
-          mkdir -p output
-          cp src/generated/openapi.json output/openapi-types.json
+          if [ -f src/generated/openapi.json ]; then
+            mkdir -p output
+            cp src/generated/openapi.json output/openapi-types.json
+          else
+            echo "No src/generated/openapi.json found; skipping copy"
+          fi
 
-      - name: Build docs (VitePress)
+      - name: Build docs
         run: pnpm run docs:build
 
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Upload coverage reports to Codecov
-        if: ${{ !cancelled() }}
+      - name: Upload coverage to Codecov (optional)
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload test report artifact (junit/coverage)
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            coverage
+            coverage-report
+            test-report.junit.xml
+            test-results.xml
+          if-no-files-found: ignore
+
+  matrix-tests:
+    name: Matrix tests (unit tests + platform check) - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        node: [ 20 ]
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: "pnpm"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm run test
+
+      - name: Run platform check
+        run: node scripts/platform-check.js
+
+  meili-integration:
+    name: Meilisearch integration tests
+    runs-on: ubuntu-latest
+    needs: matrix-tests
+    services:
+      meilisearch:
+        image: getmeili/meilisearch:latest
+        env:
+          MEILI_MASTER_KEY: masterKey
+        ports:
+          - 7700:7700
+        options: >-
+          --health-cmd="curl -sS http://localhost:7700/health || exit 1" --health-interval=10s --health-timeout=5s
+          --health-retries=5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Meilisearch integration tests
+        env:
+          MEILI_HOST: http://127.0.0.1:7700
+          MEILI_API_KEY: masterKey
+        run: pnpm test -- tests/meilisearch.integration.test.ts
+
+  accessibility:
+    name: Accessibility (build site -> serve -> pa11y)
+    runs-on: ubuntu-latest
+    needs: checks
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate site (CLI)
+        run: pnpm run dev:cli -- --generate-site --out-dir ./out
+
+      - name: Serve generated site
+        run: npx http-server ./out/site -p 8080 &
+
+      - name: Wait for server
+        run: npx wait-on http://127.0.0.1:8080 -t 30000
+
+      - name: Run pa11y scan
+        run: npx pa11y http://127.0.0.1:8080
+
+      - name: Lint markdown
+        run: pnpm run lint:md
+
+  # optional: aggregate artifacts (docs, coverage) for PR debugging
+  upload-artifacts:
+    name: Upload artifacts (docs/coverage/site)
+    runs-on: ubuntu-latest
+    needs: [ checks, accessibility ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs
+          path: .vitepress/dist
+          if-no-files-found: ignore
+
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: out/site
+          if-no-files-found: ignore

@@ -2,8 +2,10 @@ packages:
   - '.'
 
 allowBuilds:
+  cpu-features: true
   esbuild: true
   msw: true
+  ssh2: true
   vue-demi: true
 
 publicHoistPattern:

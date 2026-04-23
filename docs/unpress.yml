@@ -1,0 +1,18 @@
+source:
+  type: xml
+  xml:
+    file: ./tests/fixtures/sample-wp-export.xml
+content_types: ./docs/types.yml
+media:
+  mode: reupload
+  reupload:
+    driver: s3
+    s3:
+      bucket: example-bucket
+      endpoint: https://s3.example.com
+processing:
+  concurrency: 2
+  intervalCap: 10
+  interval: 1000
+resume:
+  stateDir: ./.unpress/state
