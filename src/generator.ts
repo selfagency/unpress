@@ -24,6 +24,7 @@ export async function generate11tyProject(dest: string) {
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body>
+    <a href="#maincontent" class="sr-only">Skip to main</a>
     <header role="banner">
       <h1>{{ site.title }}</h1>
       <nav aria-label="Main navigation">
@@ -140,6 +141,15 @@ pagination:
 body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; max-width: 72ch; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
 header nav a { margin-right: 1rem; }
 img { max-width: 100%; height: auto; }
+.sr-only:not(:focus):not(:active) {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
 `;
   await fs.writeFile(path.join(root, 'assets', 'styles.css'), styles, 'utf8');
   // progress message

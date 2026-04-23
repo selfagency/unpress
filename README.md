@@ -58,6 +58,15 @@ await indexPostsFromDir('out/site/content/posts', { host: 'http://127.0.0.1:7700
 
 If you prefer not to run Meilisearch, skip the steps above — search UI will display a message that search is not configured.
 
+Accessibility & cross-platform notes
+
+- A "Skip to main" link is included in generated templates to improve keyboard navigation. Use tools like Accessibility Insights or Lighthouse to audit pages.
+- For cross-platform checks, a helper script is available: `node scripts/platform-check.js`.
+
+Testing with real WordPress sites
+
+See `docs/testing/real-wordpress.md` for instructions on testing migration against public or local WordPress instances and validating output.
+
 Contributing
 
 This project is a work-in-progress. Please open issues or PRs for improvements.
