@@ -1,11 +1,11 @@
 ---
 # unpress-erf0
-title: "Meilisearch integration"
-status: done
+title: Meilisearch integration
+status: completed
 type: epic
 priority: medium
 created_at: 2026-04-23T02:41:59Z
-updated_at: 2026-04-23T05:45:00Z
+updated_at: 2026-04-23T10:59:57Z
 parent: unpress-9vhq
 blocking:
     - unpress-pri5

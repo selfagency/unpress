@@ -1,13 +1,14 @@
 ---
 # unpress-uqic
-title: "Implement script to index all posts/pages into Meilisearch"
-status: done
+title: Implement script to index all posts/pages into Meilisearch
+status: completed
 type: task
+priority: normal
 created_at: 2026-04-23T02:44:59Z
-updated_at: 2026-04-23T05:45:00Z
+updated_at: 2026-04-23T10:59:57Z
 parent: unpress-erf0
-id: unpress-uqic
 ---
+
 Implement a script that indexes all posts and pages into Meilisearch.
 
 ## Notes
