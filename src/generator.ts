@@ -142,6 +142,13 @@ header nav a { margin-right: 1rem; }
 img { max-width: 100%; height: auto; }
 `;
   await fs.writeFile(path.join(root, 'assets', 'styles.css'), styles, 'utf8');
+  // progress message
+  try {
+    const { progress } = await import('./logger');
+    progress('templates written');
+  } catch (e) {
+    /* ignore */
+  }
 
   return {
     files: [

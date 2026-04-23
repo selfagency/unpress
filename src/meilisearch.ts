@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import YAML from 'yaml';
 import fetch from 'node-fetch';
+import { info, warn, error, progress } from './logger';
 
 interface MeiliConfig {
   host: string; // e.g. http://127.0.0.1:7700
@@ -47,16 +48,22 @@ export async function indexPostsFromDir(postsDir: string, cfg: MeiliConfig) {
   if (cfg.apiKey) headers['X-Meili-API-Key'] = cfg.apiKey;
 
   // create index (safe to call)
-  await fetch(`${cfg.host}/indexes`, { method: 'POST', headers, body: JSON.stringify({ uid: index }) })
-    .catch(()=>{});
+  try {
+    await fetch(`${cfg.host}/indexes`, { method: 'POST', headers, body: JSON.stringify({ uid: index }) });
+  } catch (e) {
+    // ignore - index may already exist or host unreachable
+    warn('create index request failed (ignored):', e instanceof Error ? e.message : e);
+  }
 
   // push documents in batches
   const batchSize = 1000;
   for (let i=0;i<docs.length;i+=batchSize) {
     const batch = docs.slice(i,i+batchSize);
+    progress(`uploading documents ${i}-${i+batch.length}`, (i+batch.length)/docs.length);
     const res = await fetch(`${cfg.host}/indexes/${index}/documents`, { method: 'POST', headers, body: JSON.stringify(batch) });
     if (!res.ok) {
       const text = await res.text();
+      error('Meilisearch indexing failed:', res.status, text);
       throw new Error(`Meilisearch indexing failed: ${res.status} ${text}`);
     }
   }
