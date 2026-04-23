@@ -27,33 +27,44 @@ export class WordPressApi {
     const token = Buffer.from(`${username}:${appPassword}`).toString('base64');
     return `Basic ${token}`;
   }
-
   async fetch(path: string, init: RequestInit = {}) {
     const url = `${this.baseUrl}${path}`;
-    let baseHeaders: Record<string, string> = {};
-    if (init.headers) {
-      if (Array.isArray(init.headers)) {
-        for (const [k, v] of init.headers as [string, string][]) {
-          baseHeaders[k] = v;
-        }
-      } else if (init.headers instanceof Object && !(init.headers instanceof Headers)) {
-        baseHeaders = { ...(init.headers as Record<string, string>) };
-      } else if (init.headers instanceof Headers) {
-        (init.headers as Headers).forEach((v, k) => {
-          baseHeaders[k] = v;
-        });
+    const controller = new AbortController();
+    const timeout = (init as any).timeout ?? 30000; // 30s default
+    const signal = controller.signal;
+
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      Authorization: this.getAuthHeader(),
+      ...(init.headers as Record<string, string> || {}),
+    };
+
+    const timer = setTimeout(() => controller.abort(), timeout);
+    try {
+      const res = await fetch(url, { ...init, headers, signal } as any);
+      if (!res.ok) {
+        throw new Error(`WordPress API error: ${res.status} ${res.statusText}`);
+      }
+      return res.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  // Helper to perform GET with retries for transient errors
+  private async requestWithRetries(path: string, attempts = 3, perTryTimeout = 30000) {
+    let lastErr: any = null;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await this.fetch(path, { method: 'GET', timeout: perTryTimeout });
+      } catch (err) {
+        lastErr = err;
+        // simple backoff
+        const wait = 500 * Math.pow(2, i);
+        await new Promise(r => setTimeout(r, wait));
       }
     }
-    const headers = {
-      ...baseHeaders,
-      Authorization: this.getAuthHeader(),
-      Accept: 'application/json',
-    };
-    const res = await fetch(url, { ...init, headers });
-    if (!res.ok) {
-      throw new Error(`WordPress API error: ${res.status} ${res.statusText}`);
-    }
-    return res.json();
+    throw lastErr;
   }
 
   async fetchAllPostsPagesAndTaxonomiesPaged({
@@ -73,7 +84,7 @@ export class WordPressApi {
       let total = 0;
       while (true) {
         // reuse this.fetch to ensure consistent headers/auth and centralized error handling
-        const data = (await this.fetch(`${endpoint}?per_page=${perPage ?? 100}&page=${page}`)) as any[];
+        const data = (await this.requestWithRetries(`${endpoint}?per_page=${perPage ?? 100}&page=${page}`)) as any[];
         // attempt to read total pages from header via a raw fetch for first page
         if (page === 1) {
           try {

@@ -70,3 +70,28 @@ See `docs/testing/real-wordpress.md` for instructions on testing migration again
 Contributing
 
 This project is a work-in-progress. Please open issues or PRs for improvements.
+
+CLI flags and environment variables
+
+You can run the CLI (`unpress`) with flags or environment variables. Flags accept either kebab-case or camelCase variants.
+
+Examples:
+
+```bash
+# using flags
+pnpm dev:cli -- --wp-url https://example.com --wp-user admin --wp-app-password "app_pw" --download-media
+
+# using environment variables
+export WP_URL=https://example.com
+export WP_USER=admin
+export WP_APP_PASSWORD=app_pw
+pnpm dev:cli -- --generate-site --out-dir ./out
+```
+
+Relevant environment variables:
+- WP_URL - WordPress base URL
+- WP_USER - WordPress username
+- WP_APP_PASSWORD - WordPress application password
+- MEILI_HOST - Meilisearch host (e.g., http://127.0.0.1:7700)
+- MEILI_API_KEY - Meilisearch API key (if required)
+
