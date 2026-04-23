@@ -12,5 +12,6 @@ parent: unpress-erf0
 Document how to use Meilisearch in the README.md.
 
 ## Notes
+
 - README updated with a "How to enable Meilisearch (quick start)" section covering Docker Compose and indexing usage.
 - Documentation emphasizes Meilisearch is optional and provides examples for enabling or skipping search.

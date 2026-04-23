@@ -12,6 +12,7 @@ parent: unpress-9vhq
 Implements unit/integration tests, error handling, accessibility review, and final polish for the migration utility and generated site.
 
 ## Features
+
 - Vitest tests (unit/integration)
 - Real site testing
 - Output validation
@@ -21,6 +22,7 @@ Implements unit/integration tests, error handling, accessibility review, and fin
 - Final code review/documentation
 
 ## Tasks
+
 - [x] Add unit/integration tests with `vitest`
 - [x] Test with real WordPress sites (public demo, local dev, large site)
 - [x] Validate output: all posts/pages, metadata, media, search
@@ -30,6 +32,7 @@ Implements unit/integration tests, error handling, accessibility review, and fin
 - [x] Final code review and documentation
 
 ## Notes
+
 - Added `tests/meilisearch.test.ts` and `tests/convert.post-author.test.ts` and other unit tests.
 - Added `src/logger.ts` for logging and progress indicators.
 - Added skip-link and `.sr-only` styles in generated templates for improved accessibility.

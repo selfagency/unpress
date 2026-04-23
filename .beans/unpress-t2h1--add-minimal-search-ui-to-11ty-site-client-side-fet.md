@@ -12,6 +12,7 @@ parent: unpress-erf0
 Add a minimal search UI to the 11ty site that fetches results from Meilisearch.
 
 ## Notes
+
 - Added `templates/11ty/_includes/search.njk` and `/assets/search.js`.
 - The search UI is disabled if Meilisearch is not configured; it displays a friendly message.
 - To enable, set `window.MEILI_CONFIG = { host: 'http://127.0.0.1:7700', apiKey: '...' }` in a small inline script in your base layout or via environment templating.

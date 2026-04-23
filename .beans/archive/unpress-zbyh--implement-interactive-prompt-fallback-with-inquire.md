@@ -12,6 +12,7 @@ parent: unpress-tokl
 Use `@inquirer/prompts` to prompt for missing CLI arguments interactively.
 
 ## Tasks
+
 - [ ] Install `@inquirer/prompts`
 - [ ] Prompt for missing credentials or options
 - [ ] Validate and sanitize prompt input

@@ -17,6 +17,7 @@ blocking:
 Implements CLI entrypoint, argument parsing, interactive prompts, env var loading, and input validation for the migration utility.
 
 ## Features
+
 - TypeScript project scaffolding
 - CLI with cac
 - Interactive prompts with @inquirer/prompts
@@ -24,6 +25,7 @@ Implements CLI entrypoint, argument parsing, interactive prompts, env var loadin
 - Input validation/sanitization
 
 ## Tasks
+
 - [ ] Scaffold TypeScript project with CLI entrypoint (`bin/cli.ts`)
 - [ ] Set up `package.json` with npx-executable config (bin field, build scripts)
 - [ ] Implement CLI argument parsing with `cac`

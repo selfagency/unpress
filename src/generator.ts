@@ -156,7 +156,7 @@ img { max-width: 100%; height: auto; }
   try {
     const { progress } = await import('./logger');
     progress('templates written');
-  } catch (e) {
+  } catch {
     /* ignore */
   }
 

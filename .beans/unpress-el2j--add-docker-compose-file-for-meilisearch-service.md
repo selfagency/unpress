@@ -12,5 +12,6 @@ parent: unpress-erf0
 Add a Docker Compose file to set up a Meilisearch service for local development.
 
 ## Notes
+
 - Added `docs/meilisearch/docker-compose.yml` which runs Meilisearch for local development.
 - This is optional; users can run Meilisearch natively if they prefer.

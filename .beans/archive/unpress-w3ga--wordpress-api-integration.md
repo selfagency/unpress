@@ -14,6 +14,7 @@ blocking:
 Implements authenticated REST API access to WordPress, fetching posts, pages, and taxonomies, with YAML-based extensibility and resumable export.
 
 ## Features
+
 - node-fetch for HTTP
 - Fetch posts, pages, taxonomies
 - YAML definition files for extensibility
@@ -21,6 +22,7 @@ Implements authenticated REST API access to WordPress, fetching posts, pages, an
 - Resumable state file
 
 ## Tasks
+
 - [x] Use `node-fetch` for authenticated REST API access (app password)
 - [x] Fetch all posts, pages, and taxonomies (categories/tags)
 - [x] Support YAML definition files for posts/pages/taxonomies (default + extensible)

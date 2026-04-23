@@ -12,6 +12,7 @@ parent: unpress-erf0
 Implement a script that indexes all posts and pages into Meilisearch.
 
 ## Notes
+
 - Added `src/meilisearch.ts` providing `indexPostsFromDir(postsDir, { host, apiKey, indexName })`.
 - The script reads markdown frontmatter from post files and uploads batches of documents to Meilisearch via the HTTP API.
 - The indexing is optional and only runs when the user invokes it; it is not required for site generation.

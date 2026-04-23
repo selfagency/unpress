@@ -63,7 +63,7 @@ export async function writePostAndAuthorFiles(post: any, outDir: string) {
     let existing = null;
     try {
       existing = await fs.readFile(authorFile, 'utf8');
-    } catch (e) {
+    } catch {
       /* missing file */
     }
     if (existing !== newAuthorContent) {

@@ -14,17 +14,20 @@ blocking:
 Integrates Meilisearch for local search, adds Docker Compose, indexing script, and a minimal search UI for the 11ty site.
 
 ## Features
+
 - Docker Compose for Meilisearch
 - Indexing script for posts/pages
 - Minimal search UI (client-side fetch)
 - Documentation for Meilisearch usage
 
 ## Tasks
+
 - [x] Add Docker Compose file for Meilisearch service
 - [x] Implement script to index all posts/pages into Meilisearch
 - [x] Add minimal search UI to 11ty site (client-side fetch)
 - [x] Document Meilisearch usage in README.md
 
 ## Notes
+
 - Meilisearch integration is optional. Users can run Meilisearch locally (native) or via Docker Compose (`docs/meilisearch/docker-compose.yml`).
 - Use `src/meilisearch.ts` to index generated markdown files into a Meilisearch index.

@@ -12,6 +12,7 @@ parent: unpress-tokl
 Configure `package.json` for npx execution, including the bin field and build scripts.
 
 ## Tasks
+
 - [ ] Add `bin` field pointing to built CLI
 - [ ] Add build scripts for TypeScript
 - [ ] Add prepublishOnly script for build

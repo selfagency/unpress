@@ -12,5 +12,6 @@ parent: unpress-ammp
 Add a README.md file with usage instructions for the generated 11ty site.
 
 ## Notes
+
 - Added top-level `README.md` describing the generator, authors handling, and optional Meilisearch setup.
 - Mentioned how to run the generator and where templates/styles are generated.

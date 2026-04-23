@@ -89,9 +89,9 @@ pnpm dev:cli -- --generate-site --out-dir ./out
 ```
 
 Relevant environment variables:
-- WP_URL - WordPress base URL
-- WP_USER - WordPress username
-- WP_APP_PASSWORD - WordPress application password
-- MEILI_HOST - Meilisearch host (e.g., http://127.0.0.1:7700)
-- MEILI_API_KEY - Meilisearch API key (if required)
 
+- `WP_URL` - WordPress base URL
+- `WP_USER` - WordPress username
+- `WP_APP_PASSWORD` - WordPress application password
+- `MEILI_HOST` - Meilisearch host (e.g., `http://127.0.0.1:7700`)
+-- `MEILI_API_KEY` - Meilisearch API key (if required)

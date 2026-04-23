@@ -24,7 +24,7 @@
         hits
           .map(h => `<article><h3><a href="/${h.slug}/">${h.title}</a></h3><p>${h.excerpt || ''}</p></article>`)
           .join('') || '<p>No results</p>';
-    } catch (err) {
+    } catch {
       results.innerHTML = '<p>Error querying search service.</p>';
     }
   });

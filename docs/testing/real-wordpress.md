@@ -41,4 +41,3 @@ pnpm dev:cli -- --out-dir ./out --index-meili --meili-host http://127.0.0.1:7700
 
 - For very large sites, run the export against a subset or use pagination to avoid memory/execution limits.
 - Consider running indexing in batches and increasing Meilisearch resources.
-

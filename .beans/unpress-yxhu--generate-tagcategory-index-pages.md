@@ -12,6 +12,7 @@ parent: unpress-ammp
 Generate index pages for tags and categories.
 
 ## Notes
+
 - Added 11ty templates under `templates/11ty/`:
   - `_includes/layouts/base.njk` — accessible base layout
   - `tags.njk` — tag listing template with pagination support

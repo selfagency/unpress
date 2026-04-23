@@ -12,6 +12,7 @@ parent: unpress-tokl
 Implement robust validation and sanitization for all user input (CLI, prompts, env).
 
 ## Tasks
+
 - [ ] Validate URLs, usernames, passwords, and paths
 - [ ] Sanitize file paths to prevent traversal
 - [ ] Handle invalid input gracefully

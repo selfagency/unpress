@@ -4,7 +4,6 @@ import path from 'path';
 
 vi.mock('node-fetch');
 import fetch from 'node-fetch';
-const { Response } = vi.importMock('node-fetch');
 
 import { indexPostsFromDir } from '../src/meilisearch';
 

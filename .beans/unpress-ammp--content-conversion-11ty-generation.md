@@ -14,6 +14,7 @@ blocking:
 Converts WordPress content to Markdown with metadata, downloads media, and generates a complete 11ty project structure.
 
 ## Features
+
 - HTML→Markdown conversion (turndown)
 - Metadata mapping to frontmatter
 - Optional media download/relink
@@ -22,6 +23,7 @@ Converts WordPress content to Markdown with metadata, downloads media, and gener
 - Default layouts/templates
 
 ## Tasks
+
 - [x] Use `turndown` for HTML→Markdown conversion
 - [x] Map all metadata to Markdown frontmatter (YAML/JSON)
 - [x] Optionally download referenced media (if user specifies)
@@ -33,5 +35,6 @@ Converts WordPress content to Markdown with metadata, downloads media, and gener
 - [x] Add README.md with usage instructions
 
 ## Notes
+
 - Migration now emits per-author files under `site/content/authors/` and the post frontmatter includes an `author` object when available.
 - Templates assume `collections.authors` and `author` data on posts; generator seeds a sample author file.
