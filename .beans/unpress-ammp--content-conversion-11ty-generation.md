@@ -1,11 +1,11 @@
 ---
 # unpress-ammp
-title: "Content conversion & 11ty generation"
-status: done
+title: Content conversion & 11ty generation
+status: completed
 type: epic
 priority: high
 created_at: 2026-04-23T02:41:59Z
-updated_at: 2026-04-23T05:35:00Z
+updated_at: 2026-04-23T21:34:20Z
 parent: unpress-9vhq
 blocking:
     - unpress-erf0

@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
+import fetch from 'node-fetch';
 import path from 'path';
 import YAML from 'yaml';
-import fetch from 'node-fetch';
-import { info, warn, error, progress } from './logger';
+import { error, progress, warn } from './logger';
 
 interface MeiliConfig {
   host: string; // e.g. http://127.0.0.1:7700
@@ -44,7 +44,7 @@ export async function indexPostsFromDir(postsDir: string, cfg: MeiliConfig) {
 
   if (!cfg.host) throw new Error('Meilisearch host is required');
   const index = cfg.indexName || 'posts';
-  const headers: Record<string,string> = { 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (cfg.apiKey) headers['X-Meili-API-Key'] = cfg.apiKey;
 
   // create index (safe to call)
@@ -57,10 +57,14 @@ export async function indexPostsFromDir(postsDir: string, cfg: MeiliConfig) {
 
   // push documents in batches
   const batchSize = 1000;
-  for (let i=0;i<docs.length;i+=batchSize) {
-    const batch = docs.slice(i,i+batchSize);
-    progress(`uploading documents ${i}-${i+batch.length}`, (i+batch.length)/docs.length);
-    const res = await fetch(`${cfg.host}/indexes/${index}/documents`, { method: 'POST', headers, body: JSON.stringify(batch) });
+  for (let i = 0; i < docs.length; i += batchSize) {
+    const batch = docs.slice(i, i + batchSize);
+    progress(`uploading documents ${i}-${i + batch.length}`, (i + batch.length) / docs.length);
+    const res = await fetch(`${cfg.host}/indexes/${index}/documents`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(batch),
+    });
     if (!res.ok) {
       const text = await res.text();
       error('Meilisearch indexing failed:', res.status, text);

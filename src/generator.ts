@@ -161,11 +161,7 @@ img { max-width: 100%; height: auto; }
   }
 
   return {
-    files: [
-      '.eleventy.js',
-      'site/_includes/layouts/base.njk',
-      'site/index.md',
-    ],
+    files: ['.eleventy.js', 'site/_includes/layouts/base.njk', 'site/index.md'],
   };
 }
 

@@ -1,12 +1,13 @@
 ---
 # unpress-9vhq
 title: WordPress to 11ty Migration Utility
-status: todo
+status: completed
 type: milestone
+priority: normal
 created_at: 2026-04-23T02:41:38Z
-updated_at: 2026-04-23T02:41:38Z
-id: unpress-9vhq
+updated_at: 2026-04-23T21:34:20Z
 ---
+
 Implements a TypeScript npx utility to migrate WordPress posts/pages/taxonomies to 11ty static site with Meilisearch. See full plan for requirements, constraints, and deliverables.
 
 ## Goals

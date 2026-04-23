@@ -7,20 +7,7 @@ import YAML from 'yaml';
  */
 export function metadataToFrontmatter(meta: Record<string, any>): string {
   // Pick common fields for demo; extend as needed
-  const {
-    id,
-    date,
-    modified,
-    slug,
-    title,
-    excerpt,
-    status,
-    type,
-    author,
-    categories,
-    tags,
-    ...rest
-  } = meta;
+  const { id, date, modified, slug, title, excerpt, status, type, author, categories, tags, ...rest } = meta;
   const frontmatter: Record<string, any> = {
     id,
     date,
@@ -36,8 +23,6 @@ export function metadataToFrontmatter(meta: Record<string, any>): string {
     ...rest,
   };
   // Remove undefined/null
-  Object.keys(frontmatter).forEach(
-    k => (frontmatter[k] == null || frontmatter[k] === '') && delete frontmatter[k]
-  );
+  Object.keys(frontmatter).forEach(k => (frontmatter[k] == null || frontmatter[k] === '') && delete frontmatter[k]);
   return `---\n${YAML.stringify(frontmatter)}---`;
 }

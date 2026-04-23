@@ -12,7 +12,7 @@ export function error(msg: string, ...args: any[]) {
 
 export function progress(step: string, pct?: number) {
   if (pct != null) {
-    console.log(`[progress] ${step} (${Math.round(pct*100)}%)`);
+    console.log(`[progress] ${step} (${Math.round(pct * 100)}%)`);
   } else {
     console.log(`[progress] ${step}`);
   }

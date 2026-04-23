@@ -1,6 +1,6 @@
-import TurndownService from 'turndown';
 import fs from 'fs-extra';
 import path from 'path';
+import TurndownService from 'turndown';
 
 /**
  * Converts HTML content to Markdown using turndown.
@@ -35,14 +35,12 @@ export async function writePostAndAuthorFiles(post: any, outDir: string) {
   const markdown = htmlToMarkdown(post.content || post.excerpt || '');
 
   // Frontmatter — include common metadata
-  const frontmatterLines = [
-    '---',
-    `title: "${(post.title || '').replace(/"/g, '\"') }"`,
-  ];
+  const frontmatterLines = ['---', `title: "${(post.title || '').replace(/"/g, '\"')}"`];
   if (post.date) frontmatterLines.push(`date: "${new Date(post.date).toISOString()}"`);
   if (post.slug) frontmatterLines.push(`slug: "${post.slug}"`);
   if (post.tags && Array.isArray(post.tags)) frontmatterLines.push(`tags: ${JSON.stringify(post.tags)}`);
-  if (post.categories && Array.isArray(post.categories)) frontmatterLines.push(`categories: ${JSON.stringify(post.categories)}`);
+  if (post.categories && Array.isArray(post.categories))
+    frontmatterLines.push(`categories: ${JSON.stringify(post.categories)}`);
   if (post.custom && typeof post.custom === 'object') frontmatterLines.push(`custom: ${JSON.stringify(post.custom)}`);
 
   // Author handling: attach author object in frontmatter and emit author file
@@ -63,7 +61,11 @@ export async function writePostAndAuthorFiles(post: any, outDir: string) {
 
     // Only overwrite if content differs to avoid stomping manual edits
     let existing = null;
-    try { existing = await fs.readFile(authorFile, 'utf8'); } catch (e) { /* missing file */ }
+    try {
+      existing = await fs.readFile(authorFile, 'utf8');
+    } catch (e) {
+      /* missing file */
+    }
     const newAuthorContent = authorFront.join('\n');
     if (existing !== newAuthorContent) {
       await fs.writeFile(authorFile, newAuthorContent, 'utf8');

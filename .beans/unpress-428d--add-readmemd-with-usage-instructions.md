@@ -1,13 +1,14 @@
 ---
 # unpress-428d
-title: "Add README.md with usage instructions"
-status: done
+title: Add README.md with usage instructions
+status: completed
 type: task
+priority: normal
 created_at: 2026-04-23T02:44:41Z
-updated_at: 2026-04-23T05:12:00Z
+updated_at: 2026-04-23T21:34:21Z
 parent: unpress-ammp
-id: unpress-428d
 ---
+
 Add a README.md file with usage instructions for the generated 11ty site.
 
 ## Notes

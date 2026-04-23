@@ -1,12 +1,12 @@
 ---
 # unpress-e4ev
-title: "Copy/generate default 11ty layouts/templates"
-status: done
+title: Copy/generate default 11ty layouts/templates
+status: completed
 type: task
+priority: normal
 created_at: 2026-04-23T02:44:41Z
-updated_at: 2026-04-23T05:10:00Z
+updated_at: 2026-04-23T21:34:21Z
 parent: unpress-ammp
-id: unpress-e4ev
 ---
 
 Copy or generate default 11ty layouts and templates.

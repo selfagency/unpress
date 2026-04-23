@@ -1,12 +1,12 @@
 ---
 # unpress-yxhu
-title: "Generate tag/category index pages"
-status: done
+title: Generate tag/category index pages
+status: completed
 type: task
+priority: normal
 created_at: 2026-04-23T02:44:41Z
-updated_at: 2026-04-23T04:55:00Z
+updated_at: 2026-04-23T21:34:20Z
 parent: unpress-ammp
-id: unpress-yxhu
 ---
 
 Generate index pages for tags and categories.

@@ -1,11 +1,11 @@
 ---
 # unpress-rv8s
-title: "Write all posts/pages as Markdown files with correct frontmatter"
-status: done
+title: Write all posts/pages as Markdown files with correct frontmatter
+status: completed
 type: task
 priority: normal
 created_at: 2026-04-23T02:44:41Z
-updated_at: 2026-04-23T04:32:00Z
+updated_at: 2026-04-23T21:34:21Z
 parent: unpress-ammp
 ---
 
