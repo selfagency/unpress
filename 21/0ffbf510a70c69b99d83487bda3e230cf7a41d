@@ -1,0 +1,20 @@
+README.md
+  h_5cf1e2c1161853 61-69
+docs/testing/real-wordpress.md
+  h_5cf1e2c1161853 1-44
+scripts/platform-check.js
+  h_5cf1e2c1161853 1-9
+src/generator.ts
+  h_5cf1e2c1161853 27,144-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "210ffbf510a70c69b99d83487bda3e230cf7a41d",
+  "prompts": {},
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
