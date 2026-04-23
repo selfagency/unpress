@@ -1,4 +1,5 @@
 export function info(msg: string, ...args: any[]) {
+  if (process.env.UNPRESS_SILENT === 'true') return;
   console.log('[info]', msg, ...args);
 }
 

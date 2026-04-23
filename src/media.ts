@@ -1,6 +1,9 @@
 import fs from 'fs-extra';
 import fetch from 'node-fetch';
 import path from 'path';
+import { pipeline } from 'stream';
+import { promisify } from 'util';
+const streamPipeline = promisify(pipeline);
 
 /**
  * Download a file from a URL to a local path.
@@ -12,11 +15,8 @@ export async function downloadFile(url: string, dest: string): Promise<void> {
   if (!res.ok) throw new Error(`Failed to download: ${url}`);
   await fs.ensureDir(path.dirname(dest));
   const fileStream = fs.createWriteStream(dest);
-  await new Promise((resolve, reject) => {
-    res.body.pipe(fileStream);
-    res.body.on('error', reject);
-    fileStream.on('finish', resolve);
-  });
+  // Use pipeline to ensure proper cleanup on errors
+  await streamPipeline(res.body as any, fileStream);
 }
 
 /**

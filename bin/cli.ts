@@ -17,6 +17,7 @@ cli.option('--index-meili', 'After generation, index generated posts into Meilis
 cli.option('--meili-host <url>', 'Meilisearch host (e.g., http://127.0.0.1:7700)');
 cli.option('--meili-api-key <key>', 'Meilisearch API key');
 cli.option('--meili-index <name>', 'Meilisearch index name');
+cli.option('--dry-run', 'Validate configuration and exit without performing network or file operations');
 
 cli.help();
 
@@ -30,8 +31,11 @@ cli.command('', async flags => {
       downloadMedia: typeof flags.downloadMedia === 'boolean' ? flags.downloadMedia : flags['download-media'] || false,
     };
     const config = await loadConfig(normalized);
-    // Placeholder: print config for now
-    console.log('Loaded config:', config);
+    // If dry-run requested, validate and exit
+    if (flags['dry-run']) {
+      console.log('Dry-run: validated config:', config);
+      process.exit(0);
+    }
 
     // Optionally generate site first
     const outDir = flags['out-dir'] || process.cwd();
