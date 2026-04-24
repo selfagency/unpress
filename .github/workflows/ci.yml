@@ -187,6 +187,9 @@ jobs:
       - name: Wait for server
         run: npx wait-on http://127.0.0.1:8080 -t 30000
 
+      - name: Install Chrome for Pa11y
+        run: npx puppeteer browsers install chrome
+
       - name: Run pa11y scan
         run: npx pa11y http://127.0.0.1:8080
 
