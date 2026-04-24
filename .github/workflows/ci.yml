@@ -172,8 +172,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate site (CLI)
-        run: pnpm run dev:cli -- --generate-site --out-dir ./out
+      - name: Generate site
+        run: pnpm exec tsx -e "import gen from './src/generator.ts'; await gen('./out')"
 
       - name: Build 11ty site
         run: |
@@ -215,7 +215,7 @@ jobs:
 
       - name: Generate and build site
         run: |
-          pnpm run dev:cli -- --generate-site --out-dir ./out
+          pnpm exec tsx -e "import gen from './src/generator.ts'; await gen('./out')"
           test -d out || (echo "Expected ./out to exist after generation" && ls -la && exit 1)
           npx @11ty/eleventy --config=./out/.eleventy.js --input=./out/site --output=./out/dist
 
