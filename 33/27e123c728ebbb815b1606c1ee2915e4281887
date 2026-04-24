@@ -1,0 +1,45 @@
+docs/guide/customization.md
+  44969bbb529e9b3b 60,72,98,111,125,195,234,242,250,256,295,348,365,375,397,464,494,516,534,548,560,600,631
+docs/wasabi-minio-integration.md
+  44969bbb529e9b3b 7,34,40,48
+.rumdl.toml
+  c6ba6e3a200eee4e 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "3327e123c728ebbb815b1606c1ee2915e4281887",
+  "prompts": {
+    "44969bbb529e9b3b": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8d9b650c-6320-46e4-82b0-cf744646ac87",
+        "model": "z/glm-5.1"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 28,
+      "total_deletions": 4,
+      "accepted_lines": 56,
+      "overriden_lines": 0
+    },
+    "c6ba6e3a200eee4e": {
+      "agent_id": {
+        "tool": "github-copilot-tab",
+        "id": "ai_tab-1777067137006",
+        "model": "default"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
