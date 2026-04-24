@@ -1,20 +1,19 @@
 # Quick Start
 
-Get your WordPress site migrated to 11ty in under 5 minutes.
+Get your WordPress site migrated to 11ty in under 5 minutes using npx.
 
 ## Prerequisites
 
 Before you start, make sure you have:
 
 - **Node.js 18+** installed ([download here](https://nodejs.org/))
-- **pnpm** package manager ([install here](https://pnpm.io/installation))
 - **WordPress site** with Application Password created
 
-::: tip What is an Application Password?
-WordPress Application Passwords are a secure way to connect tools like Unpress to your site without using your main login password. They can be revoked anytime.
+::: tip No installation required!
+Unpress runs directly with `npx`—no installation needed. Just have Node.js installed and you're ready to go!
 :::
 
-## Step 1: Create a WordPress Application Password
+## Step 1: Create WordPress Application Password
 
 1. Log in to your WordPress admin dashboard
 2. Go to **Users → Profile** (or click your username in top right)
@@ -26,47 +25,49 @@ WordPress Application Passwords are a secure way to connect tools like Unpress t
 Never share your application password publicly or commit it to Git. Store it in environment variables or a secure config file.
 :::
 
-## Step 2: Install Unpress
+## Step 2: Create a `.env` file
 
-Choose how you want to install Unpress:
+Create a `.env` file in your current directory with your WordPress credentials:
 
-### Option A: Install Globally (Recommended)
-
-```bash
-pnpm install -g @selfagency/unpress
+```dotenv
+WP_URL=https://your-wordpress-site.com
+WP_USER=your-username
+WP_APP_PASSWORD=your-20-char-app-password
 ```
 
-This lets you run `unpress` from anywhere on your computer.
+**Replace with your own values:**
 
-### Option B: Install Locally
+- `WP_URL`: Your WordPress site URL (without `/wp-admin`)
+- `WP_USER`: Your WordPress username
+- `WP_APP_PASSWORD`: The application password you created in Step 1
+
+::: tip What is `.env`?
+The `.env` file stores configuration and secrets. Unpress automatically reads this file from your current working directory, so you usually do not need to pass credentials as command-line flags.
+:::
+
+### Managing Your .env File
+
+Keep your `.env` file secure:
+
+- **Never commit to Git** - Add `.env` to your `.gitignore` file
+- **Keep it private** - Never share your `.env` file publicly
+- **Update as needed** - Edit `.env` file when credentials change
+- **Delete when done** - Remove `.env` file after migration (optional)
+
+## Step 3: Run migration with `pnpx` or `npx`
 
 ```bash
-git clone https://github.com/selfagency/unpress.git
-cd unpress
-pnpm install
-pnpm build
+pnpx @selfagency/unpress --generate-site
+# or
+npx -y @selfagency/unpress --generate-site
 ```
 
-Run Unpress using `pnpm dev:cli -- <flags>` instead of `unpress <flags>`.
-
-## Step 3: Run Your Migration
-
-```bash
-unpress \
-  --wp-url https://your-wordpress-site.com \
-  --wp-user your-username \
-  --wp-app-password "your-20-char-app-password" \
-  --generate-site
-```
-
-Replace the values with your own:
-- `--wp-url`: Your WordPress site URL (without `/wp-admin`)
-- `--wp-user`: Your WordPress username
-- `--wp-app-password`: The application password you created in Step 1
+Because Unpress reads `.env` automatically, you only need flags for overrides like `--download-media`, `--out-dir`, or `--source xml`.
 
 **What happens next?**
 
 Unpress will:
+
 1. Connect to your WordPress site
 2. Fetch all posts, pages, categories, and tags
 3. Download media files (if using `--download-media`)
@@ -74,7 +75,8 @@ Unpress will:
 5. Generate a complete 11ty project in a `site/` folder
 
 **Watch for progress messages:**
-```
+
+```text
 Fetching posts and pages... ✓
 Converting HTML to Markdown... ✓
 Generating 11ty project... ✓
@@ -90,18 +92,24 @@ ls -la site/
 ```
 
 You should see:
-```
+
+```text
 site/
-├── content/
-│   ├── authors/      # Author files (if multi-author blog)
-│   ├── posts/        # Your blog posts as Markdown
-│   └── tags/         # Tag and category index pages
-├── _includes/
-│   └── layouts/
-│       └── base.njk # Base HTML template
+├── .eleventy.js          # 11ty configuration
 ├── assets/
-│   └── styles.css  # Basic styles with dark mode
-└── index.md           # Home page
+│   └── styles.css        # CSS styles (dark mode support)
+└── site/
+    ├── index.md           # Home page
+    ├── content/
+    │   ├── authors/       # Author files (if multi-author blog)
+    │   └── posts/         # Your blog posts as Markdown
+    └── _includes/
+        └── layouts/
+            ├── base.njk   # Base HTML template
+            ├── tags.njk   # Tags index
+            ├── categories.njk  # Categories index
+            ├── authors.njk     # Authors index
+            └── author.njk      # Per-author page
 ```
 
 Open `site/index.md` in a text editor—you'll see your home page content in Markdown with YAML frontmatter.
@@ -111,17 +119,11 @@ Open `site/index.md` in a text editor—you'll see your home page content in Mar
 If you want to preview your site before deploying:
 
 ```bash
-# Install 11ty globally
-pnpm install -g @11ty/eleventy
-
-# Navigate to your site folder
 cd site
-
-# Build and serve locally
-eleventy --serve
+npx @11ty/eleventy --serve
 ```
 
-Visit `http://localhost:8080` to see your new site!
+The 11ty config uses `input: 'site'` and `output: 'dist'`, so the built output will be in `site/dist/`.
 
 ## Step 6: Deploy Your Site
 
@@ -154,6 +156,7 @@ See the [Deployment Guide](./deployment.md) for detailed instructions.
 **Problem:** Unpress can't connect to WordPress.
 
 **Solution:**
+
 - Double-check your username matches your WordPress login (not email)
 - Verify your application password was copied correctly
 - Make sure your WordPress site URL is correct (try in a browser)
@@ -164,6 +167,7 @@ See the [Deployment Guide](./deployment.md) for detailed instructions.
 **Problem:** Migration finishes but `site/content/posts/` is empty.
 
 **Solution:**
+
 - Check if your WordPress posts are "Published" (not "Draft" or "Private")
 - Ensure your WordPress REST API is enabled (it is by default)
 - Try visiting `https://your-site.com/wp-json/wp/v2/posts` in a browser—you should see JSON data
@@ -173,13 +177,14 @@ See the [Deployment Guide](./deployment.md) for detailed instructions.
 **Problem:** Images in your posts show broken links.
 
 **Solution:**
+
 - Add `--download-media` flag to your command
 - If using reupload mode, check your S3/SFTP credentials in config file
 - Verify media URLs in your original WordPress are accessible
 
 ## Next Steps
 
-- **[Installation Guide](./installation.md)** - Detailed installation options
+- **[Installation Guide](./installation.md)** - Running Unpress without installing it globally
 - **[WordPress API Migration](./migration-api.md)** - Deep dive into API-based migration
 - **[XML Export Migration](./migration-xml.md)** - Use WordPress export files instead
 - **[Media Handling](./media.md)** - Configure media download or reupload

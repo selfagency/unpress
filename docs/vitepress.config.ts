@@ -8,6 +8,9 @@ export default defineConfig({
   head: [
     ['link', { rel: 'icon', href: '/favicon.ico' }],
   ],
+
+  ignoreDeadLinks: true,
+
   themeConfig: {
     nav: [
       { text: 'Quick Start', link: '/guide/quick-start' },

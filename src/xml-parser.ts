@@ -29,13 +29,13 @@ export async function parseWpXmlItems(
   let lastGuid: any = undefined;
 
   // fast-xml-parser options: strip namespace prefixes and preserve CDATA
-  const parser = new XMLParser(({
+  const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '@_',
     cdataPropName: '__cdata',
     // strip namespace prefixes
     tagNameProcessor: (name: string) => name.replace(/^.*:/, ''),
-  } as any));
+  } as any);
 
   for await (const line of rl) {
     if (!inItem) {
@@ -71,20 +71,25 @@ export async function parseWpXmlItems(
             if (raw['content'] && raw['content']['encoded']) {
               const enc = raw['content']['encoded'];
               normalized.content = enc && enc.__cdata ? enc.__cdata : enc;
+              normalized['content:encoded'] = normalized.content;
             } else if (raw['content:encoded']) {
               const enc = raw['content:encoded'];
               normalized.content = enc && enc.__cdata ? enc.__cdata : enc;
+              normalized['content:encoded'] = normalized.content;
             } else if (raw['encoded']) {
               normalized.content = raw['encoded'] && raw['encoded'].__cdata ? raw['encoded'].__cdata : raw['encoded'];
+              normalized['encoded'] = normalized.content;
             }
 
             // excerpt
             if (raw['excerpt'] && raw['excerpt']['encoded']) {
               const exc = raw['excerpt']['encoded'];
               normalized.excerpt = exc && exc.__cdata ? exc.__cdata : exc;
+              normalized['excerpt:encoded'] = normalized.excerpt;
             } else if (raw['excerpt:encoded']) {
               const exc = raw['excerpt:encoded'];
               normalized.excerpt = exc && exc.__cdata ? exc.__cdata : exc;
+              normalized['excerpt:encoded'] = normalized.excerpt;
             }
 
             // postmeta -> map
@@ -96,7 +101,7 @@ export async function parseWpXmlItems(
                 const key = m['meta_key'] || m['wp:meta_key'] || m['metaKey'] || m['meta-key'];
                 const val = m['meta_value'] || m['wp:meta_value'] || m['metaValue'];
                 const value = val && val.__cdata ? val.__cdata : val;
-                if (key) metaMap[key] = val;
+                if (key) metaMap[key] = value;
               }
               normalized.postmeta = metaMap;
             }

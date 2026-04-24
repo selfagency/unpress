@@ -7,12 +7,14 @@ Migrate your WordPress content directly using the WordPress REST API. This is th
 When you migrate via the WordPress REST API, Unpress connects directly to your WordPress site and fetches all content (posts, pages, categories, tags, authors) programmatically.
 
 **Advantages:**
+
 - Fast and direct—no need to export XML files
 - Real-time data—gets the latest published content
 - Handles large sites with pagination
 - Supports all WordPress versions with REST API (WordPress 4.7+)
 
 **Disadvantages:**
+
 - Requires live WordPress site with Application Password
 - Can be rate-limited by WordPress server
 - Depends on site uptime during migration
@@ -31,7 +33,7 @@ Before migrating, you need an Application Password to connect Unpress to your Wo
 
 WordPress will generate a 20-character password like:
 
-```
+```text
 abcd efgh ijkl mnop qrst
 ```
 
@@ -47,37 +49,39 @@ If you need to revoke or recreate your Application Password:
 4. Create a new one if needed
 
 ::: tip Security Best Practices
+
 - Use unique Application Passwords for each tool
 - Revoke passwords when migration is complete
 - Never commit passwords to Git or share publicly
 - Store passwords in environment variables or secure config files
+
 :::
 
 ## Step 2: Run API Migration
 
 Once you have your Application Password, run the migration:
 
-```bash
-unpress \
-  --wp-url https://your-wordpress-site.com \
-  --wp-user your-username \
-  --wp-app-password "your-20-char-app-password" \
-  --generate-site
+```dotenv
+WP_URL=https://your-wordpress-site.com
+WP_USER=your-username
+WP_APP_PASSWORD=your-20-char-app-password
 ```
 
-### Required Flags
+```bash
+pnpx @selfagency/unpress --generate-site
+# or
+npx -y @selfagency/unpress --generate-site
+```
 
-- `--wp-url <url>` - Your WordPress site URL
-  - Must include `https://` or `http://`
-  - Example: `https://myblog.com` (not `https://myblog.com/wp-admin`)
+Unpress automatically reads `.env` from the directory where you run the command.
 
-- `--wp-user <user>` - Your WordPress username
-  - This is your login username (not email address)
-  - Example: `admin` or `john-doe`
+### Core values
 
-- `--wp-app-password <pw>` - Application Password you created
-  - Must be wrapped in quotes if it contains spaces
-  - Example: `"abcd efgh ijkl mnop qrst"`
+These usually live in `.env`:
+
+- `WP_URL` - Your WordPress site URL
+- `WP_USER` - Your WordPress username
+- `WP_APP_PASSWORD` - Your WordPress Application Password
 
 ### Optional Flags
 
@@ -94,7 +98,7 @@ Unpress migrates all public content from your WordPress site:
 ### Content Types
 
 | Content | Migrated | Location in Output |
-|----------|-----------|----------------------|
+| ------- | -------- | ------------------ |
 | **Posts** | ✅ All published posts | `site/content/posts/` |
 | **Pages** | ✅ All published pages | `site/content/` (root level files) |
 | **Categories** | ✅ All categories with hierarchy | Metadata in post frontmatter + category index |
@@ -104,6 +108,7 @@ Unpress migrates all public content from your WordPress site:
 ### Post Data
 
 Each post includes:
+
 - **Title** - Post title (rendered)
 - **Content** - Post body converted to Markdown
 - **Excerpt** - Post excerpt (if available)
@@ -125,12 +130,7 @@ By default, Unpress does **not** download media. To handle media, choose a mode:
 #### Mode 1: Download Locally
 
 ```bash
-unpress \
-  --wp-url https://your-site.com \
-  --wp-user admin \
-  --wp-app-password "abcd efgh ijkl mnop qrst" \
-  --download-media \
-  --generate-site
+pnpx @selfagency/unpress --download-media --generate-site
 ```
 
 Media files are saved to `site/media/` and URLs in Markdown are updated automatically.
@@ -166,7 +166,7 @@ export AWS_REGION=us-east-1
 Run migration:
 
 ```bash
-unpress --config unpress.yml --generate-site
+pnpx @selfagency/unpress --config unpress.yml --generate-site
 ```
 
 #### Mode 3: Leave URLs (Archival)
@@ -190,7 +190,7 @@ ls -la site/
 
 You should see:
 
-```
+```text
 site/
 ├── content/
 │   ├── posts/
@@ -237,7 +237,7 @@ tags:
   - food
 ---
 
-# My First Blog Post
+## My First Blog Post
 
 This is the content of my blog post, converted from WordPress HTML to clean Markdown...
 
@@ -253,12 +253,7 @@ WordPress servers may rate-limit API requests to prevent overload. Unpress provi
 Limit number of simultaneous requests:
 
 ```bash
-unpress \
-  --wp-url https://your-site.com \
-  --wp-user admin \
-  --wp-app-password "abcd efgh ijkl mnop qrst" \
-  --concurrency 1 \
-  --generate-site
+pnpx @selfagency/unpress --concurrency 1 --generate-site
 ```
 
 - **Default**: 2 concurrent requests
@@ -270,13 +265,7 @@ unpress \
 Control request rate per second:
 
 ```bash
-unpress \
-  --wp-url https://your-site.com \
-  --wp-user admin \
-  --wp-app-password "abcd efgh ijkl mnop qrst" \
-  --intervalCap 5 \
-  --interval 1000 \
-  --generate-site
+pnpx @selfagency/unpress --intervalCap 5 --interval 1000 --generate-site
 ```
 
 - `--intervalCap 5`: Max 5 requests per interval
@@ -301,6 +290,7 @@ processing:
 **Cause:** Wrong credentials or authentication method.
 
 **Solutions:**
+
 - Double-check username matches your WordPress login (not email)
 - Verify Application Password was copied correctly (20 characters)
 - Check if your site uses HTTPS—use `https://` in URL
@@ -311,6 +301,7 @@ processing:
 **Cause:** Permission denied or CORS issues.
 
 **Solutions:**
+
 - Ensure Application Password has correct permissions (it should by default)
 - Check if your WordPress installation blocks REST API (some security plugins do)
 - Try accessing `https://your-site.com/wp-json/wp/v2/posts` in a browser
@@ -321,6 +312,7 @@ processing:
 **Cause:** WordPress server rate limiting.
 
 **Solutions:**
+
 - Reduce concurrency: `--concurrency 1`
 - Add rate limiting: `--intervalCap 2 --interval 1000`
 - Wait a few minutes and run migration again
@@ -331,6 +323,7 @@ processing:
 **Cause:** No published posts or wrong query.
 
 **Solutions:**
+
 - Verify posts are "Published" status (not "Draft" or "Private")
 - Check if custom post types exist—configure `types.yml` to include them
 - Test API directly in browser: `https://your-site.com/wp-json/wp/v2/posts`
@@ -341,6 +334,7 @@ processing:
 **Cause:** Server timeout or network issues.
 
 **Solutions:**
+
 - Reduce concurrency and increase rate limiting
 - Check your internet connection
 - Try migrating during off-peak hours
@@ -351,9 +345,10 @@ processing:
 **Cause:** Processing too much data at once.
 
 **Solutions:**
+
 - Reduce concurrency to process fewer items simultaneously
 - Use pagination to fetch smaller batches
-- Increase Node.js memory limit: `NODE_OPTIONS=--max-old-space-size=4096 unpress ...`
+- Increase Node.js memory limit: `NODE_OPTIONS=--max-old-space-size=4096 pnpx @selfagency/unpress ...`
 
 ## Next Steps
 
@@ -367,7 +362,7 @@ After successful API migration:
 ## Comparison: API vs XML Export
 
 | Feature | API Migration | XML Export |
-|---------|---------------|-------------|
+| ------- | ------------- | ---------- |
 | **Speed** | Fast, real-time | Slower, requires export first |
 | **Connection** | Requires live site | Works offline with export file |
 | **Content** | All published content | All content (including drafts) |
@@ -376,12 +371,14 @@ After successful API migration:
 | **Best For** | Active sites, small-to-medium sites | Large sites, archival, offline work |
 
 **When to use API migration:**
+
 - Your WordPress site is live and accessible
 - You have fewer than 5,000 posts
 - You want the latest published content
 - You don't want to export XML manually
 
 **When to use XML export:**
+
 - Your WordPress site is large (5,000+ posts)
 - You want to migrate offline
 - You need to include drafts or private posts

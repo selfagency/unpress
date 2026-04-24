@@ -15,21 +15,33 @@ You can immediately deploy this project or customize it further.
 
 ## Project Structure
 
+When you run Unpress with `--out-dir ./out`, the generated layout is:
+
+```text
+out/
+├── .eleventy.js            # 11ty configuration (input: site, output: dist)
+├── assets/
+│   └── styles.css          # CSS styles (dark mode support)
+└── site/
+    ├── index.md             # Home page
+    ├── content/
+    │   ├── posts/           # Blog posts as Markdown
+    │   ├── authors/         # Author information files
+    │   ├── tags/            # Tag index pages
+    │   └── categories/      # Category index pages
+    ├── _includes/
+    │   └── layouts/
+    │       ├── base.njk     # Base HTML template
+    │       ├── tags.njk     # Tags index template
+    │       ├── categories.njk # Categories index template
+    │       ├── authors.njk  # Authors index template
+    │       └── author.njk   # Per-author paginated template
+    └── content/
+        └── authors/
+            └── site-author.md # Sample author file
 ```
-site/
-├── .eleventy.js          # 11ty configuration
-├── index.md               # Home page
-├── content/
-│   ├── posts/            # Blog posts as Markdown
-│   ├── authors/          # Author information files
-│   ├── tags/             # Tag index pages
-│   └── categories/       # Category index pages
-├── _includes/
-│   └── layouts/
-│       └── base.njk     # Base HTML template
-└── assets/
-    └── styles.css        # CSS styles (dark mode support)
-```
+
+The `.eleventy.js` config sets `input: 'site'` and `output: 'dist'`, so the 11ty build output goes to `out/dist/`.
 
 ### Detailed Breakdown
 
@@ -44,20 +56,18 @@ site/
 - **Markdown plugins** - Customize markdown rendering
 
 **Default settings:**
+
 ```javascript
 module.exports = function(eleventyConfig) {
+  eleventyConfig.addPassthroughCopy('assets');
   return {
-    dir: {
-      input: 'content',
-      output: '_site',
-      includes: '../_includes',
-    },
-    templateFormats: ['md', 'njk'],
+    dir: { input: 'site', includes: '_includes', data: '_data', output: 'dist' },
   };
 };
 ```
 
 You can modify this to:
+
 - Add custom Markdown plugins (syntax highlighting, etc.)
 - Change input/output directories
 - Add 11ty plugins
@@ -68,6 +78,7 @@ You can modify this to:
 Your WordPress site's home page content in Markdown format.
 
 **Example:**
+
 ```markdown
 ---
 title: "My WordPress Site"
@@ -87,7 +98,8 @@ Unpress copies your home page content from WordPress. Customize this file to cha
 All your WordPress blog posts as Markdown files with YAML frontmatter.
 
 **File naming:**
-```
+
+```text
 2024-01-15-my-first-post.md
 2024-01-16-second-post.md
 2024-02-20-third-post.md
@@ -96,6 +108,7 @@ All your WordPress blog posts as Markdown files with YAML frontmatter.
 Naming format: `YYYY-MM-DD-slug.md`
 
 **Post file structure:**
+
 ```markdown
 ---
 title: "My First Blog Post"
@@ -114,7 +127,7 @@ tags:
   - food
 ---
 
-# My First Blog Post
+## My First Blog Post
 
 This is the content of my blog post, converted from WordPress HTML to clean Markdown...
 
@@ -124,24 +137,22 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit...
 ```
 
 **Frontmatter fields:**
+
 - `title` - Post title
 - `date` - Publication date (ISO 8601 format)
-- `modified` - Last modification date
 - `slug` - URL-friendly post name
-- `status` - Post status (publish, draft, private)
-- `type` - Post type (post, page, custom type)
-- `author` - Author information
-- `categories` - Category list
 - `tags` - Tag list
-- `featured_image` - Featured image URL (if set)
-- `custom_fields` - Any WordPress custom fields
+- `categories` - Category list
+- `author` - Author object with `name` and `slug` (plus optional `bio`, `image`, `website`)
+- `custom` - Any WordPress custom fields
 
 #### `content/authors/` - Author Files
 
 Author information files (created only for multi-author WordPress sites).
 
 **File naming:**
-```
+
+```text
 admin.md
 jane-doe.md
 john-smith.md
@@ -150,26 +161,27 @@ john-smith.md
 Naming format: `username.md` (WordPress username)
 
 **Author file structure:**
+
 ```markdown
 ---
 name: "Jane Doe"
-email: jane@example.com
+slug: jane-doe
 bio: "Jane is a travel writer and photographer based in New York."
-image: https://your-site.com/wp-content/uploads/avatars/jane.jpg
+image: /assets/authors/jane-doe.jpg
+website: https://janedoe.com
 ---
-
-# Jane Doe
-
-Jane writes about travel, food, and culture.
 ```
 
 **Frontmatter fields:**
+
 - `name` - Display name
-- `email` - Email address
+- `slug` - URL-friendly author name
 - `bio` - Author biography
-- `image` - Profile image URL
+- `image` - Profile image (downloaded to `assets/authors/` when possible)
+- `website` - Author website URL (if available)
 
 These files are used to:
+
 - Render author pages (individual author with all their posts)
 - Show author information on post pages
 - Create author index page (list of all authors)
@@ -179,7 +191,8 @@ These files are used to:
 Tag browsing pages (created when posts have tags).
 
 **File naming:**
-```
+
+```text
 travel.md
 food.md
 technology.md
@@ -188,12 +201,13 @@ technology.md
 Naming format: `tag-name.md` (tag slug)
 
 **Tag page structure:**
+
 ```markdown
 ---
 title: "Travel"
 ---
 
-# Travel
+## Travel
 
 Posts tagged with "travel":
 
@@ -201,6 +215,7 @@ Posts tagged with "travel":
 ```
 
 These pages:
+
 - List all posts with a specific tag
 - Can be paginated (if you have many posts)
 - Include tag metadata
@@ -210,7 +225,8 @@ These pages:
 Category browsing pages (created when posts have categories).
 
 **File naming:**
-```
+
+```text
 uncategorized.md
 travel.md
 food.md
@@ -219,12 +235,13 @@ food.md
 Naming format: `category-name.md` (category slug)
 
 **Category page structure:**
+
 ```markdown
 ---
 title: "Travel"
 ---
 
-# Travel
+## Travel
 
 Posts in "Travel" category:
 
@@ -232,6 +249,7 @@ Posts in "Travel" category:
 ```
 
 These pages:
+
 - List all posts in a specific category
 - Can be paginated (if you have many posts)
 - Include category metadata
@@ -241,12 +259,14 @@ These pages:
 Base HTML template that all pages inherit from. Includes:
 
 **Accessibility features:**
+
 - "Skip to main" link for keyboard navigation
 - Semantic HTML (`<main>`, `<header>`, `<footer>`)
 - ARIA labels for navigation and interactive elements
 - Responsive meta tags for mobile devices
 
 **Template structure:**
+
 ```html
 <!doctype html>
 <html lang="en">
@@ -284,6 +304,7 @@ Base HTML template that all pages inherit from. Includes:
 ```
 
 **Customizing base template:**
+
 - Add your own header/footer
 - Include analytics (Google Analytics, etc.)
 - Add social media links
@@ -295,12 +316,14 @@ Base HTML template that all pages inherit from. Includes:
 Basic CSS styles with dark mode support.
 
 **Features:**
+
 - Responsive typography
 - Mobile-friendly layout
 - Dark mode support (via `prefers-color-scheme`)
 - Basic styling for posts, lists, and navigation
 
 **Customizing styles:**
+
 - Add your own CSS
 - Use CSS variables for theming
 - Include CSS frameworks (Tailwind, Bootstrap, etc.)
@@ -311,23 +334,17 @@ Basic CSS styles with dark mode support.
 Once you're happy with your generated site, build it with 11ty:
 
 ```bash
-# Install 11ty (if not already)
-pnpm install -g @11ty/eleventy
-
-# Navigate to site folder
 cd site
+npx @11ty/eleventy
 
-# Build site
-eleventy
-
-# Output will be in _site/ folder
+# Output will be in dist/ folder
 ```
 
 ### Build Output
 
-11ty will generate static HTML files in `_site/` folder:
+11ty will generate static HTML files in `dist/` folder:
 
-```
+```text
 site/
 └── _site/
     ├── index.html                    # Home page
@@ -360,9 +377,7 @@ To preview your site locally during development:
 
 ```bash
 cd site
-
-# Build and serve with auto-reload
-eleventy --serve
+npx @11ty/eleventy --serve
 ```
 
 Visit `http://localhost:8080` to see your site. Files will rebuild automatically when you make changes.
@@ -372,6 +387,7 @@ Visit `http://localhost:8080` to see your site. Files will rebuild automatically
 ### Modify Base Template
 
 Edit `_includes/layouts/base.njk` to:
+
 - Change site structure (add sidebar, footer, etc.)
 - Add analytics or tracking codes
 - Include CSS/JavaScript libraries
@@ -381,6 +397,7 @@ Edit `_includes/layouts/base.njk` to:
 ### Add Custom CSS
 
 Edit `assets/styles.css` or create new CSS files:
+
 ```html
 <!-- In base.njk -->
 <link rel="stylesheet" href="/assets/custom.css">
@@ -389,6 +406,7 @@ Edit `assets/styles.css` or create new CSS files:
 ### Add Custom JavaScript
 
 Create `assets/script.js`:
+
 ```html
 <!-- In base.njk, before </body> -->
 <script src="/assets/script.js"></script>
@@ -397,6 +415,7 @@ Create `assets/script.js`:
 ### Create New Page Types
 
 Add new Markdown files in `content/`:
+
 - `about.md` - About page
 - `contact.md` - Contact page
 - `projects/` - Custom page type with subdirectory
@@ -404,6 +423,7 @@ Add new Markdown files in `content/`:
 ### Add Plugins to 11ty
 
 Edit `.eleventy.js` to add plugins:
+
 ```javascript
 const pluginRss = require("@11ty/eleventy-plugin-rss");
 
@@ -434,6 +454,7 @@ After understanding your generated site:
 1. Create `favicon.ico` file
 2. Place in `site/assets/`
 3. Add to base template `<head>`:
+
    ```html
    <link rel="icon" href="/assets/favicon.ico">
    ```
@@ -442,6 +463,7 @@ After understanding your generated site:
 
 1. Get Google Analytics tracking code
 2. Add to base template `<head>`:
+
    ```html
    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
    <script>
@@ -455,6 +477,7 @@ After understanding your generated site:
 ### Add Social Media Meta Tags
 
 Add to base template `<head>` for better social sharing:
+
 ```html
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
@@ -473,6 +496,7 @@ Add to base template `<head>` for better social sharing:
 ### Change Site Title/Description
 
 Edit base template or use 11ty data:
+
 ```javascript
 // In .eleventy.js
 module.exports = function(eleventyConfig) {
@@ -484,6 +508,7 @@ module.exports = function(eleventyConfig) {
 ```
 
 Use in template:
+
 ```html
 <title>{{ site.title }} - {{ title }}</title>
 <meta name="description" content="{{ site.description }}">
@@ -492,6 +517,7 @@ Use in template:
 ### Customize Navigation
 
 Edit navigation in base template:
+
 ```html
 <nav aria-label="Main Navigation">
   <a href="/">Home</a>
@@ -503,6 +529,7 @@ Edit navigation in base template:
 ```
 
 Or use 11ty data for navigation:
+
 ```javascript
 // In .eleventy.js
 module.exports = function(eleventyConfig) {
@@ -516,6 +543,7 @@ module.exports = function(eleventyConfig) {
 ```
 
 Use in template:
+
 ```html
 <nav aria-label="Main Navigation">
   {% for item in nav %}

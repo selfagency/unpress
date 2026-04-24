@@ -1,3 +1,4 @@
 ---
 name: B
+slug: b
 ---

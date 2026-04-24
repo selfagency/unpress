@@ -7,6 +7,7 @@ Migrate your WordPress content using an XML export file instead of the live API.
 When you migrate via XML export, Unpress parses a WordPress XML export file (generated via Tools → Export) and converts it to a static 11ty site.
 
 **Advantages:**
+
 - Works offline—no need for live WordPress site
 - No rate limiting—process as fast as your computer can
 - Includes all content (published, drafts, private)
@@ -14,6 +15,7 @@ When you migrate via XML export, Unpress parses a WordPress XML export file (gen
 - Checkpoint support—resume interrupted migrations
 
 **Disadvantages:**
+
 - Requires manual XML export from WordPress
 - Data is snapshot at time of export (not real-time)
 - Larger file size for sites with many posts
@@ -29,7 +31,8 @@ When you migrate via XML export, Unpress parses a WordPress XML export file (gen
 4. Click **Download Export File**
 
 WordPress will download an XML file named like:
-```
+
+```text
 your-site-name.wordpress.YYYY-MM-DD.xml
 ```
 
@@ -47,6 +50,7 @@ If you only want to migrate certain content:
 4. Click **Download Export File**
 
 ::: tip Export Options
+
 - **"All content"** exports everything (posts, pages, media, taxonomies)
 - **"Date range"** lets you export posts from specific time period
 - **"Authors"** filters export to specific authors
@@ -56,7 +60,8 @@ If you only want to migrate certain content:
 ### Save Export File
 
 Save your XML export file in a memorable location:
-```
+
+```text
 /path/to/your-site-export.xml
 ```
 
@@ -66,12 +71,25 @@ You'll need this file path when running Unpress.
 
 Once you have your XML export file, run migration:
 
+```dotenv
+WP_URL=https://your-wordpress-site.com
+WP_USER=your-username
+WP_APP_PASSWORD=your-20-char-app-password
+```
+
 ```bash
-unpress \
+pnpx @selfagency/unpress \
+  --source xml \
+  --xml-file /path/to/your-site-export.xml \
+  --generate-site
+# or
+npx -y @selfagency/unpress \
   --source xml \
   --xml-file /path/to/your-site-export.xml \
   --generate-site
 ```
+
+Unpress automatically reads `.env` from the directory where you run the command.
 
 ### Required Flags
 
@@ -103,6 +121,7 @@ Unpress parses your XML export and migrates all content it finds:
 ### Post Data (XML)
 
 Each post includes:
+
 - **ID** - WordPress post ID
 - **Title** - Post title (rendered)
 - **Content** - Post body in HTML
@@ -126,11 +145,7 @@ XML export includes media **metadata** (URLs, sizes, captions) but not the actua
 #### Mode 1: Download Locally
 
 ```bash
-unpress \
-  --source xml \
-  --xml-file /path/to/export.xml \
-  --download-media \
-  --generate-site
+pnpx @selfagency/unpress --source xml --xml-file /path/to/export.xml --download-media --generate-site
 ```
 
 Media files are downloaded to `site/media/` and URLs are updated automatically.
@@ -166,7 +181,7 @@ export AWS_REGION=us-east-1
 Run migration:
 
 ```bash
-unpress --config unpress.yml --generate-site
+pnpx @selfagency/unpress --config unpress.yml --generate-site
 ```
 
 #### Mode 3: Leave URLs (Archival)
@@ -188,7 +203,7 @@ For large XML exports (thousands of posts), Unpress saves checkpoints every 100 
 
 By default, checkpointing is enabled. Unpress saves state to:
 
-```
+```text
 .unpress/state/xml-checkpoint.json
 ```
 
@@ -197,14 +212,11 @@ By default, checkpointing is enabled. Unpress saves state to:
 If your migration was interrupted (power outage, crash, etc.), simply run the same command again:
 
 ```bash
-unpress \
-  --source xml \
-  --xml-file /path/to/export.xml \
-  --generate-site \
-  --resume
+pnpx @selfagency/unpress --source xml --xml-file /path/to/export.xml --generate-site --resume
 ```
 
 Unpress will:
+
 1. Read the checkpoint file
 2. Identify the last successfully processed post
 3. Resume from that point in the XML file
@@ -220,6 +232,7 @@ resume:
 ```
 
 ::: tip Checkpoint Best Practices
+
 - Always use `--resume` for interrupted migrations
 - Checkpoint file is saved automatically every 100 items
 - You can manually delete `.unpress/state/` to force fresh migration
@@ -236,7 +249,7 @@ ls -la site/
 
 You should see:
 
-```
+```text
 site/
 ├── content/
 │   ├── posts/
@@ -283,7 +296,7 @@ tags:
   - food
 ---
 
-# My First Blog Post
+## My First Blog Post
 
 This is the content of my blog post, converted from WordPress HTML to clean Markdown...
 
@@ -297,12 +310,13 @@ This is the content of my blog post, converted from WordPress HTML to clean Mark
 Large XML exports (10,000+ posts) may be slow or use significant memory.
 
 **Tips for large files:**
+
 1. **Use checkpointing** - Always enable `--resume` flag
 2. **Reduce concurrency** - Lower concurrent processing if needed
 3. **Increase memory** - Give Node.js more RAM if needed:
 
 ```bash
-NODE_OPTIONS=--max-old-space-size=4096 unpress --source xml --xml-file large-export.xml --generate-site
+NODE_OPTIONS=--max-old-space-size=4096 pnpx @selfagency/unpress --source xml --xml-file large-export.xml --generate-site
 ```
 
 4. **Split export** - Consider splitting large exports into smaller chunks by date range or author
@@ -312,6 +326,7 @@ NODE_OPTIONS=--max-old-space-size=4096 unpress --source xml --xml-file large-exp
 Unpress parses XML using a streaming parser, which is memory efficient. However, very large files (100MB+) may still require significant RAM.
 
 **If you encounter memory errors:**
+
 - Increase Node.js memory limit (see above)
 - Close other applications to free RAM
 - Process exports in smaller chunks
@@ -319,12 +334,14 @@ Unpress parses XML using a streaming parser, which is memory efficient. However,
 ### Processing Speed
 
 XML processing speed depends on:
+
 - Your computer's CPU speed
 - Disk I/O speed (reading XML file, writing output)
 - Number of posts in export
 - Media downloading (if enabled)
 
 **Typical speeds:**
+
 - 1,000 posts: ~1-2 minutes
 - 10,000 posts: ~10-20 minutes
 - 100,000 posts: ~2-4 hours
@@ -338,6 +355,7 @@ Your actual speed may vary significantly.
 **Cause:** Corrupted or malformed XML export file.
 
 **Solutions:**
+
 - Re-export XML from WordPress
 - Try using a different browser to export
 - Check if export file is complete (not truncated download)
@@ -348,6 +366,7 @@ Your actual speed may vary significantly.
 **Cause:** XML file doesn't contain expected content.
 
 **Solutions:**
+
 - Open XML file in a text editor—verify it contains `<wp:post>` elements
 - Check if you exported "All content" or specific content type
 - Ensure XML file is not empty (size > 0 bytes)
@@ -358,6 +377,7 @@ Your actual speed may vary significantly.
 **Cause:** Corrupted checkpoint file from previous interrupted migration.
 
 **Solutions:**
+
 - Delete checkpoint directory: `rm -rf .unpress/state/`
 - Run migration again without `--resume` flag (fresh migration)
 - Check file permissions on `.unpress/state/` directory
@@ -367,6 +387,7 @@ Your actual speed may vary significantly.
 **Cause:** Media URLs in XML are no longer accessible or invalid.
 
 **Solutions:**
+
 - Verify media URLs are accessible in a browser
 - Check if your WordPress site is still live (for XML exports, site may not be live)
 - Try migration without `--download-media` (leave URLs unchanged)
@@ -377,6 +398,7 @@ Your actual speed may vary significantly.
 **Cause:** Not enough disk space for media files or output.
 
 **Solutions:**
+
 - Free up disk space before running migration
 - Use reupload mode instead of local download
 - Migrate media separately or exclude certain media types
@@ -403,6 +425,7 @@ After successful XML migration:
 | **Best For** | Large sites, archival, offline work | Active sites, frequent migrations |
 
 **When to use XML export:**
+
 - Your WordPress site is large (5,000+ posts)
 - You want to migrate offline or on another computer
 - You need to include drafts or private posts
@@ -410,6 +433,7 @@ After successful XML migration:
 - You want to archive your WordPress site completely
 
 **When to use API migration:**
+
 - Your WordPress site is live and accessible
 - You have fewer than 5,000 posts
 - You want to latest published content

@@ -1,247 +1,137 @@
 # Installation
 
-Detailed installation instructions for Unpress.
+Unpress is designed to run without global installation. In most cases you should use `pnpx` or `npx` and let the tool read credentials from a local `.env` file.
 
 ## Prerequisites
 
-Before installing Unpress, ensure you have:
+Before using Unpress, ensure you have:
 
 - **Node.js 18 or higher** - Download from [nodejs.org](https://nodejs.org/)
-- **pnpm** package manager - Install with:
-  ```bash
-  npm install -g pnpm
-  ```
+- **pnpm** package manager (optional) if you prefer `pnpx`
 
-::: tip Why pnpm?
-pnpm is faster and more disk-efficient than npm or yarn. It uses hard links to avoid duplicating packages, saving significant space on your system.
+::: tip No installation required!
+Unpress runs directly with `pnpx` or `npx`. Just have Node.js installed and you're ready to go.
 :::
 
-## Installation Options
+## Recommended workflow
 
-### Option 1: Global Installation (Recommended)
+### 1. Create a `.env` file
 
-Install Unpress globally so you can run it from anywhere:
+Create a `.env` file in the directory where you plan to run Unpress:
+
+```dotenv
+WP_URL=https://your-wordpress-site.com
+WP_USER=your-wordpress-username
+WP_APP_PASSWORD=your-wordpress-application-password
+```
+
+Unpress loads this file automatically via `dotenv`, so you do not need to export variables manually for the common case.
+
+### 2. Run Unpress with `pnpx`
 
 ```bash
-pnpm install -g @selfagency/unpress
+pnpx @selfagency/unpress --generate-site
 ```
 
-After installation, verify it works:
+### 3. Or run with `npx`
 
 ```bash
-unpress --version
+npx -y @selfagency/unpress --generate-site
 ```
 
-You should see version output like:
-```
-@selfagency/unpress/0.1.0
-```
+### 4. Override values only when necessary
 
-**Benefits:**
-- Run `unpress` from any directory
-- Easy to update: `pnpm update -g @selfagency/unpress`
-- No need to manage local build artifacts
-
-**When to use:**
-- You plan to use Unpress regularly
-- You want the simplest workflow
-- You're migrating multiple WordPress sites
-
-### Option 2: Local Installation
-
-Install Unpress locally in your project directory:
+You can still pass flags explicitly. Flags override `.env` values.
 
 ```bash
-# Clone the repository
+pnpx @selfagency/unpress --out-dir ./out --download-media
+```
+
+## `pnpx` vs `npx`
+
+Both approaches work:
+
+- `pnpx @selfagency/unpress ...` if you already use pnpm
+- `npx -y @selfagency/unpress ...` if you use the default npm tooling
+
+Choose one and keep the docs, scripts, and examples consistent in your project.
+
+## Verify the command works
+
+If you want to confirm the published package can execute:
+
+```bash
+pnpx @selfagency/unpress --help
+# or
+npx -y @selfagency/unpress --help
+```
+
+## Working with `.env`
+
+The tool reads these values automatically:
+
+- `WP_URL`
+- `WP_USER`
+- `WP_APP_PASSWORD`
+- `DOWNLOAD_MEDIA`
+
+Optional Meilisearch-related values can also live in `.env`:
+
+- `MEILI_HOST`
+- `MEILI_API_KEY`
+- `MEILI_INDEX`
+
+Example:
+
+```dotenv
+WP_URL=https://example.com
+WP_USER=admin
+WP_APP_PASSWORD=your-app-password
+DOWNLOAD_MEDIA=true
+MEILI_HOST=http://127.0.0.1:7700
+MEILI_INDEX=posts
+```
+
+## When to clone the repo instead
+
+Clone the repo only if you are developing Unpress itself, debugging locally, or contributing changes.
+
+```bash
 git clone https://github.com/selfagency/unpress.git
 cd unpress
-
-# Install dependencies
 pnpm install
-
-# Build the CLI
 pnpm build
+pnpm dev:cli -- --generate-site
 ```
 
-Run Unpress using pnpm:
+That workflow is for maintainers and contributors, not the normal migration path.
+
+## Troubleshooting
+
+### `pnpx: command not found`
+
+Install pnpm or use `npx` instead.
 
 ```bash
-pnpm dev:cli -- <flags>
+npx -y @selfagency/unpress --help
 ```
 
-**Benefits:**
-- Always use the latest version from Git
-- Easy to test local changes
-- Full control over build process
+### `.env` values are not being picked up`
 
-**When to use:**
-- You want to modify Unpress source code
-- You need a specific version from Git
-- You're contributing to Unpress development
+Check that:
 
-### Option 3: Use with npx (No Install)
+- the file is named exactly `.env`
+- you run `pnpx`/`npx` from the same directory as `.env`
+- variable names are uppercase and spelled correctly
+- there are no extra quotes around the whole line
 
-Try Unpress without installing globally:
+### I want a repeatable command for a team
 
-```bash
-npx -y @selfagency/unpress -- <flags>
-```
-
-**Benefits:**
-- No installation required
-- Always uses latest version
-- Great for one-time migrations
-
-**When to use:**
-- Quick test of Unpress
-- One-time migration project
-- Can't install global packages (restricted environments)
-
-**Drawbacks:**
-- Downloads package on every run (slower)
-- Uses more network bandwidth
-- Not ideal for repeated use
-
-## Verify Installation
-
-After installation, verify Unpress is working:
-
-```bash
-# Show version
-unpress --version
-
-# Show help
-unpress --help
-```
-
-If you see version output and help text, installation was successful!
-
-## Troubleshooting Installation
-
-### "command not found: unpress"
-
-**Cause:** Global installation not in your PATH.
-
-**Solutions:**
-
-1. **Restart your terminal** - PATH may update after install
-2. **Check pnpm global bin directory:**
-   ```bash
-   pnpm bin -g
-   ```
-   Add this path to your system PATH
-3. **Use full path to binary:**
-   ```bash
-   $(pnpm bin -g)/unpress --help
-   ```
-
-### "pnpm: command not found"
-
-**Cause:** pnpm not installed or not in PATH.
-
-**Solution:**
-```bash
-npm install -g pnpm
-```
-
-Restart your terminal and try again.
-
-### "EACCES: permission denied" (Global Install)
-
-**Cause:** Don't have write permissions for global directories.
-
-**Solution:** Use a version manager like nvm (Node Version Manager):
-
-```bash
-# Install nvm (macOS/Linux)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-
-# Restart terminal
-# Install Node.js with nvm
-nvm install 18
-
-# Set as default
-nvm use 18
-
-# Try global install again
-pnpm install -g @selfagency/unpress
-```
-
-### Build Errors (Local Installation)
-
-**Cause:** TypeScript compilation errors or missing dependencies.
-
-**Solution:**
-```bash
-# Clean build artifacts
-rm -rf dist node_modules
-
-# Reinstall dependencies
-pnpm install
-
-# Try building again
-pnpm build
-```
-
-If errors persist, check:
-- Node.js version is 18 or higher: `node --version`
-- pnpm version is 8 or higher: `pnpm --version`
-- No conflicting packages globally
-
-## Upgrading Unpress
-
-### Global Installation
-
-```bash
-# Update to latest version
-pnpm update -g @selfagency/unpress
-
-# Verify new version
-unpress --version
-```
-
-### Local Installation
-
-```bash
-# Pull latest changes
-git pull origin main
-
-# Update dependencies
-pnpm install
-
-# Rebuild
-pnpm build
-```
-
-### Npx Usage
-
-npx always uses the latest published version. No upgrade needed—just run it again!
-
-## Uninstalling Unpress
-
-### Global Installation
-
-```bash
-pnpm remove -g @selfagency/unpress
-```
-
-Verify removal:
-```bash
-unpress --version
-# Should show "command not found"
-```
-
-### Local Installation
-
-Simply delete the cloned directory:
-```bash
-cd ..
-rm -rf unpress
-```
+Use a committed `README` snippet plus a non-committed local `.env`. If you need shared defaults, add a tracked `.env.example` and keep real secrets in `.env`.
 
 ## Next Steps
 
-After installing Unpress:
+After confirming `pnpx` or `npx` works:
 
 1. **[Quick Start Guide](./quick-start.md)** - Run your first migration
 2. **[WordPress API Migration](./migration-api.md)** - Learn about API-based migration

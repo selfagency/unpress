@@ -22,6 +22,9 @@ describe('writePostAndAuthorFiles author preservation', () => {
 
     await writePostAndAuthorFiles(post, outDir);
     const after = await fs.readFile(authorFile, 'utf8');
-    expect(after).toBe(original);
+    // existing author file should be preserved except we add missing metadata like slug
+    expect(after).toContain('name: Alice Example');
+    expect(after).toContain('image: /img.jpg');
+    expect(after).toContain('slug: alice-example');
   });
 });

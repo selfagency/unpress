@@ -8,36 +8,44 @@ This document describes how to test the migration utility against real WordPress
 mkdir -p /tmp/unpress-test && cd /tmp/unpress-test
 ```
 
-2. Run the CLI to generate and export from a WordPress site:
+2. Create a `.env` file in the test directory:
 
-```bash
-# Example: run migration (use your WP URL and app password)
-pnpm dev:cli -- --wp-url https://demo.wp.example --wp-user user --wp-app-password "app:password" --generate-site --out-dir ./out
+```dotenv
+WP_URL=https://demo.wp.example
+WP_USER=user
+WP_APP_PASSWORD=app-password
 ```
 
-3. Inspect generated files under `./out/site`:
+3. Run the CLI to generate and export from a WordPress site:
+
+```bash
+# Example: run migration from the directory containing .env
+npx -y @selfagency/unpress --generate-site --out-dir ./out
+```
+
+4. Inspect generated files under `./out/site`:
 
 - `out/site/content/posts` - markdown content
 - `out/site/content/authors` - authors
 - `out/site/_includes` - templates
 
-4. Optional: start Meilisearch and index the posts (if you want to test search):
+5. Optional: start Meilisearch and index the posts (if you want to test search):
 
 ```bash
 cd docs/meilisearch
 docker compose up -d
 # then from repo root
-pnpm dev:cli -- --out-dir ./out --index-meili --meili-host http://127.0.0.1:7700
+npx -y @selfagency/unpress --out-dir ./out --index-meili --meili-host http://127.0.0.1:7700
 ```
 
-5. Manual checks:
+6. Manual checks:
 
 - Open `out/site/index.html` with an 11ty dev server or build and serve the `dist` folder.
 - Verify authors list and individual author pages.
 - Verify that images are downloaded and the paths are correct.
 - Spot-check metadata (date, tags, categories).
 
-6. Notes on large sites
+7. Notes on large sites
 
 - For very large sites, run the export against a subset or use pagination to avoid memory/execution limits.
 - Consider running indexing in batches and increasing Meilisearch resources.

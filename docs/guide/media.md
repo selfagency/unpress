@@ -11,6 +11,7 @@ WordPress sites typically have hundreds or thousands of media files. Unpress off
 3. **Leave URLs** - Keep original media URLs unchanged
 
 Choose the mode that best fits your use case:
+
 - **Cost savings** → Use Reupload (S3 is cheap)
 - **Archival** → Use Leave URLs (preserve original structure)
 - **Simple migration** → Use Local Download (easiest setup)
@@ -31,12 +32,7 @@ Download media files from WordPress to your local `site/` folder and update URLs
 Add `--download-media` flag to your migration command:
 
 ```bash
-unpress \
-  --wp-url https://your-site.com \
-  --wp-user admin \
-  --wp-app-password "abcd efgh ijkl mnop qrst" \
-  --download-media \
-  --generate-site
+pnpx @selfagency/unpress --download-media --generate-site
 ```
 
 ### What Happens
@@ -49,7 +45,7 @@ unpress \
 
 ### Output Structure
 
-```
+```text
 site/
 ├── media/
 │   └── uploads/
@@ -77,11 +73,13 @@ site/
 ### Troubleshooting
 
 **Media files not downloading:**
+
 - Check if WordPress media URLs are accessible
 - Verify your internet connection is stable
 - Look for error messages in migration output
 
 **Broken image links in deployed site:**
+
 - Ensure `site/media/` folder was deployed
 - Check file permissions on media files
 - Verify URL paths in Markdown are correct
@@ -162,14 +160,14 @@ media:
       endpoint: https://s3.amazonaws.com
 ```
 
-### Step 5: Set Environment Variables
+### Step 5: Add AWS credentials to `.env`
 
-Set your AWS credentials as environment variables:
+Add your AWS credentials to the same `.env` file you use for Unpress:
 
-```bash
-export AWS_ACCESS_KEY_ID=your-access-key-id
-export AWS_SECRET_ACCESS_KEY=your-secret-access-key
-export AWS_REGION=us-east-1
+```dotenv
+AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+AWS_REGION=us-east-1
 ```
 
 ::: warning Never commit credentials!
@@ -179,12 +177,11 @@ Never commit AWS credentials to Git or share them publicly. Use environment vari
 ### Step 6: Run Migration
 
 ```bash
-unpress \
-  --config unpress.yml \
-  --generate-site
+pnpx @selfagency/unpress --config unpress.yml --generate-site
 ```
 
 Unpress will:
+
 1. Download media from WordPress (to temporary folder)
 2. Upload each file to your S3 bucket
 3. Update URLs in Markdown to point to S3:
@@ -211,17 +208,20 @@ Unpress will:
 ### Troubleshooting
 
 **"Access Denied" error:**
+
 - Check AWS credentials are correct
 - Verify bucket policy allows public read access
 - Ensure IAM user has S3 permissions
 - Check bucket name and region match your config
 
 **"Bucket not found" error:**
+
 - Verify bucket name is correct (case-sensitive)
 - Check bucket is in the correct region
 - Ensure bucket exists and you have access
 
 **"Connection timeout":**
+
 - Check your internet connection
 - Verify S3 endpoint URL is correct for your region
 - Try increasing timeout (adjust in config if needed)
@@ -286,27 +286,25 @@ media:
       path: /var/www/media
 ```
 
-### Step 2: Set Environment Variables (Optional)
+### Step 2: Add SFTP credentials to `.env` (optional)
 
-You can also set SFTP credentials via environment variables:
+You can also place SFTP credentials in `.env`:
 
-```bash
-export SFTP_HOST=your-server.com
-export SFTP_PORT=22
-export SFTP_USERNAME=your-username
-export SFTP_PASSWORD=your-password
-export SFTP_PATH=/var/www/media
+```dotenv
+SFTP_HOST=your-server.com
+SFTP_PORT=22
+SFTP_USER=your-username
+SFTP_PASSWORD=your-password
 ```
 
 ### Step 3: Run Migration
 
 ```bash
-unpress \
-  --config unpress.yml \
-  --generate-site
+pnpx @selfagency/unpress --config unpress.yml --generate-site
 ```
 
 Unpress will:
+
 1. Download media from WordPress (to temporary folder)
 2. Upload each file to your SFTP server
 3. Update URLs in Markdown to point to SFTP:
@@ -347,17 +345,20 @@ sftp:
 ### Troubleshooting
 
 **"Connection refused" error:**
+
 - Verify SFTP port is correct (default: 22)
 - Check if SFTP service is enabled on your server
 - Ensure firewall allows SFTP connections
 - Verify hostname resolves correctly
 
 **"Authentication failed" error:**
+
 - Check username and password/SSH key are correct
 - Verify SSH key format is supported (PEM format)
 - Test SFTP connection manually: `sftp your-server.com`
 
 **"Permission denied" error:**
+
 - Check if upload path exists and is writable
 - Verify user has write permissions on target directory
 - Check directory ownership and permissions
@@ -382,14 +383,10 @@ media:
   mode: leave
 ```
 
-Or use CLI flag (though config is recommended for consistency):
+Or just run Unpress with your existing `.env` and no media override flags:
 
 ```bash
-unpress \
-  --wp-url https://your-site.com \
-  --wp-user admin \
-  --wp-app-password "abcd efgh ijkl mnop qrst" \
-  --generate-site
+pnpx @selfagency/unpress --generate-site
 ```
 
 Default behavior (if no media config) is to leave URLs unchanged.
@@ -419,18 +416,21 @@ Your new site will continue loading media from your WordPress server.
 **Problem:** WordPress server is offline or media is deleted.
 
 **Solution:** Your new site will show broken image links. To fix this:
+
 1. Migrate again using Local Download or Reupload mode
 2. Or manually restore WordPress server/media files
 
 ### Use Case: Archival Migration
 
 For archival scenarios, this mode is ideal because:
+
 - Preserves original structure exactly
 - No risk of losing media if WordPress is archived properly
 - Minimal migration effort
 - Maintains historical accuracy
 
 However, ensure your WordPress media is properly archived:
+
 - Backup media files to reliable storage
 - Consider using Wayback Machine or archive.org for public sites
 - Document media structure for future reference
@@ -439,7 +439,7 @@ However, ensure your WordPress media is properly archived:
 
 ### Decision Flowchart
 
-```
+```text
 Do you want to move media?
 ├─ No → Use "Leave URLs" (easiest)
 └─ Yes
@@ -464,18 +464,22 @@ Do you want to move media?
 ### Recommendations
 
 **For cost savings:**
+
 - Use Reupload to S3 (cheapest storage at scale)
 - Local Download works for small sites (< 100MB media)
 
 **For archival:**
+
 - Use Leave URLs (preserve original structure)
 - Ensure WordPress media is properly backed up
 
 **For performance:**
+
 - Use Reupload to S3 + CloudFront CDN (fastest)
 - Reupload to fast SFTP server with caching
 
 **For simplicity:**
+
 - Use Leave URLs (no changes needed)
 - Local Download if you want media with your site
 

@@ -5,6 +5,7 @@
 Unpress is a CLI utility that helps you migrate your WordPress content (posts, pages, taxonomies, and media) to a static Eleventy site. Whether you're looking to save hosting costs or archive a stale blog, Unpress makes the migration simple and reliable.
 
 ::: tip Why Migrate?
+
 - **Cost Savings**: WordPress hosting costs $10–$100/month. Static hosting can be free or under $5/month.
 - **Performance**: Static sites load faster because there's no database or PHP processing.
 - **Security**: No WordPress vulnerabilities to patch—static sites can't be hacked the same way.
@@ -13,24 +14,24 @@ Unpress is a CLI utility that helps you migrate your WordPress content (posts, p
 
 ## Quick Start
 
-Get started in 3 commands:
+Get started in 2 steps:
 
 ```bash
-# 1. Install Unpress
-pnpm install -g @selfagency/unpress
+# 1. Add credentials to .env in the directory where you will run Unpress
+WP_URL=https://your-site.com
+WP_USER=your-username
+WP_APP_PASSWORD=your-app-password
 
-# 2. Run migration (replace with your WordPress credentials)
-unpress \
-  --wp-url https://your-site.com \
-  --wp-user your-username \
-  --wp-app-password "your-app-password" \
-  --generate-site
-
-# 3. Deploy your new static site!
-# Drag the `site/` folder to Netlify, Vercel, or Cloudflare Pages.
+# 2. Run migration without installing Unpress globally
+pnpx @selfagency/unpress --generate-site
+# or
+npx -y @selfagency/unpress --generate-site
 ```
 
+Then deploy the generated `site/` folder to Netlify, Vercel, or Cloudflare Pages.
+
 That's it! Unpress will:
+
 - Fetch all your posts, pages, categories, and tags
 - Convert WordPress HTML to clean Markdown
 - Download or reupload your media files
@@ -42,7 +43,7 @@ That's it! Unpress will:
 ## What Gets Migrated?
 
 | Content | Migrated | Notes |
-|----------|-----------|--------|
+| ------- | -------- | ----- |
 | Posts | ✅ | All post types, statuses, and custom fields |
 | Pages | ✅ | All pages including parent-child relationships |
 | Categories | ✅ | Preserves category hierarchy |
@@ -56,12 +57,14 @@ That's it! Unpress will:
 ### Dual Source Support
 
 Choose how to connect to WordPress:
+
 - **WordPress API**: Connect directly with your site URL and application password
 - **XML Export**: Use WordPress's export tool for large migrations or offline work
 
 ### Flexible Media Handling
 
 Three modes to handle your images and files:
+
 - **Local Download**: Save media files to your `site/` folder
 - **Reupload**: Upload media to S3 or SFTP with automatic URL replacement
 - **Leave URLs**: Keep original media URLs (perfect for archival)
@@ -77,6 +80,7 @@ Static sites don't have built-in search. Unpress integrates with [Meilisearch](.
 ### Accessibility First
 
 Generated 11ty templates include:
+
 - "Skip to main" links for keyboard navigation
 - Semantic HTML with proper ARIA labels
 - Responsive meta tags for mobile devices
@@ -94,7 +98,7 @@ See our [example projects](./examples/) for complete, working configurations:
 ## Next Steps
 
 1. **[Quick Start Guide](./guide/quick-start.md)** - Step-by-step first migration
-2. **[Installation Guide](./guide/installation.md)** - Install and verify Unpress
+2. **[Installation Guide](./guide/installation.md)** - Run Unpress with `pnpx` or `npx`
 3. **[Migration Guides](./guide/migration-api.md)** - Detailed instructions for API and XML migrations
 4. **[Deployment Guide](./guide/deployment.md)** - Deploy your new site to Netlify, Vercel, or Cloudflare Pages
 
