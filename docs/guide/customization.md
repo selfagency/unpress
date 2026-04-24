@@ -57,6 +57,7 @@ Edit `_includes/layouts/base.njk` to change site-wide structure:
 ```
 
 **Common customizations:**
+
 - Add logo or site title in header
 - Add sidebar with recent posts or categories
 - Add search box or social media links
@@ -68,6 +69,7 @@ Edit `_includes/layouts/base.njk` to change site-wide structure:
 Create additional layouts in `_includes/layouts/`:
 
 **Post layout** - `_includes/layouts/post.njk`:
+
 ```html
 ---
 layout: base.njk
@@ -93,6 +95,7 @@ layout: base.njk
 ```
 
 **Use layout in post:**
+
 ```markdown
 ---
 layout: post.njk
@@ -105,6 +108,7 @@ title: "My Post"
 Create reusable page templates:
 
 **About page template** - `_includes/templates/about.njk`:
+
 ```html
 ---
 layout: base.njk
@@ -118,6 +122,7 @@ title: "About"
 ```
 
 **Use template:**
+
 ```markdown
 ---
 layout: ../templates/about.njk
@@ -187,6 +192,7 @@ Create `assets/custom.css` and include it in base template:
 ```
 
 **Custom CSS example:**
+
 ```css
 /* Custom button styles */
 .btn {
@@ -225,6 +231,7 @@ Create `assets/custom.css` and include it in base template:
 Add a CSS framework like Tailwind CSS, Bootstrap, or Bulma:
 
 **Install Tailwind CSS:**
+
 ```bash
 cd site
 pnpm add -D tailwindcss postcss autoprefixer
@@ -232,6 +239,7 @@ npx tailwindcss init -p
 ```
 
 **Create `assets/tailwind.css`:**
+
 ```css
 @tailwind base;
 @tailwind components;
@@ -239,11 +247,13 @@ npx tailwindcss init -p
 ```
 
 **Include in base template:**
+
 ```html
 <link rel="stylesheet" href="/assets/tailwind.css">
 ```
 
 **Use Tailwind classes in templates:**
+
 ```html
 <div class="max-w-4xl mx-auto px-4 py-8">
   <h1 class="text-4xl font-bold text-blue-600">{{ title }}</h1>
@@ -282,6 +292,7 @@ Post content...
 ### Display Custom Fields in Templates
 
 **In post layout:**
+
 ```html
 <article>
   <header>
@@ -334,6 +345,7 @@ Unpress will now include these fields in frontmatter.
 Add custom WordPress content type to migration:
 
 **Edit `types.yml`:**
+
 ```yaml
 - name: product  # New content type
   source: product  # WordPress post type slug
@@ -350,6 +362,7 @@ Add custom WordPress content type to migration:
 ```
 
 **Run migration:**
+
 ```bash
 unpress --config unpress.yml --generate-site
 ```
@@ -359,6 +372,7 @@ Products will be created in `content/products/` folder.
 ### Create Custom Template for New Type
 
 Create `_includes/layouts/product.njk`:
+
 ```html
 ---
 layout: base.njk
@@ -380,6 +394,7 @@ layout: base.njk
 ```
 
 **Add to product frontmatter:**
+
 ```markdown
 ---
 layout: product.njk
@@ -446,6 +461,7 @@ module.exports = function(eleventyConfig) {
 ```
 
 **Use filters in templates:**
+
 ```html
 <h1>{{ title | capitalize }}</h1>
 <p>Reading time: {{ content | readingTime }}</p>
@@ -475,6 +491,7 @@ module.exports = function(eleventyConfig) {
 ```
 
 **Use shortcodes in Markdown:**
+
 ```markdown
 This is my post.
 
@@ -496,6 +513,7 @@ Integrate Meilisearch for site search:
 Add third-party commenting system:
 
 **Disqus:**
+
 ```html
 <div id="disqus_thread"></div>
 <script>
@@ -513,6 +531,7 @@ Add third-party commenting system:
 ```
 
 **Utterances (GitHub comments):**
+
 ```html
 <script src="https://utteranc.es/client.js"
   repo="username/repo"
@@ -526,6 +545,7 @@ Add third-party commenting system:
 ### Add Analytics
 
 **Google Analytics:**
+
 ```html
 <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
 <script>
@@ -537,6 +557,7 @@ Add third-party commenting system:
 ```
 
 **Plausible Analytics (privacy-friendly):**
+
 ```html
 <script defer data-domain="your-site.com" src="https://plausible.io/js/script.js"></script>
 ```
@@ -576,6 +597,7 @@ module.exports = function(eleventyConfig) {
 ```
 
 **Use in templates:**
+
 ```html
 {% image "/assets/image.jpg", "Alt text", "(max-width: 800px) 100vw" %}
 ```
@@ -606,6 +628,7 @@ git commit -m "Add custom layout and styles"
 ```
 
 **Re-run migration:**
+
 ```bash
 # Backup customizations
 cd ..

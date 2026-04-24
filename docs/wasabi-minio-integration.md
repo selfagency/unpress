@@ -4,7 +4,7 @@ This document shows how to configure `unpress` to upload media to an S3-compatib
 
 Environment variables (example for Wasabi):
 
-```
+```text
 export S3_ENDPOINT=https://s3.wasabisys.com
 export AWS_REGION=us-east-1
 export AWS_ACCESS_KEY_ID=YOUR_WASABI_KEY
@@ -31,13 +31,13 @@ media:
 
 Usage (generally):
 
-```
+```text
 unpress --config unpress.yml --source xml --xml-file ./wp-export.xml
 ```
 
 The CLI will construct an S3 client from `unpress.yml` when present, or fall back to environment variables. For local testing you can point `S3_ENDPOINT` at a MinIO instance:
 
-```
+```text
 export S3_ENDPOINT=http://127.0.0.1:9000
 export AWS_ACCESS_KEY_ID=minio
 export AWS_SECRET_ACCESS_KEY=minio123
@@ -45,5 +45,6 @@ export S3_FORCE_PATH_STYLE=true
 ```
 
 Notes:
+
 - Use `S3_FORCE_PATH_STYLE=true` for some setups (MinIO, older providers).
 - Wasabi supports SIGv4; standard AWS SDK configuration works.
