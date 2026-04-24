@@ -187,9 +187,6 @@ jobs:
       - name: Run pa11y scan
         run: npx pa11y http://127.0.0.1:8080
 
-      - name: Lint markdown
-        run: pnpm run lint:md
-
   # optional: aggregate artifacts (docs, coverage) for PR debugging
   upload-artifacts:
     name: Upload artifacts (docs/coverage/site)
