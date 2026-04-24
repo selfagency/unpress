@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 import path from 'path';
 import stream from 'stream';
 import { promisify } from 'util';
+import { safeResolve } from './path-utils.js';
 const pipeline = promisify(stream.pipeline);
 
 // S3
@@ -22,7 +23,7 @@ export async function downloadToLocal(url: string, destDir: string): Promise<str
   if (!res.ok) throw new Error(`Failed to download ${url}: ${res.status}`);
   const urlObj = new URL(url);
   const filename = path.basename(urlObj.pathname) || `media-${Date.now()}`;
-  const outPath = path.join(destDir, filename);
+  const outPath = safeResolve(destDir, filename);
   await fs.promises.mkdir(destDir, { recursive: true });
   await pipeline(res.body as NodeJS.ReadableStream, fs.createWriteStream(outPath));
   return outPath;

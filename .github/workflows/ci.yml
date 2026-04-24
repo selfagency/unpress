@@ -28,8 +28,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: "10"
 
       - name: Setup Node.js (for checks)
         uses: actions/setup-node@v4
@@ -105,8 +103,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: "10"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -143,8 +139,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: "10"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -169,16 +163,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "pnpm"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: "10"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -186,8 +178,11 @@ jobs:
       - name: Generate site (CLI)
         run: pnpm run dev:cli -- --generate-site --out-dir ./out
 
+      - name: Build 11ty site
+        run: cd out && npx @11ty/eleventy
+
       - name: Serve generated site
-        run: npx http-server ./out/site -p 8080 &
+        run: npx http-server ./out/dist -p 8080 &
 
       - name: Wait for server
         run: npx wait-on http://127.0.0.1:8080 -t 30000
@@ -207,16 +202,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build docs
+        run: pnpm run docs:build
+
+      - name: Generate and build site
+        run: |
+          pnpm run dev:cli -- --generate-site --out-dir ./out
+          cd out && npx @11ty/eleventy
+
       - name: Upload docs artifact
         uses: actions/upload-artifact@v4
         with:
           name: docs
-          path: .vitepress/dist
+          path: docs/.vitepress/dist
           if-no-files-found: ignore
 
       - name: Upload site artifact
         uses: actions/upload-artifact@v4
         with:
           name: site
-          path: out/site
+          path: out/dist
           if-no-files-found: ignore

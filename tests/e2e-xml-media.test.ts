@@ -1,9 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { vi, describe, it, expect, beforeAll, afterAll } from 'vitest';
-
-// We will stub media-adapters to avoid real network calls
-import * as mediaAdapters from '../src/media-adapters';
 import { parseWpXmlItems } from '../src/xml-parser';
 
 const FIXTURE_XML = `<?xml version="1.0" encoding="UTF-8" ?>

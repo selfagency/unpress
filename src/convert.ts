@@ -3,6 +3,7 @@ import path from 'path';
 import TurndownService from 'turndown';
 import matter from 'gray-matter';
 import { downloadToLocal } from './media-adapters.js';
+import { safeResolve } from './path-utils.js';
 
 /**
  * Converts HTML content to Markdown using turndown.
@@ -72,7 +73,7 @@ export async function writePostAndAuthorFiles(post: any, outDir: string) {
     }
 
     // write/update author file using YAML
-    const authorFile = path.join(authorsDir, `${authorSlug}.md`);
+    const authorFile = safeResolve(authorsDir, `${authorSlug}.md`);
     const authorFrontObj: Record<string, any> = { name: author.name, slug: authorSlug };
     if (fm.author.image) authorFrontObj.image = fm.author.image;
     if (author.bio) authorFrontObj.bio = author.bio;
@@ -94,7 +95,7 @@ export async function writePostAndAuthorFiles(post: any, outDir: string) {
   }
 
   const outSlug = post.slug ? slugify(post.slug) : slugify(post.title || 'post');
-  const outPath = path.join(postsDir, `${outSlug}.md`);
+  const outPath = safeResolve(outDir, 'site', 'content', 'posts', `${outSlug}.md`);
   const contentToWrite = matter.stringify(markdown, fm);
   await fs.writeFile(outPath, contentToWrite, 'utf8');
 

@@ -1,12 +1,21 @@
 import fs from 'fs-extra';
+import os from 'os';
 import path from 'path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { writePostAndAuthorFiles } from '../src/convert';
 
 describe('writePostAndAuthorFiles author preservation', () => {
+  let outDir = '';
+
+  beforeEach(async () => {
+    outDir = await fs.mkdtemp(path.join(os.tmpdir(), 'unpress-out-author-'));
+  });
+
+  afterEach(async () => {
+    if (outDir) await fs.remove(outDir);
+  });
+
   it('does not overwrite author file when identical', async () => {
-    const outDir = path.join(__dirname, 'out-author');
-    await fs.remove(outDir);
     const authorDir = path.join(outDir, 'site', 'content', 'authors');
     await fs.ensureDir(authorDir);
     const authorFile = path.join(authorDir, 'alice-example.md');
