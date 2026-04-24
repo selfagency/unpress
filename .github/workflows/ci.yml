@@ -152,6 +152,43 @@ jobs:
           MEILI_API_KEY: masterKey
         run: pnpm test -- tests/meilisearch.integration.test.ts
 
+  accessibility:
+    name: Accessibility (build site -> serve -> pa11y)
+    runs-on: ubuntu-latest
+    needs: checks
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate site (CLI)
+        run: pnpm run dev:cli -- --generate-site --out-dir ./out
+
+      - name: Serve generated site
+        run: npx http-server ./out/site -p 8080 &
+
+      - name: Wait for server
+        run: npx wait-on http://127.0.0.1:8080 -t 30000
+
+      - name: Run pa11y scan
+        run: npx pa11y http://127.0.0.1:8080
+
+      - name: Lint markdown
+        run: pnpm run lint:md
+
   # optional: aggregate artifacts (docs, coverage) for PR debugging
   upload-artifacts:
     name: Upload artifacts (docs/coverage/site)
