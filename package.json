@@ -43,6 +43,7 @@
     "dotenv": "^17.4.2",
     "fast-xml-parser": "^4.3.4",
     "fs-extra": "^11.3.4",
+    "gray-matter": "^4.0.3",
     "http-server": "^14.1.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
@@ -50,6 +51,7 @@
     "node-fetch": "^3.3.2",
     "oxfmt": "^0.46.0",
     "oxlint": "^1.61.0",
+    "p-queue": "9.1.2",
     "pa11y": "9.1.1",
     "rumdl": "^0.1.80",
     "ssh2-sftp-client": "^9.0.0",
@@ -65,9 +67,7 @@
   },
   "devDependencies": {
     "@types/ssh2-sftp-client": "^9.0.6",
-    "@types/turndown": "^5.0.6",
-    "gray-matter": "^4.0.3",
-    "p-queue": "9.1.2"
+    "@types/turndown": "^5.0.6"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}": [

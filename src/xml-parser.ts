@@ -150,8 +150,8 @@ export async function parseWpXmlItems(
       }
       // remainder becomes buffer for next item
       buffer = parts[parts.length - 1] || '';
-      inItem = buffer.trim().length > 0 && !buffer.includes('<item');
-      if (!inItem) buffer = '';
+      inItem = buffer.includes('<item');
+      if (!inItem && buffer.trim().length === 0) buffer = '';
     }
   }
 

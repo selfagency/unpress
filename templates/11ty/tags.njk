@@ -5,24 +5,21 @@ title: "Tags"
 
 <h2>Tags</h2>
 <ul>
-  {# Example: this template can be used to render a paginated list of posts for a tag #}
-  {% for post in collections[tag] | default([]) %}
+  {# Render tag index pages. Each item links to a tag page. #}
+  {% for tag in collections.tags | default([]) %}
     <li>
-      <article>
-        <h3><a href="{{ post.url }}">{{ post.data.title }}</a></h3>
-        <p>{{ post.data.description or post.templateContent | striptags | slice(0,160) }}…</p>
-        <p><time datetime="{{ post.date | date: "%Y-%m-%d" }}">{{ post.date | date: "%B %d, %Y" }}</time></p>
-      </article>
+      <a href="{{ tag.url }}">{{ tag.data.title or tag.data.name or tag.fileSlug }}</a>
     </li>
   {% endfor %}
-  {% if pagination %}
-    <nav aria-label="Pagination">
-      {% if pagination.href.previous %}
-        <a href="{{ pagination.href.previous }}">Previous</a>
-      {% endif %}
-      {% if pagination.href.next %}
-        <a href="{{ pagination.href.next }}">Next</a>
-      {% endif %}
-    </nav>
-  {% endif %}
 </ul>
+
+{% if pagination %}
+  <nav aria-label="Pagination">
+    {% if pagination.href.previous %}
+      <a href="{{ pagination.href.previous }}">Previous</a>
+    {% endif %}
+    {% if pagination.href.next %}
+      <a href="{{ pagination.href.next }}">Next</a>
+    {% endif %}
+  </nav>
+{% endif %}
