@@ -176,7 +176,9 @@ jobs:
         run: pnpm run dev:cli -- --generate-site --out-dir ./out
 
       - name: Build 11ty site
-        run: cd out && npx @11ty/eleventy
+        run: |
+          test -d out || (echo "Expected ./out to exist after generation" && ls -la && exit 1)
+          npx @11ty/eleventy --config=./out/.eleventy.js --input=./out/site --output=./out/dist
 
       - name: Serve generated site
         run: npx http-server ./out/dist -p 8080 &
@@ -214,7 +216,8 @@ jobs:
       - name: Generate and build site
         run: |
           pnpm run dev:cli -- --generate-site --out-dir ./out
-          cd out && npx @11ty/eleventy
+          test -d out || (echo "Expected ./out to exist after generation" && ls -la && exit 1)
+          npx @11ty/eleventy --config=./out/.eleventy.js --input=./out/site --output=./out/dist
 
       - name: Upload docs artifact
         uses: actions/upload-artifact@v4
