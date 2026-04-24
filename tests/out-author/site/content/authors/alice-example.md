@@ -1,5 +1,0 @@
----
-name: Alice Example
-slug: alice-example
-image: /img.jpg
----
