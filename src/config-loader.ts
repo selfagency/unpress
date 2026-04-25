@@ -3,6 +3,7 @@ import path from 'path';
 import { parse } from 'yaml';
 import { z } from 'zod';
 import { isAllowedAbsolute, safeResolve } from './path-utils.js';
+import { readFileSyncSafe, pathExistsSafe, pathExistsSyncSafe } from './safe-fs.js';
 
 export const ProcessingSchema = z.object({
   concurrency: z.number().int().positive().optional(),
@@ -76,15 +77,12 @@ export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
 function loadContentTypesFromFile(contentTypesPath: string) {
   // Resolve the provided path against the current working dir and
   // ensure it cannot escape the repo via path traversal.
-  const resolvedPath = safeResolve(process.cwd(), contentTypesPath);
-  if (!fs.existsSync(resolvedPath)) {
-    throw new Error(`Content types file not found: ${resolvedPath}`);
-  }
-  const raw = fs.readFileSync(resolvedPath, 'utf8');
+  // Resolve and verify containment before reading to avoid path traversal
+  const raw = readFileSyncSafe(process.cwd(), contentTypesPath);
   const parsed = parse(raw);
   const result = z.array(ContentTypeSchema).safeParse(parsed);
   if (!result.success) {
-    throw new Error(`Invalid content types file ${resolvedPath}: ${result.error.message}`);
+    throw new Error(`Invalid content types file ${contentTypesPath}: ${result.error.message}`);
   }
   return result.data;
 }
@@ -98,8 +96,11 @@ export function loadProjectConfigFromFile(configPath: string): ProjectConfig {
   } else {
     resolvedConfigPath = safeResolve(process.cwd(), configPath);
   }
-  if (!fs.existsSync(resolvedConfigPath)) throw new Error(`Config file not found: ${resolvedConfigPath}`);
-  const raw = fs.readFileSync(resolvedConfigPath, 'utf8');
+  // Ensure config file is readable and contained before reading (sync for CLI flow)
+  if (!pathExistsSyncSafe(path.dirname(resolvedConfigPath), path.basename(resolvedConfigPath))) {
+    throw new Error(`Config file not found: ${resolvedConfigPath}`);
+  }
+  const raw = readFileSyncSafe(path.dirname(resolvedConfigPath), path.basename(resolvedConfigPath));
   const parsed = parse(raw);
   const result = ProjectConfigSchema.safeParse(parsed);
   if (!result.success) {

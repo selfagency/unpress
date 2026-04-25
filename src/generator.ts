@@ -2,12 +2,13 @@ import fs from 'fs-extra';
 import { fileURLToPath } from 'node:url';
 import path from 'path';
 import { isAllowedAbsolute, safeResolve } from './path-utils.js';
+import { ensureDirSafe, writeFileSafe, copySafe, readdirSafe, pathExistsSafe } from './safe-fs.js';
 
 async function createProjectDirs(baseRoot: string) {
-  await fs.ensureDir(safeResolve(baseRoot, 'site', '_includes', 'layouts'));
-  await fs.ensureDir(safeResolve(baseRoot, 'site', 'content', 'posts'));
-  await fs.ensureDir(safeResolve(baseRoot, 'site', 'content', 'authors'));
-  await fs.ensureDir(safeResolve(baseRoot, 'assets'));
+  await ensureDirSafe(baseRoot, 'site', '_includes', 'layouts');
+  await ensureDirSafe(baseRoot, 'site', 'content', 'posts');
+  await ensureDirSafe(baseRoot, 'site', 'content', 'authors');
+  await ensureDirSafe(baseRoot, 'assets');
 }
 
 async function writeCoreFiles(baseRoot: string, eleventyConfig: string, indexMd: string) {
@@ -18,9 +19,9 @@ async function writeCoreFiles(baseRoot: string, eleventyConfig: string, indexMd:
     'bio: "This is a sample author bio. Replace with real authors during migration."\n' +
     '---\n\n';
 
-  await fs.writeFile(safeResolve(baseRoot, '.eleventy.js'), eleventyConfig, 'utf8');
-  await fs.writeFile(safeResolve(baseRoot, 'site', 'index.md'), indexMd, 'utf8');
-  await fs.writeFile(safeResolve(baseRoot, 'site', 'content', 'authors', 'site-author.md'), sampleAuthor, 'utf8');
+  await writeFileSafe(baseRoot, eleventyConfig, '.eleventy.js');
+  await writeFileSafe(baseRoot, indexMd, 'site', 'index.md');
+  await writeFileSafe(baseRoot, sampleAuthor, 'site', 'content', 'authors', 'site-author.md');
 
   const styles =
     ':root { color-scheme: light dark; }\n' +
@@ -37,7 +38,7 @@ async function writeCoreFiles(baseRoot: string, eleventyConfig: string, indexMd:
     '  width: 1px;\n' +
     '}\n';
 
-  await fs.writeFile(safeResolve(baseRoot, 'assets', 'styles.css'), styles, 'utf8');
+  await writeFileSafe(baseRoot, styles, 'assets', 'styles.css');
 }
 
 async function copyCustomTemplates(root: string) {
@@ -45,22 +46,22 @@ async function copyCustomTemplates(root: string) {
     const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
     const templatesDir = safeResolve(packageRoot, 'templates', '11ty');
 
-    if (await fs.pathExists(templatesDir)) {
+    if (await pathExistsSafe(packageRoot, 'templates', '11ty')) {
       const siteDir = safeResolve(root, 'site');
       const includesDir = safeResolve(root, 'site', '_includes');
       const templatesIncludesDir = safeResolve(templatesDir, '_includes');
 
-      const templateFiles = await fs.readdir(templatesDir);
+      const templateFiles = await readdirSafe(packageRoot, 'templates', '11ty');
       for (const file of templateFiles) {
         if (file.endsWith('.njk')) {
-          const src = safeResolve(templatesDir, file);
-          const dest = safeResolve(siteDir, file);
-          await fs.copy(src, dest);
+          await copySafe(packageRoot, ['templates', '11ty', file], root, ['site', file]);
         }
       }
 
-      if (await fs.pathExists(templatesIncludesDir)) {
-        await fs.copy(templatesIncludesDir, includesDir, { overwrite: true });
+      if (await pathExistsSafe(packageRoot, 'templates', '11ty', '_includes')) {
+        await copySafe(packageRoot, ['templates', '11ty', '_includes'], root, ['site', '_includes'], {
+          overwrite: true,
+        });
       }
     }
   } catch (err) {
@@ -75,9 +76,9 @@ async function copyCustomTemplates(root: string) {
 
 async function ensureBaseLayoutExists(root: string, fallbackBaseLayout: string) {
   const baseLayoutPath = safeResolve(root, 'site', '_includes', 'layouts', 'base.njk');
-  if (!(await fs.pathExists(baseLayoutPath))) {
-    await fs.ensureDir(safeResolve(root, 'site', '_includes', 'layouts'));
-    await fs.writeFile(baseLayoutPath, fallbackBaseLayout, 'utf8');
+  if (!(await pathExistsSafe(root, 'site', '_includes', 'layouts', 'base.njk'))) {
+    await ensureDirSafe(root, 'site', '_includes', 'layouts');
+    await writeFileSafe(root, fallbackBaseLayout, 'site', '_includes', 'layouts', 'base.njk');
   }
 }
 
