@@ -1,0 +1,57 @@
+tests/convert.post-author.test.ts
+  h_5cf1e2c1161853 53,55,57-58,60,63-65
+tests/meilisearch.retry.test.ts
+  h_5cf1e2c1161853 22
+.github/dependabot.yml
+  h_5cf1e2c1161853 3,5-13
+package.json
+  h_5cf1e2c1161853 44-47,52-56
+src/wordpress.ts
+  h_5cf1e2c1161853 39,54-78,111-113,115-117,119-121,123
+src/path-utils.ts
+  h_5cf1e2c1161853 9
+tests/xml-parser.test.ts
+  h_5cf1e2c1161853 14
+src/media.ts
+  h_5cf1e2c1161853 14-17,20-24
+src/processor.ts
+  h_5cf1e2c1161853 26,34
+bin/cli.ts
+  edde09043e6c1d22 53-54
+  h_5cf1e2c1161853 51-52,55-58,60,63
+.github/workflows/ci.yml
+  h_5cf1e2c1161853 87,114,132,169-172,177
+src/index.ts
+  h_5cf1e2c1161853 1-9
+.env.example
+  h_5cf1e2c1161853 1-29
+src/convert.ts
+  h_5cf1e2c1161853 69
+src/xml-parser.ts
+  h_5cf1e2c1161853 30,145-147,165-171
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "38c8f5492576793c8a91ae2f3b4552c24a502e92",
+  "prompts": {
+    "edde09043e6c1d22": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "e981159b-ece9-43f9-aaa4-f996c46af62b",
+        "model": "z/glm-5"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 1,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
