@@ -66,7 +66,7 @@ export async function writePostAndAuthorFiles(post: any, outDir: string) {
         // make a site-root-relative URL path (posix)
         const rel = path.relative(path.join(outDir, 'site'), downloaded).split(path.sep).join('/');
         fm.author.image = '/' + rel;
-      } catch (err) {
+      } catch {
         // if download fails, fall back to original URL
         fm.author.image = author.image;
       }

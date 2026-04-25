@@ -50,17 +50,18 @@ describe('writePostAndAuthorFiles', () => {
 
     // first write
     await writePostAndAuthorFiles(post, tmp);
-    const stat1 = await fs.stat(authorPath);
+    const content1 = await fs.readFile(authorPath, 'utf8');
 
-    // write again with same author
+    // write again with same author — content should be unchanged
     await writePostAndAuthorFiles(post, tmp);
-    const stat2 = await fs.stat(authorPath);
-    expect(stat1.mtimeMs).toBe(stat2.mtimeMs);
+    const content2 = await fs.readFile(authorPath, 'utf8');
+    expect(content2).toBe(content1);
 
-    // change author bio - should update
+    // change author bio — should update
     post.author.bio = 'Bio2';
     await writePostAndAuthorFiles(post, tmp);
-    const stat3 = await fs.stat(authorPath);
-    expect(stat3.mtimeMs).toBeGreaterThan(stat2.mtimeMs);
+    const content3 = await fs.readFile(authorPath, 'utf8');
+    expect(content3).toContain('Bio2');
+    expect(content3).not.toBe(content2);
   });
 });

@@ -25,8 +25,10 @@ describe('meilisearch integration', () => {
 
     // query documents
     const url = `${host}/indexes/ci_test_posts/documents?limit=1`;
-    const r = await fetch(url, { headers: apiKey ? { 'X-Meili-API-Key': apiKey } : {} });
+    const r = await fetch(url, { headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {} });
     const docs = await r.json();
-    expect(Array.isArray(docs)).toBe(true);
-  });
+    const results = Array.isArray(docs) ? docs : docs.results;
+    expect(Array.isArray(results)).toBe(true);
+    expect(results.length).toBeGreaterThan(0);
+  }, 30000);
 });

@@ -27,6 +27,7 @@ export async function parseWpXmlItems(
   let index = 0;
   let lastPostId: any = undefined;
   let lastGuid: any = undefined;
+  const parseErrors: { index: number; error: string }[] = [];
 
   // fast-xml-parser options: strip namespace prefixes and preserve CDATA
   const parser = new XMLParser({
@@ -141,10 +142,9 @@ export async function parseWpXmlItems(
               fs.writeFileSync(opts.checkpointPath, JSON.stringify(ckpt, null, 2));
             }
           } catch (err) {
-            // swallow per-item parse errors but continue
-            // could add retries/backoff if needed
-            // write a simple error log to stderr
-            console.error('Failed to parse item XML:', err instanceof Error ? err.message : err);
+            const msg = err instanceof Error ? err.message : String(err);
+            console.error(`Failed to parse item XML (#${index}):`, msg);
+            parseErrors.push({ index, error: msg });
           }
         }
       }
@@ -161,5 +161,12 @@ export async function parseWpXmlItems(
     if (lastPostId) finalCkpt.last_post_id = lastPostId;
     if (lastGuid) finalCkpt.last_guid = lastGuid;
     fs.writeFileSync(opts.checkpointPath, JSON.stringify(finalCkpt, null, 2));
+  }
+
+  if (parseErrors.length > 0) {
+    console.error(
+      `\nXML parse completed with ${parseErrors.length} error(s) out of ${index} item(s):`,
+      parseErrors.map(e => `  #${e.index}: ${e.error}`).join('\n'),
+    );
   }
 }
