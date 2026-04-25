@@ -1,0 +1,34 @@
+src/safe-fs.ts
+  223b1102edcd6e60 24-30
+  h_5cf1e2c1161853 1-23,31-70
+src/generator.ts
+  h_5cf1e2c1161853 5,8-11,22-24,41,49,54,57,61,79-81
+  223b1102edcd6e60 62-64
+src/config-loader.ts
+  h_5cf1e2c1161853 6,80-81,85,99-100,102-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "51dc0a99ce4824cbb34f93ba6e0b5e302aa7caa8",
+  "prompts": {
+    "223b1102edcd6e60": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8e9b32f4-d740-4d72-8f1f-3d1d92c5653a",
+        "model": "copilot/auto"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 10,
+      "total_deletions": 2,
+      "accepted_lines": 10,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
