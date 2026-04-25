@@ -152,6 +152,7 @@ jobs:
           MEILI_API_KEY: masterKey
         run: pnpm test -- tests/meilisearch.integration.test.ts
 
+<<<<<<< feature/wordpress-to-11ty-migration
   accessibility:
     name: Accessibility (build site -> serve -> pa11y)
     runs-on: ubuntu-latest
@@ -195,6 +196,8 @@ jobs:
       - name: Lint markdown
         run: pnpm run lint:md
 
+=======
+>>>>>>> main
   # optional: aggregate artifacts (docs, coverage) for PR debugging
   upload-artifacts:
     name: Upload artifacts (docs/coverage/site)
