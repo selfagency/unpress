@@ -1,6 +1,6 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import fetch from 'node-fetch';
-import path from 'path';
+import path from 'node:path';
 import stream from 'stream';
 import { promisify } from 'util';
 import { safeResolve } from './path-utils.js';

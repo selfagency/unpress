@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import { fileURLToPath } from 'node:url';
-import path from 'path';
+import path from 'node:path';
 import { isAllowedAbsolute, safeResolve } from './path-utils.js';
 import { ensureDirSafe, writeFileSafe, copySafe, readdirSafe, pathExistsSafe } from './safe-fs.js';
 

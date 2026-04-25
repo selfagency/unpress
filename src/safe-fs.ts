@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import path from 'path';
+import path from 'node:path';
 import { safeResolve, isAllowedAbsolute, isPathWithin } from './path-utils.js';
 
 function assertAllowed(resolvedPath: string) {
