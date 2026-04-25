@@ -94,7 +94,11 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
       .sort();
 
     expect(exportedXmls.length).toBeGreaterThan(0);
-    await fs.copyFile(exportedXmls[0], deterministicXmlPath);
+    const exportedXmlPath = path.resolve(exportedXmls[0]);
+    const canonicalXmlPath = path.resolve(deterministicXmlPath);
+    if (exportedXmlPath !== canonicalXmlPath) {
+      await fs.copyFile(exportedXmlPath, canonicalXmlPath);
+    }
 
     // Keep test fixture YAML in sync with actual exported file path.
     expect(await fs.pathExists(path.join(fixtureDir, 'unpress.api.yml'))).toBe(true);
