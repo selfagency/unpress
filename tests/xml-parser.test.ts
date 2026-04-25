@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { test, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, expect, test } from 'vitest';
 import { parseWpXmlItems } from '../src/xml-parser';
 
 const TMP_DIR = path.join(__dirname, 'tmp');

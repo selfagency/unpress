@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 import cac from 'cac';
+import fs from 'fs-extra';
+import path from 'path';
 import { loadConfig } from '../src/config';
 import { loadProjectConfigFromFile, mergeConfig } from '../src/config-loader';
-import path from 'path';
-import fs from 'fs-extra';
 import { safeResolve } from '../src/path-utils';
 
 const cli = cac('unpress');

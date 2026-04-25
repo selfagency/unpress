@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
+import matter from 'gray-matter';
 import path from 'path';
 import TurndownService from 'turndown';
-import matter from 'gray-matter';
 import { downloadToLocal } from './media-adapters.js';
 import { safeResolve } from './path-utils.js';
 
