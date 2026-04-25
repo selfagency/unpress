@@ -49,7 +49,7 @@ export async function indexPostsFromDir(
   if (!cfg.host) throw new Error('Meilisearch host is required');
   const index = cfg.indexName || 'posts';
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (cfg.apiKey) headers['X-Meili-API-Key'] = cfg.apiKey;
+  if (cfg.apiKey) headers['Authorization'] = `Bearer ${cfg.apiKey}`;
 
   async function parseJsonSafe(res: any) {
     if (typeof res?.json === 'function') {
