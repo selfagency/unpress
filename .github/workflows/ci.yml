@@ -50,15 +50,6 @@ jobs:
       - name: Run tests (coverage)
         run: pnpm run test:coverage
 
-      - name: Prepare OpenAPI for docs (if present)
-        run: |
-          if [ -f src/generated/openapi.json ]; then
-            mkdir -p output
-            cp src/generated/openapi.json output/openapi-types.json
-          else
-            echo "No src/generated/openapi.json found; skipping copy"
-          fi
-
       - name: Build docs
         run: pnpm run docs:build
 
@@ -140,6 +131,30 @@ jobs:
           MEILI_HOST: http://127.0.0.1:7700
           MEILI_API_KEY: masterKey
         run: pnpm test -- tests/meilisearch.integration.test.ts
+
+  wordpress-e2e:
+    name: WordPress live E2E tests
+    runs-on: ubuntu-latest
+    needs: matrix-tests
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run WordPress E2E tests
+        run: pnpm run test:e2e:wordpress
 
   # optional: aggregate artifacts (docs, coverage) for PR debugging
   upload-artifacts:

@@ -1,6 +1,37 @@
-# Unpress
+---
+layout: home
 
-**Convert your whole WordPress site to 11ty with one command!**
+hero:
+  name: Unpress
+  text: WordPress to 11ty migration CLI
+  tagline: Convert your whole WordPress site to Eleventy with one command.
+  actions:
+    - theme: brand
+      text: Quick Start
+      link: /guide/quick-start
+    - theme: alt
+      text: Installation
+      link: /guide/installation
+
+features:
+  - icon: ⚡
+    title: Fast migrations
+    details: Convert posts, pages, categories, tags, and authors with resume support for large sites.
+    link: /guide/quick-start
+    linkText: Start migrating
+  - icon: 🖼️
+    title: Flexible media handling
+    details: Keep original URLs, download locally, or reupload to S3/SFTP with automatic URL replacement.
+    link: /guide/media
+    linkText: Media options
+  - icon: 🔎
+    title: Search-ready output
+    details: Generate content and plug in Meilisearch for fast, typo-tolerant static-site search.
+    link: /guide/meilisearch
+    linkText: Search integration
+---
+
+## Overview
 
 Unpress is a CLI utility that helps you migrate your WordPress content (posts, pages, taxonomies, and media) to a static Eleventy site. Whether you're looking to save hosting costs or archive a stale blog, Unpress makes the migration simple and reliable.
 

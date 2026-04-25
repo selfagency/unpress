@@ -227,6 +227,106 @@ cli.command('[...args]').action(async (_args, flags) => {
         );
 
         console.log('XML processing complete');
+
+        // Convert JSON items to markdown files in appropriate directories based on post_type
+        try {
+          const { htmlToMarkdown } = await import('../src/convert');
+          const itemsDir = path.join(stateDir, 'items');
+          const itemFiles = await fs.readdir(itemsDir);
+          const outDir = getFlag('outDir', 'out-dir') || process.cwd();
+          const siteDir = path.join(outDir, 'site');
+
+          // Helper to extract string from CDATA objects
+          const extractText = (val: any): string => {
+            if (!val) return '';
+            if (typeof val === 'string') return val;
+            if (typeof val === 'object' && val.__cdata) return val.__cdata;
+            if (typeof val === 'object' && val['#text']) return val['#text'];
+            return String(val);
+          };
+
+          const postTypeMap: Record<string, string> = {
+            post: 'posts',
+            page: 'pages',
+            book: 'books',
+          };
+
+          for (const itemFile of itemFiles) {
+            if (!itemFile.endsWith('.json')) continue;
+            const itemData = await fs.readJson(path.join(itemsDir, itemFile));
+            const item = itemData.item || itemData;
+            if (!item) continue;
+
+            const title = extractText(item.title);
+            if (!title) continue;
+
+            const postType = (item.post_type || 'post').toLowerCase();
+            const contentSubdir = postTypeMap[postType] || 'posts';
+            const contentDir = path.join(siteDir, 'content', contentSubdir);
+            await fs.ensureDir(contentDir);
+
+            const content = extractText(item['content:encoded'] || item.content || item.excerpt || '');
+            const markdown = htmlToMarkdown(content);
+
+            // Build frontmatter
+            const fm: Record<string, any> = {};
+            fm.title = title;
+            if (item['wp:post_date']) {
+              const dateStr = extractText(item['wp:post_date']);
+              if (dateStr) fm.date = new Date(dateStr).toISOString();
+            }
+            if (item['wp:post_name']) {
+              fm.slug = extractText(item['wp:post_name']);
+            }
+
+            // Handle tags and categories from terms
+            const tags: string[] = [];
+            const categories: string[] = [];
+            if (item.terms && Array.isArray(item.terms)) {
+              for (const term of item.terms) {
+                const domain = extractText(term.domain);
+                const name = extractText(term['#text']);
+                if (domain === 'tag') tags.push(name);
+                else if (domain === 'category') categories.push(name);
+              }
+            }
+            if (tags.length > 0) fm.tags = tags;
+            if (categories.length > 0) fm.categories = categories;
+
+            if (item['dc:creator']) {
+              fm.author = extractText(item['dc:creator']);
+            }
+
+            fm.layout = 'layouts/base.njk';
+
+            // Serialize frontmatter as YAML
+            const fmLines = ['---'];
+            for (const [key, value] of Object.entries(fm)) {
+              if (typeof value === 'string') {
+                fmLines.push(`${key}: "${value.replace(/"/g, '\\"')}"`);
+              } else if (Array.isArray(value)) {
+                fmLines.push(`${key}:`);
+                for (const v of value) {
+                  fmLines.push(`  - "${v}"`);
+                }
+              } else {
+                fmLines.push(`${key}: ${value}`);
+              }
+            }
+            fmLines.push('---');
+            fmLines.push('');
+
+            const slug = extractText(item['wp:post_name'] || `item-${item.post_id || Date.now()}`);
+            const filename = `${slug}.md`;
+            const fileContent = fmLines.join('\n') + markdown;
+            await fs.writeFile(path.join(contentDir, filename), fileContent, 'utf8');
+          }
+
+          console.log(`Generated markdown files for ${itemFiles.filter(f => f.endsWith('.json')).length} items`);
+        } catch (err) {
+          console.error('Markdown generation failed:', err instanceof Error ? err.message : err);
+          process.exit(1);
+        }
       } catch (err) {
         console.error('XML processing failed:', err instanceof Error ? err.message : err);
         process.exit(1);

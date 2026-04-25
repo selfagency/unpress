@@ -1,0 +1,12 @@
+source:
+  type: api
+  api:
+    baseUrl: http://127.0.0.1:8088
+media:
+  mode: leave
+processing:
+  concurrency: 2
+  intervalCap: 10
+  interval: 1000
+resume:
+  stateDir: ./tests/e2e-wordpress/output/.unpress/state

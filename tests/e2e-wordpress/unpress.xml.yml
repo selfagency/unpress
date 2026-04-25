@@ -1,0 +1,12 @@
+source:
+  type: xml
+  xml:
+    file: ./tests/e2e-wordpress/output/unpress-e2e-export.xml
+media:
+  mode: leave
+processing:
+  concurrency: 2
+  intervalCap: 10
+  interval: 1000
+resume:
+  stateDir: ./tests/e2e-wordpress/output/.unpress/state

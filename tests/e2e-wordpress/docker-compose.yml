@@ -1,0 +1,66 @@
+name: unpress-e2e-wordpress
+
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wp
+      MYSQL_PASSWORD: wp
+    networks:
+      default:
+        aliases:
+          - mysql
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  wordpress:
+    image: wordpress:6.5.5-php8.2-apache
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '8088:80'
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wp
+      WORDPRESS_DB_PASSWORD: wp
+    volumes:
+      - wp_data:/var/www/html
+      - ./scripts:/workspace/scripts:ro
+      - ./output:/workspace/output
+
+  wpcli:
+    image: wordpress:6.5.5-php8.2-apache
+    user: '0:0'
+    depends_on:
+      - wordpress
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wp
+      WORDPRESS_DB_PASSWORD: wp
+      WORDPRESS_URL_INTERNAL: http://wordpress
+      WORDPRESS_URL_EXTERNAL: http://127.0.0.1:8088
+      WP_ADMIN_USER: admin
+      WP_ADMIN_PASSWORD: admin-pass
+      WP_ADMIN_EMAIL: admin@example.test
+      WP_E2E_APP_PASSWORD_NAME: unpress-e2e
+      WP_PATH: /var/www/html
+      WP_EXPORT_DIR: /workspace/output
+    volumes:
+      - wp_data:/var/www/html
+      - ./scripts:/workspace/scripts:ro
+      - ./output:/workspace/output
+    entrypoint: ['php', '/workspace/scripts/seed-and-export.php']
+
+volumes:
+  db_data:
+  wp_data:

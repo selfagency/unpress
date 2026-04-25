@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { safeResolve } from './path-utils.js';
 
 /**
@@ -12,38 +13,11 @@ export async function generate11tyProject(dest: string) {
   eleventyConfig.addPassthroughCopy('assets');
   return {
     dir: { input: 'site', includes: '_includes', data: '_data', output: 'dist' },
+    templateFormats: ['njk', 'md'],
+    markdownTemplateEngine: 'njk',
+    htmlTemplateEngine: 'njk',
   };
 };
-`;
-
-  const baseLayout = `<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>{% if title %}{{ title }} - {% endif %}{{ site.title | safe }}</title>
-    <link rel="stylesheet" href="/assets/styles.css" />
-  </head>
-  <body>
-    <a href="#maincontent" class="sr-only">Skip to main</a>
-    <header role="banner">
-      <h1>{{ site.title }}</h1>
-      <nav aria-label="Main navigation">
-        <a href="/">Home</a>
-        <a href="/tags/">Tags</a>
-        <a href="/categories/">Categories</a>
-        <a href="/authors/">Authors</a>
-      </nav>
-    </header>
-    <main id="maincontent" role="main">
-      {{ content | safe }}
-    </main>
-
-    <footer role="contentinfo">
-      <p>&copy; {{ now | date: "%Y" }} {{ site.title }}</p>
-    </footer>
-  </body>
-</html>
 `;
 
   const indexMd = `---
@@ -74,65 +48,7 @@ bio: "This is a sample author bio. Replace with real authors during migration."
 
   // write files
   await fs.writeFile(safeResolve(root, '.eleventy.js'), eleventyConfig, 'utf8');
-  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'base.njk'), baseLayout, 'utf8');
   await fs.writeFile(safeResolve(root, 'site', 'index.md'), indexMd, 'utf8');
-
-  // write tag/category/author templates
-  const tagsTemplate = `---
-layout: layouts/base.njk
-title: "Tags"
----
-
-<h2>Tags</h2>
-{% for tag in collections.tags | sort(false) %}
-  <h3><a href="/tags/{{ tag | slug }}/">{{ tag }}</a></h3>
-{% endfor %}
-`;
-
-  const categoriesTemplate = `---
-layout: layouts/base.njk
-title: "Categories"
----
-
-<h2>Categories</h2>
-{% for category in collections.categories | sort(false) %}
-  <h3><a href="/categories/{{ category | slug }}/">{{ category }}</a></h3>
-{% endfor %}
-`;
-
-  const authorsIndex = `---
-layout: layouts/base.njk
-title: "Authors"
----
-
-<h2>Authors</h2>
-<ul>
-{% for author in collections.authors %}
-  <li><a href="{{ author.url }}">{{ author.data.name }}</a></li>
-{% endfor %}
-</ul>
-`;
-
-  const authorTemplate = `---
-layout: layouts/base.njk
-pagination:
-  data: collections.authorPosts
-  size: 10
----
-
-<h2>{{ pagination.items[0].data.author.name }}</h2>
-<p>{{ pagination.items[0].data.author.bio }}</p>
-<ul>
-{% for post in pagination.items %}
-  <li><a href="{{ post.url }}">{{ post.data.title }}</a></li>
-{% endfor %}
-</ul>
-`;
-
-  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'tags.njk'), tagsTemplate, 'utf8');
-  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'categories.njk'), categoriesTemplate, 'utf8');
-  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'authors.njk'), authorsIndex, 'utf8');
-  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'author.njk'), authorTemplate, 'utf8');
 
   // sample author file
   await fs.writeFile(safeResolve(root, 'site', 'content', 'authors', 'site-author.md'), sampleAuthor, 'utf8');
@@ -153,6 +69,43 @@ img { max-width: 100%; height: auto; }
 }
 `;
   await fs.writeFile(safeResolve(root, 'assets', 'styles.css'), styles, 'utf8');
+
+  // Copy custom templates from the repo's templates/11ty directory
+  try {
+    // Find the templates directory at package root
+    const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+    const templatesDir = path.join(packageRoot, 'templates', '11ty');
+
+    if (await fs.pathExists(templatesDir)) {
+      const siteDir = safeResolve(root, 'site');
+      const includesDir = safeResolve(root, 'site', '_includes');
+      const templatesIncludesDir = path.join(templatesDir, '_includes');
+
+      // Copy top-level template pages (author.njk, tags.njk, etc.) into site root
+      const templateFiles = await fs.readdir(templatesDir);
+      for (const file of templateFiles) {
+        if (file.endsWith('.njk')) {
+          const src = path.join(templatesDir, file);
+          const dest = safeResolve(siteDir, file);
+          await fs.copy(src, dest);
+        }
+      }
+
+      // Copy includes tree into site/_includes
+      if (await fs.pathExists(templatesIncludesDir)) {
+        await fs.copy(templatesIncludesDir, includesDir, { overwrite: true });
+      }
+    }
+  } catch (err) {
+    // Log but don't fail if template copying fails
+    try {
+      const { warn } = await import('./logger.js');
+      warn(`Failed to copy custom templates: ${err instanceof Error ? err.message : err}`);
+    } catch {
+      /* ignore */
+    }
+  }
+
   // progress message
   try {
     const { progress } = await import('./logger.js');

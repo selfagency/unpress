@@ -25,6 +25,7 @@
     "lint:md:fix": "rumdl check --fix . && rumdl fmt .",
     "prepare": "husky",
     "test": "vitest run",
+    "test:e2e:wordpress": "RUN_WORDPRESS_E2E=1 vitest run tests/e2e-wordpress.live.test.ts",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
