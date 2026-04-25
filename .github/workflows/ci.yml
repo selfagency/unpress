@@ -50,27 +50,17 @@ jobs:
       - name: Markdown lint
         run: pnpm run lint:md
 
-      # Tests are run in dedicated unit jobs (per OS). Keep checks focused on
-      # typecheck/lint/format/docs to reduce redundant runs.
-
-      - name: Build docs
-        run: pnpm run docs:build
-
-      - name: Upload coverage to Codecov (optional)
-        uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe
+  sonarqube:
+    name: SonarQube
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Upload test report artifact (junit/coverage)
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: test-results
-          path: |
-            coverage
-            coverage-report
-            test-report.junit.xml
-            test-results.xml
-          if-no-files-found: ignore
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   unit-linux:
     name: Unit tests (linux)
