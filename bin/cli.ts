@@ -295,7 +295,7 @@ cli.command('[...args]').action(async (_args, flags) => {
             const siteDir = safeResolve(outDir, 'site');
 
             // Helper to extract string from CDATA objects
-            function extractText(val: any): string {
+            function extractText(val: unknown): string {
               if (!val) return '';
               if (typeof val === 'string') return val;
               if (typeof val === 'object' && val.__cdata) return val.__cdata;

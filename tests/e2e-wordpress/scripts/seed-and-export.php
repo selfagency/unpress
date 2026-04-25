@@ -6,8 +6,7 @@ ini_set('display_errors', 'stderr');
 
 function env_var(string $name, string $default): string
 {
-    // getenv is acceptable in test fixture; values are injected via env
-    // getenv is acceptable in test fixture; values are injected via env
+    // Getenv is acceptable in test fixture; values are injected via env
     $value = getenv($name);
     return $value === false || $value === '' ? $default : $value;
 }
@@ -31,8 +30,8 @@ function wait_for_core(string $wpPath): void
             return;
         }
         log_line("[$i/180] Waiting for WordPress core files...");
-        // sleep() is acceptable in test fixture for polling; total wait capped at 360s
-        usleep(2000000); // 2 seconds in microseconds
+        // Sleep() is acceptable in test fixture for polling; total wait capped at 360s.
+        usleep(2000000); // 2 seconds in microseconds.
     }
 
     fail("WordPress core files never appeared in {$wpPath}");
@@ -51,7 +50,7 @@ function wait_for_db(string $hostWithPort, string $database, string $user, strin
             return;
         }
         log_line("[$i/180] Waiting for DB readiness...");
-        usleep(2000000); // 2 seconds in microseconds
+        usleep(2000000); // 2 seconds in microseconds.
     }
 
     fail('Database never became reachable from the seed container');
@@ -61,7 +60,7 @@ function wait_for_http(string $url): void
 {
     log_line('Waiting for WordPress HTTP readiness...');
     for ($i = 1; $i <= 180; $i++) {
-        // Use curl with explicit timeout; acceptable in test fixture
+        // Use curl with explicit timeout; acceptable in test fixture.
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 2);
@@ -84,7 +83,7 @@ function normalize_term_id(int|array|false|null $term): ?int
         return null;
     }
     if (is_array($term)) {
-        // isset check on array key; acceptable in test fixture
+        // Isset check on array key; acceptable in test fixture.
         return isset($term['term_id']) ? (int) $term['term_id'] : null;
     }
     return (int) $term;
@@ -102,7 +101,7 @@ function ensure_term(string $taxonomy, string $name): int
         fail('Failed to create term ' . $taxonomy . ':' . $name . ' - ' . $created->get_error_message());
     }
 
-    // Access array key; acceptable in test fixture
+    // Access array key; acceptable in test fixture.
     return (int) $created['term_id'];
 }
 
@@ -117,7 +116,7 @@ function ensure_user(string $username, string $email, string $password, string $
         $user = get_user_by('id', (int) $userId);
     }
 
-    // Explicit type check for WP_User; acceptable in test fixture
+    // Explicit type check for WP_User; acceptable in test fixture.
     if (! $user instanceof WP_User) {
         fail('Could not load user ' . $username);
     }
@@ -136,7 +135,7 @@ function maybe_insert_post(array $args): void
     }
 
     $postId = wp_insert_post($args, true);
-    // is_wp_error is a WordPress API function; acceptable in test fixture
+    // Is_wp_error is a WordPress API function; acceptable in test fixture.
     if (is_wp_error($postId)) {
         fail('Failed to create ' . $args['post_type'] . ' "' . $args['post_title'] . '" - ' . $postId->get_error_message());
     }
@@ -232,7 +231,7 @@ try {
     }
 
     $admin = get_user_by('login', $wpAdminUser);
-    // Explicit type check for WP_User; acceptable in test fixture
+    // Explicit type check for WP_User; acceptable in test fixture.
     if (! $admin instanceof WP_User) {
         fail('Admin user was not created successfully');
     }

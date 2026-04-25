@@ -37,7 +37,7 @@ export async function uploadToS3(localPath: string, client: S3Client, bucket: st
   return `s3://${bucket}/${key}`;
 }
 
-export async function uploadToSftp(localPath: string, client: any, remotePath: string): Promise<string> {
+export async function uploadToSftp(localPath: string, client: unknown, remotePath: string): Promise<string> {
   const remoteFile = path.posix.join(remotePath, path.basename(localPath));
   await (client as any).put(localPath, remoteFile);
   return `sftp:${remoteFile}`;

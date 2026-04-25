@@ -23,6 +23,14 @@ interface MeiliDocument {
   author: string | null;
 }
 
+interface MeiliTask {
+  status: string;
+  error?: {
+    message?: string;
+    code?: string;
+  };
+}
+
 async function readMarkdownFrontmatter(filePath: string) {
   const raw = await fs.readFile(filePath, 'utf8');
   // Use gray-matter to parse frontmatter robustly (supports YAML, TOML, etc.)
@@ -58,7 +66,7 @@ async function waitForTask(cfg: MeiliConfig, taskUid: number, attempts = 60, int
       const body = await res.text();
       throw new Error(`Failed to fetch task ${taskUid}: ${res.status} ${body}`);
     }
-    const task = (await parseJsonSafe(res)) as any;
+    const task = (await parseJsonSafe(res)) as MeiliTask;
     if (task?.status === 'succeeded') return;
     if (task?.status === 'failed') {
       const reason = task?.error?.message || task?.error?.code || 'unknown error';

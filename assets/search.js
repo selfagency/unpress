@@ -15,7 +15,7 @@
     }
     // Compose URL safely and avoid operator-precedence bugs
     const indexName = cfg.index || 'posts';
-    const url = String(cfg.host).replace(/\/$/, '') + '/indexes/' + encodeURIComponent(indexName) + '/search';
+    const url = `${String(cfg.host).replace(/\/$/, '')}/indexes/${encodeURIComponent(indexName)}/search`;
     const body = { q: q, limit: 10 };
     const headers = { 'Content-Type': 'application/json' };
     if (cfg.apiKey) headers['X-Meili-API-Key'] = cfg.apiKey;
@@ -35,13 +35,13 @@
           const h3 = document.createElement('h3');
           const a = document.createElement('a');
           // Ensure slug is treated as text for URL parts
-          const slug = h && h.slug ? String(h.slug) : '';
-          a.setAttribute('href', '/' + encodeURIComponent(slug) + '/');
-          a.textContent = h && h.title ? String(h.title) : 'Untitled';
+          const slug = h?.slug ? String(h.slug) : '';
+          a.setAttribute('href', `/${encodeURIComponent(slug)}/`);
+          a.textContent = h?.title ? String(h.title) : 'Untitled';
           h3.appendChild(a);
           article.appendChild(h3);
           const p = document.createElement('p');
-          p.textContent = h && h.excerpt ? String(h.excerpt) : '';
+          p.textContent = h?.excerpt ? String(h.excerpt) : '';
           article.appendChild(p);
           results.appendChild(article);
         }
