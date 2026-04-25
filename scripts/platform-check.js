@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+// Quick platform compatibility helper
 // Quick platform compatibility helper
 const os = require('os');
 console.log('Platform:', process.platform);

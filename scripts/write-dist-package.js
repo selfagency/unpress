@@ -13,15 +13,15 @@ async function main() {
     JSON.parse(raw);
 
   const distPkg = {
-    name,
-    version,
-    description,
-    keywords,
-    homepage,
-    bugs,
-    repository,
-    license,
-    author,
+    name: name,
+    version: version,
+    description: description,
+    keywords: keywords,
+    homepage: homepage,
+    bugs: bugs,
+    repository: repository,
+    license: license,
+    author: author,
     type: 'module',
     main: './index.js',
     types: './index.d.ts',
@@ -31,11 +31,11 @@ async function main() {
         types: './index.d.ts',
       },
     },
-    dependencies,
+    dependencies: dependencies,
   };
 
   await mkdir(outDir, { recursive: true });
-  await writeFile(resolve(outDir, 'package.json'), `${JSON.stringify(distPkg, null, 2)}\n`, 'utf8');
+  await writeFile(resolve(outDir, 'package.json'), '' + JSON.stringify(distPkg, null, 2) + '\n', 'utf8');
   console.log('Wrote', resolve(outDir, 'package.json'));
 
   const readmeSrc = resolve(__dirname, '..', 'README.md');
