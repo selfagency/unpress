@@ -11,12 +11,17 @@ const streamPipeline = promisify(pipeline);
  * @param dest - The local file path to save to.
  */
 export async function downloadFile(url: string, dest: string): Promise<void> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to download: ${url}`);
-  await fs.ensureDir(path.dirname(dest));
-  const fileStream = fs.createWriteStream(dest);
-  // Use pipeline to ensure proper cleanup on errors
-  await streamPipeline(res.body as any, fileStream);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) throw new Error(`Failed to download: ${url}`);
+    await fs.ensureDir(path.dirname(dest));
+    const fileStream = fs.createWriteStream(dest);
+    await streamPipeline(res.body as any, fileStream);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 /**

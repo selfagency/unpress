@@ -11,7 +11,7 @@ beforeEach(() => {
 afterEach(() => {
   try {
     if (fs.existsSync(TMP_DIR)) fs.rmSync(TMP_DIR, { recursive: true, force: true });
-  } catch (e) {
+  } catch {
     // ignore
   }
 });

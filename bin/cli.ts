@@ -48,10 +48,19 @@ cli.command('', async flags => {
     }
     const mergedProject = mergeConfig(flags, projectCfg);
 
-    const config = await loadConfig(normalized);
+    // Determine source type early
+    const sourceType = mergedProject?.source?.type || flags['source'] || flags['source-type'];
+    const needsApiAuth =
+      sourceType === 'api' || (!sourceType && !flags['generate-site'] && !flags['index-meili'] && !flags['xml-file']);
+
+    // Only prompt for WordPress credentials when API source is needed
+    let config: any = undefined;
+    if (needsApiAuth) {
+      config = await loadConfig(normalized);
+    }
     // If dry-run requested, validate and exit
     if (flags['dry-run']) {
-      console.log('Dry-run: validated config:', config);
+      console.log('Dry-run: validated config:', config || 'no API config needed');
       process.exit(0);
     }
 
@@ -86,7 +95,6 @@ cli.command('', async flags => {
     }
 
     // Handle source-specific flows: API or XML (minimal wiring)
-    const sourceType = mergedProject?.source?.type || flags['source'] || flags['source-type'];
     if (sourceType === 'xml' || flags['source'] === 'xml') {
       const xmlFile = flags['xml-file'] || mergedProject?.source?.xml?.file;
       if (!xmlFile) {
@@ -114,14 +122,14 @@ cli.command('', async flags => {
           if (driver === 's3') {
             try {
               s3Client = mediaAdapters.createS3ClientFromConfig(mergedProject.media.reupload.s3);
-            } catch (err) {
+            } catch {
               // fallback to env-based client
               s3Client = mediaAdapters.createS3ClientFromEnv();
             }
           } else if (driver === 'sftp') {
             try {
               sftpClient = await mediaAdapters.createSftpClientFromConfig(mergedProject.media.reupload.sftp);
-            } catch (err) {
+            } catch {
               sftpClient = await mediaAdapters.createSftpClientFromEnv();
             }
           }
@@ -166,7 +174,7 @@ cli.command('', async flags => {
                             s3: { client: s3Client, bucket: s3cfg.bucket, prefix: s3cfg.prefix },
                           });
                           mediaMap[url] = res;
-                        } catch (err) {
+                        } catch {
                           const fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
                           mediaMap[url] = `s3://${s3cfg.bucket}/${fname}`;
                         }
@@ -180,14 +188,14 @@ cli.command('', async flags => {
                             sftp: { client: sftpClient, remotePath: sftpCfg.path || '/' },
                           });
                           mediaMap[url] = res;
-                        } catch (err) {
+                        } catch {
                           const fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
                           mediaMap[url] = `sftp:${sftpCfg.path || '/'}${fname}`;
                         }
                       }
                     }
                   }
-                } catch (err) {
+                } catch {
                   // best-effort: record failure in mediaMap as null
                   mediaMap[url] = mediaMap[url] || '';
                 }

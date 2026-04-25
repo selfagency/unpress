@@ -23,7 +23,7 @@ export async function processItems<T, R = any>(
   if (typeof opts.interval === 'number' && opts.interval > 0) pqOpts.interval = opts.interval;
   const queue = new PQueue(pqOpts as any);
 
-  const results: R[] = [];
+  const results: R[] = Array.from({ length: items.length });
   let processed = 0;
 
   const addPromises = items.map((it, idx) =>
@@ -31,14 +31,13 @@ export async function processItems<T, R = any>(
       const res = await worker(it, idx);
       processed++;
       progress(`processed ${processed}/${items.length}`);
-      results.push(res);
+      results[idx] = res;
       return res;
     }),
   );
 
-  await queue.onIdle();
   const resolved = await Promise.all(addPromises);
-  return resolved as R[];
+  return resolved;
 }
 
 export default { processItems };

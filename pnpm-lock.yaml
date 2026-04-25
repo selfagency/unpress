@@ -23,15 +23,6 @@ importers:
       '@inquirer/prompts':
         specifier: ^8.4.2
         version: 8.4.2(@types/node@25.6.0)
-      '@types/fs-extra':
-        specifier: ^11.0.4
-        version: 11.0.4
-      '@types/node':
-        specifier: ^25.6.0
-        version: 25.6.0
-      '@vitest/coverage-v8':
-        specifier: ^4.1.5
-        version: 4.1.5(vitest@4.1.5)
       cac:
         specifier: ^7.0.0
         version: 7.0.0
@@ -50,6 +41,40 @@ importers:
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
+      node-fetch:
+        specifier: ^3.3.2
+        version: 3.3.2
+      p-queue:
+        specifier: 9.1.2
+        version: 9.1.2
+      ssh2-sftp-client:
+        specifier: 12.1.1
+        version: 12.1.1
+      turndown:
+        specifier: ^7.2.4
+        version: 7.2.4
+      yaml:
+        specifier: ^2.8.3
+        version: 2.8.3
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+    devDependencies:
+      '@types/fs-extra':
+        specifier: ^11.0.4
+        version: 11.0.4
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.6.0
+      '@types/ssh2-sftp-client':
+        specifier: ^9.0.6
+        version: 9.0.6
+      '@types/turndown':
+        specifier: ^5.0.6
+        version: 5.0.6
+      '@vitest/coverage-v8':
+        specifier: ^4.1.5
+        version: 4.1.5(vitest@4.1.5)
       http-server:
         specifier: ^14.1.1
         version: 14.1.1
@@ -62,33 +87,21 @@ importers:
       msw:
         specifier: ^2.13.6
         version: 2.13.6(@types/node@25.6.0)(typescript@6.0.3)
-      node-fetch:
-        specifier: ^3.3.2
-        version: 3.3.2
       oxfmt:
         specifier: ^0.46.0
         version: 0.46.0
       oxlint:
         specifier: ^1.61.0
         version: 1.61.0
-      p-queue:
-        specifier: 9.1.2
-        version: 9.1.2
       pa11y:
         specifier: 9.1.1
         version: 9.1.1(typescript@6.0.3)
       rumdl:
         specifier: ^0.1.80
         version: 0.1.80
-      ssh2-sftp-client:
-        specifier: 12.1.1
-        version: 12.1.1
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
-      turndown:
-        specifier: ^7.2.4
-        version: 7.2.4
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -104,19 +117,6 @@ importers:
       wait-on:
         specifier: 9.0.5
         version: 9.0.5
-      yaml:
-        specifier: ^2.8.3
-        version: 2.8.3
-      zod:
-        specifier: ^4.3.6
-        version: 4.3.6
-    devDependencies:
-      '@types/ssh2-sftp-client':
-        specifier: ^9.0.6
-        version: 9.0.6
-      '@types/turndown':
-        specifier: ^5.0.6
-        version: 5.0.6
 
 packages:
 

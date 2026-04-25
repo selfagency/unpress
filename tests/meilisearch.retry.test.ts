@@ -19,7 +19,7 @@ describe('meilisearch retry/backoff', () => {
 
     // First two fetch calls fail (index creation), then succeed; subsequent document pushes succeed
     let call = 0;
-    mockedFetch.mockImplementation(async (url: string, opts: any) => {
+    mockedFetch.mockImplementation(async (_url: string, _opts: any) => {
       call++;
       // Simple mock Response-like object
       if (call <= 2) {
