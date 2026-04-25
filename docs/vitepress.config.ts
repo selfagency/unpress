@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig } from 'vitepress';
 
 export default defineConfig({
   title: 'Unpress',
@@ -17,6 +17,7 @@ export default defineConfig({
       { text: 'Guides', link: '/guide/installation' },
       { text: 'Reference', link: '/reference/cli-flags' },
       { text: 'Examples', link: '/examples/' },
+      { text: 'Testing', link: '/testing/real-wordpress' },
     ],
 
     sidebar: {
@@ -64,6 +65,14 @@ export default defineConfig({
             { text: 'Multi-Author Blog', link: '/examples/multi-author/' },
             { text: 'S3 Media Reupload', link: '/examples/s3-media/' },
             { text: 'Archival Migration', link: '/examples/archival/' },
+          ],
+        },
+      ],
+      '/testing/': [
+        {
+          text: 'Testing',
+          items: [
+            { text: 'Live WordPress Manual Test', link: '/testing/real-wordpress' },
           ],
         },
       ],

@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import path from 'node:path';
+import { describe, expect, it } from 'vitest';
 import { indexPostsFromDir } from '../src/meilisearch';
-import path from 'path';
 
 describe('meilisearch edge cases', () => {
   it('returns zero when posts dir is missing', async () => {

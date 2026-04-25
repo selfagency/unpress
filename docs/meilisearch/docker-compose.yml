@@ -1,7 +1,8 @@
-version: '3.8'
+version: "3.8"
 services:
   meilisearch:
-    image: getmeili/meilisearch:latest
+    # Pin image to a specific version (avoid `latest`) and run with reduced privileges
+    image: getmeili/meilisearch:v1.12
     container_name: meilisearch
     ports:
       - "7700:7700"
@@ -10,3 +11,8 @@ services:
       - MEILI_NO_ANALYTICS=true
     volumes:
       - ./meili_data:/data.ms
+    # Run container as non-root user and disable privilege escalation
+    user: "1000:1000"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true

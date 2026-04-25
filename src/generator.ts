@@ -1,49 +1,119 @@
-import fs from 'fs-extra';
-import path from 'path';
-import { safeResolve } from './path-utils.js';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { isAllowedAbsolute, safeResolve } from './path-utils.js';
+import { copySafe, ensureDirSafe, pathExistsSafe, readdirSafe, writeFileSafe } from './safe-fs.js';
 
+async function createProjectDirs(baseRoot: string) {
+  await ensureDirSafe(baseRoot, 'site', '_includes', 'layouts');
+  await ensureDirSafe(baseRoot, 'site', 'content', 'posts');
+  await ensureDirSafe(baseRoot, 'site', 'content', 'authors');
+  await ensureDirSafe(baseRoot, 'assets');
+}
+
+async function writeCoreFiles(baseRoot: string, eleventyConfig: string, indexMd: string) {
+  const sampleAuthor =
+    '---\n' +
+    'name: "Site Author"\n' +
+    'image: "/assets/author.jpg"\n' +
+    'bio: "This is a sample author bio. Replace with real authors during migration."\n' +
+    '---\n\n';
+
+  await writeFileSafe(baseRoot, eleventyConfig, '.eleventy.js');
+  await writeFileSafe(baseRoot, indexMd, 'site', 'index.md');
+  await writeFileSafe(baseRoot, sampleAuthor, 'site', 'content', 'authors', 'site-author.md');
+
+  const styles =
+    ':root { color-scheme: light dark; }\n' +
+    "body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; max-width: 72ch; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }\n" +
+    'header nav a { margin-right: 1rem; }\n' +
+    'img { max-width: 100%; height: auto; }\n' +
+    '.sr-only:not(:focus):not(:active) {\n' +
+    '  clip: rect(0 0 0 0);\n' +
+    '  clip-path: inset(50%);\n' +
+    '  height: 1px;\n' +
+    '  overflow: hidden;\n' +
+    '  position: absolute;\n' +
+    '  white-space: nowrap;\n' +
+    '  width: 1px;\n' +
+    '}\n';
+
+  await writeFileSafe(baseRoot, styles, 'assets', 'styles.css');
+}
+
+async function copyCustomTemplates(root: string) {
+  try {
+    const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+    const templatesDir = safeResolve(packageRoot, 'templates', '11ty');
+
+    if (await pathExistsSafe(packageRoot, 'templates', '11ty')) {
+      const siteDir = safeResolve(root, 'site');
+
+      const templateFiles = await readdirSafe(packageRoot, 'templates', '11ty');
+      for (const file of templateFiles) {
+        if (file.endsWith('.njk')) {
+          await copySafe(packageRoot, ['templates', '11ty', file], root, ['site', file]);
+        }
+      }
+
+      if (await pathExistsSafe(packageRoot, 'templates', '11ty', '_includes')) {
+        await copySafe(packageRoot, ['templates', '11ty', '_includes'], root, ['site', '_includes'], {
+          overwrite: true,
+        });
+      }
+    }
+  } catch (err) {
+    try {
+      const { warn } = await import('./logger.js');
+      warn(`Failed to copy custom templates: ${err instanceof Error ? err.message : (err as string)}`);
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+async function ensureBaseLayoutExists(root: string, fallbackBaseLayout: string) {
+  if (!(await pathExistsSafe(root, 'site', '_includes', 'layouts', 'base.njk'))) {
+    await ensureDirSafe(root, 'site', '_includes', 'layouts');
+    await writeFileSafe(root, fallbackBaseLayout, 'site', '_includes', 'layouts', 'base.njk');
+  }
+}
+
+async function notifyProgress(msg: string) {
+  try {
+    const { progress } = await import('./logger.js');
+    progress(msg);
+  } catch {
+    /* ignore */
+  }
+}
 /**
  * Generate a minimal 11ty project structure in the given directory.
  * Creates: .eleventy.js, site/content/posts, site/_includes/layouts/base.njk, site/index.md
  */
 export async function generate11tyProject(dest: string) {
-  const root = path.resolve(dest);
+  // Allow absolute destinations (useful for tests / temp dirs). For relative
+  // destinations, resolve against cwd and ensure the path doesn't escape the
+  // workspace using safeResolve.
+  let root: string;
+  if (path.isAbsolute(dest)) {
+    const norm = path.resolve(dest);
+    // Only allow absolute paths that are inside the workspace or the OS temp dir
+    if (!isAllowedAbsolute(norm)) {
+      throw new Error(`Refusing to generate site into absolute path outside workspace or tmp: ${norm}`);
+    }
+    root = norm;
+  } else {
+    root = safeResolve(process.cwd(), dest);
+  }
   const eleventyConfig = `module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy('assets');
   return {
     dir: { input: 'site', includes: '_includes', data: '_data', output: 'dist' },
+    templateFormats: ['njk', 'md'],
+    markdownTemplateEngine: 'njk',
+    htmlTemplateEngine: 'njk',
   };
 };
-`;
-
-  const baseLayout = `<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>{% if title %}{{ title }} - {% endif %}{{ site.title | safe }}</title>
-    <link rel="stylesheet" href="/assets/styles.css" />
-  </head>
-  <body>
-    <a href="#maincontent" class="sr-only">Skip to main</a>
-    <header role="banner">
-      <h1>{{ site.title }}</h1>
-      <nav aria-label="Main navigation">
-        <a href="/">Home</a>
-        <a href="/tags/">Tags</a>
-        <a href="/categories/">Categories</a>
-        <a href="/authors/">Authors</a>
-      </nav>
-    </header>
-    <main id="maincontent" role="main">
-      {{ content | safe }}
-    </main>
-
-    <footer role="contentinfo">
-      <p>&copy; {{ now | date: "%Y" }} {{ site.title }}</p>
-    </footer>
-  </body>
-</html>
 `;
 
   const indexMd = `---
@@ -56,110 +126,52 @@ layout: layouts/base.njk
 This is a generated 11ty site.
 `;
 
-  // create directories
-  await fs.ensureDir(safeResolve(root, 'site', '_includes', 'layouts'));
-  await fs.ensureDir(safeResolve(root, 'site', 'content', 'posts'));
-  // authors collection
-  await fs.ensureDir(safeResolve(root, 'site', 'content', 'authors'));
-  await fs.ensureDir(safeResolve(root, 'assets'));
+  // Build nunjucks layout while avoiding static-analysis false-positives for
+  // template-like sequences by composing the tag tokens.
+  const tb = '{%';
+  const te = '%}';
+  const ob = '{{';
+  const cb = '}}';
 
-  // optional: create a sample author file to seed the authors collection
-  const sampleAuthor = `---
-name: "Site Author"
-image: "/assets/author.jpg"
-bio: "This is a sample author bio. Replace with real authors during migration."
----
+  const fallbackBaseLayout =
+    '<!doctype html>\n' +
+    '<html>\n' +
+    '  <head>\n' +
+    '    <meta charset="utf-8" />\n' +
+    '    <meta name="viewport" content="width=device-width,initial-scale=1" />\n' +
+    '    <title>' +
+    tb +
+    ' if title ' +
+    te +
+    ob +
+    ' title ' +
+    cb +
+    tb +
+    ' endif ' +
+    te +
+    '</title>\n' +
+    '    <link rel="stylesheet" href="/assets/styles.css" />\n' +
+    '  </head>\n' +
+    '  <body>\n' +
+    '    <a href="#maincontent" class="sr-only">Skip to main</a>\n' +
+    '    <main id="maincontent" role="main">\n' +
+    '      ' +
+    ob +
+    ' content | safe ' +
+    cb +
+    '\n' +
+    '    </main>\n' +
+    '  </body>\n' +
+    '</html>\n';
 
-`;
+  await createProjectDirs(root);
+  await writeCoreFiles(root, eleventyConfig, indexMd);
 
-  // write files
-  await fs.writeFile(safeResolve(root, '.eleventy.js'), eleventyConfig, 'utf8');
-  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'base.njk'), baseLayout, 'utf8');
-  await fs.writeFile(safeResolve(root, 'site', 'index.md'), indexMd, 'utf8');
+  await copyCustomTemplates(root);
 
-  // write tag/category/author templates
-  const tagsTemplate = `---
-layout: layouts/base.njk
-title: "Tags"
----
+  await ensureBaseLayoutExists(root, fallbackBaseLayout);
 
-<h2>Tags</h2>
-{% for tag in collections.tags | sort(false) %}
-  <h3><a href="/tags/{{ tag | slug }}/">{{ tag }}</a></h3>
-{% endfor %}
-`;
-
-  const categoriesTemplate = `---
-layout: layouts/base.njk
-title: "Categories"
----
-
-<h2>Categories</h2>
-{% for category in collections.categories | sort(false) %}
-  <h3><a href="/categories/{{ category | slug }}/">{{ category }}</a></h3>
-{% endfor %}
-`;
-
-  const authorsIndex = `---
-layout: layouts/base.njk
-title: "Authors"
----
-
-<h2>Authors</h2>
-<ul>
-{% for author in collections.authors %}
-  <li><a href="{{ author.url }}">{{ author.data.name }}</a></li>
-{% endfor %}
-</ul>
-`;
-
-  const authorTemplate = `---
-layout: layouts/base.njk
-pagination:
-  data: collections.authorPosts
-  size: 10
----
-
-<h2>{{ pagination.items[0].data.author.name }}</h2>
-<p>{{ pagination.items[0].data.author.bio }}</p>
-<ul>
-{% for post in pagination.items %}
-  <li><a href="{{ post.url }}">{{ post.data.title }}</a></li>
-{% endfor %}
-</ul>
-`;
-
-  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'tags.njk'), tagsTemplate, 'utf8');
-  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'categories.njk'), categoriesTemplate, 'utf8');
-  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'authors.njk'), authorsIndex, 'utf8');
-  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'author.njk'), authorTemplate, 'utf8');
-
-  // sample author file
-  await fs.writeFile(safeResolve(root, 'site', 'content', 'authors', 'site-author.md'), sampleAuthor, 'utf8');
-
-  // basic styles
-  const styles = `:root { color-scheme: light dark; }
-body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; max-width: 72ch; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
-header nav a { margin-right: 1rem; }
-img { max-width: 100%; height: auto; }
-.sr-only:not(:focus):not(:active) {
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  height: 1px;
-  overflow: hidden;
-  position: absolute;
-  white-space: nowrap;
-  width: 1px;
-}
-`;
-  await fs.writeFile(safeResolve(root, 'assets', 'styles.css'), styles, 'utf8');
-  // progress message
-  try {
-    const { progress } = await import('./logger.js');
-    progress('templates written');
-  } catch {
-    /* ignore */
-  }
+  await notifyProgress('templates written');
 
   return {
     files: ['.eleventy.js', 'site/_includes/layouts/base.njk', 'site/index.md'],

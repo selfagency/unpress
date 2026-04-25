@@ -1,6 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
-import fs from 'fs';
-import readline from 'readline';
+import fs from 'node:fs';
+import readline from 'node:readline';
 
 export interface XmlParseOptions {
   checkpointPath?: string;
@@ -38,6 +38,19 @@ export async function parseWpXmlItems(
     tagNameProcessor: (name: string) => name.replace(/^.*:/, ''),
   } as any);
 
+  const unwrapValue = (value: any): any => {
+    if (value && typeof value === 'object') {
+      if ('__cdata' in value) return value.__cdata;
+      if ('#text' in value) return value['#text'];
+      const keys = Object.keys(value);
+      if (keys.length === 1) {
+        const key = keys[0] as string;
+        return unwrapValue(value[key]);
+      }
+    }
+    return value;
+  };
+
   for await (const line of rl) {
     if (!inItem) {
       const start = line.indexOf('<item');
@@ -71,25 +84,25 @@ export async function parseWpXmlItems(
             // content may be under content -> encoded, or 'content:encoded' depending on parser
             if (raw['content'] && raw['content']['encoded']) {
               const enc = raw['content']['encoded'];
-              normalized.content = enc && enc.__cdata ? enc.__cdata : enc;
+              normalized.content = unwrapValue(enc);
               normalized['content:encoded'] = normalized.content;
             } else if (raw['content:encoded']) {
               const enc = raw['content:encoded'];
-              normalized.content = enc && enc.__cdata ? enc.__cdata : enc;
+              normalized.content = unwrapValue(enc);
               normalized['content:encoded'] = normalized.content;
             } else if (raw['encoded']) {
-              normalized.content = raw['encoded'] && raw['encoded'].__cdata ? raw['encoded'].__cdata : raw['encoded'];
+              normalized.content = unwrapValue(raw['encoded']);
               normalized['encoded'] = normalized.content;
             }
 
             // excerpt
             if (raw['excerpt'] && raw['excerpt']['encoded']) {
               const exc = raw['excerpt']['encoded'];
-              normalized.excerpt = exc && exc.__cdata ? exc.__cdata : exc;
+              normalized.excerpt = unwrapValue(exc);
               normalized['excerpt:encoded'] = normalized.excerpt;
             } else if (raw['excerpt:encoded']) {
               const exc = raw['excerpt:encoded'];
-              normalized.excerpt = exc && exc.__cdata ? exc.__cdata : exc;
+              normalized.excerpt = unwrapValue(exc);
               normalized['excerpt:encoded'] = normalized.excerpt;
             }
 
@@ -101,7 +114,7 @@ export async function parseWpXmlItems(
               for (const m of metas) {
                 const key = m['meta_key'] || m['wp:meta_key'] || m['metaKey'] || m['meta-key'];
                 const val = m['meta_value'] || m['wp:meta_value'] || m['metaValue'];
-                const value = val && val.__cdata ? val.__cdata : val;
+                const value = unwrapValue(val);
                 if (key) metaMap[key] = value;
               }
               normalized.postmeta = metaMap;
@@ -113,7 +126,8 @@ export async function parseWpXmlItems(
               const terms: Record<string, string[]> = {};
               for (const c of cats) {
                 const domain = c['@_domain'] || 'category';
-                const label = typeof c === 'string' ? c : c['#text'] || c['text'] || Object.values(c).find(Boolean);
+                const label =
+                  typeof c === 'string' ? c : unwrapValue(c['#text'] || c['text'] || Object.values(c).find(Boolean));
                 terms[domain] = terms[domain] || [];
                 if (label) terms[domain].push(label);
               }
@@ -121,11 +135,11 @@ export async function parseWpXmlItems(
             }
 
             // post_type and id
-            normalized.post_type = raw['post_type'] || raw['postType'] || raw['wp:post_type'];
-            normalized.post_id = raw['post_id'] || raw['postId'] || raw['wp:post_id'] || raw['post_id'];
+            normalized.post_type = unwrapValue(raw['post_type'] || raw['postType'] || raw['wp:post_type']);
+            normalized.post_id = unwrapValue(raw['post_id'] || raw['postId'] || raw['wp:post_id'] || raw['post_id']);
             // guid
             if (raw['guid']) {
-              const guid = typeof raw['guid'] === 'string' ? raw['guid'] : raw['guid']['#text'] || raw['guid'];
+              const guid = unwrapValue(raw['guid']);
               normalized.guid = guid;
             }
 

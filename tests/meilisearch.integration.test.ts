@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
 import fs from 'fs-extra';
-import path from 'path';
 import fetch from 'node-fetch';
+import path from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 const host = process.env.MEILI_HOST;
 const apiKey = process.env.MEILI_API_KEY;

@@ -40,6 +40,9 @@
     "playwright-report",
     "test-results",
     "src/lexicons",
-    "plans"
+    "plans",
+    "out",
+    "assets",
+    ".codacy"
   ]
 }

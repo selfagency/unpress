@@ -21,19 +21,22 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
 
       - name: Setup Node.js (for checks)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
           cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build project (validate dist/bin/cli.js)
+        run: pnpm run build
 
       - name: Typecheck
         run: pnpm run typecheck
@@ -47,56 +50,82 @@ jobs:
       - name: Markdown lint
         run: pnpm run lint:md
 
-      - name: Run tests (coverage)
-        run: pnpm run test:coverage
+  unit-linux:
+    name: Unit tests (linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      - name: Prepare OpenAPI for docs (if present)
-        run: |
-          if [ -f src/generated/openapi.json ]; then
-            mkdir -p output
-            cp src/generated/openapi.json output/openapi-types.json
-          else
-            echo "No src/generated/openapi.json found; skipping copy"
-          fi
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
 
-      - name: Build docs
-        run: pnpm run docs:build
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: "pnpm"
 
-      - name: Upload coverage to Codecov (optional)
-        uses: codecov/codecov-action@v6
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm run test:coverage --reporter default --reporter=junit --outputFile=test-report.junit.xml
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Upload test report artifact (junit/coverage)
-        uses: actions/upload-artifact@v7
+      - name: Upload coverage reports to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe
         with:
-          name: test-results
-          path: |
-            coverage
-            coverage-report
-            test-report.junit.xml
-            test-results.xml
-          if-no-files-found: ignore
+          token: ${{ secrets.CODECOV_TOKEN }}
 
-  matrix-tests:
-    name: Matrix tests (unit tests only) - ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
-        node: [ 20, 22 ]
-      fail-fast: false
+      - name: Run codacy-coverage-reporter
+        uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: ./coverage/clover.xml
+
+  unit-macos:
+    name: Unit tests (macos)
+    runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: ${{ matrix.node }}
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm run test
+
+  unit-windows:
+    name: Unit tests (windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -108,7 +137,7 @@ jobs:
   meili-integration:
     name: Meilisearch integration tests
     runs-on: ubuntu-latest
-    needs: matrix-tests
+    needs: unit-linux
     services:
       meilisearch:
         image: getmeili/meilisearch:v1.12
@@ -121,13 +150,13 @@ jobs:
           --health-retries=5
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
           cache: "pnpm"
@@ -141,6 +170,30 @@ jobs:
           MEILI_API_KEY: masterKey
         run: pnpm test -- tests/meilisearch.integration.test.ts
 
+  wordpress-e2e:
+    name: WordPress live E2E tests
+    runs-on: ubuntu-latest
+    needs: unit-linux
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run WordPress E2E tests
+        run: pnpm run test:e2e:wordpress
+
   # optional: aggregate artifacts (docs, coverage) for PR debugging
   upload-artifacts:
     name: Upload artifacts (docs/coverage/site)
@@ -148,13 +201,13 @@ jobs:
     needs: [ checks ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
           cache: "pnpm"
@@ -169,7 +222,7 @@ jobs:
         env:
           WP_URL: "https://example.com"
           WP_USER: "ci"
-          WP_APP_PASSWORD: "ci-password"
+          WP_APP_PASSWORD: ${{ secrets.FAKE_PASSWORD }}
         run: |
           pnpm exec tsx bin/cli.ts --generate-site --out-dir ./out
           test -d out || (echo "Expected ./out to exist after generation" && ls -la && exit 1)
@@ -177,15 +230,22 @@ jobs:
           npx --yes @11ty/eleventy@3 --config=./out/.eleventy.cjs --input=./out/site --output=./out/dist
 
       - name: Upload docs artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: docs
           path: docs/.vitepress/dist
           if-no-files-found: ignore
 
       - name: Upload site artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: site
           path: out/dist
+          if-no-files-found: ignore
+
+      - name: Upload dist artifact (package & cli)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: dist
+          path: dist
           if-no-files-found: ignore

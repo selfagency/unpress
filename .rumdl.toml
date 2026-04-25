@@ -9,4 +9,15 @@ disable = [
 
 # Include all documentation but exclude dependencies
 include = ["**/*.md"]
-exclude = ["node_modules/**", "vendor/**", ".git/**", "coverage/**", ".agents/**"]
+exclude = [
+  "node_modules/**",
+  "vendor/**",
+  ".git/**",
+  "coverage/**",
+  ".agents/**",
+  ".codacy/**",
+  ".vscode/**",
+  "dist/**",
+  "build/**",
+  "out/**",
+]

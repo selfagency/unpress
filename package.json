@@ -11,7 +11,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && tsc -p tsconfig.build.json",
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && pnpm run build:cli && tsc -p tsconfig.build.json",
+    "build:cli": "tsup bin/cli.ts --format esm --platform node --target node18 --out-dir dist/bin --sourcemap && bash scripts/add-shebang.sh dist/bin/cli.js",
     "postbuild": "node scripts/write-dist-package.js",
     "dev:cli": "tsx bin/cli.ts",
     "docs:dev": "vitepress dev docs",
@@ -25,6 +26,7 @@
     "lint:md:fix": "rumdl check --fix . && rumdl fmt .",
     "prepare": "husky",
     "test": "vitest run",
+    "test:e2e:wordpress": "RUN_WORDPRESS_E2E=1 vitest run tests/e2e-wordpress.live.test.ts",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
@@ -35,6 +37,7 @@
     "@inquirer/input": "^5.0.12",
     "@inquirer/password": "^5.0.12",
     "@inquirer/prompts": "^8.4.2",
+    "@types/web": "^0.0.347",
     "cac": "^7.0.0",
     "chalk": "^5.6.2",
     "dotenv": "^17.4.2",
@@ -49,6 +52,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@codecov/vite-plugin": "^2.0.1",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.6.0",
     "@types/ssh2-sftp-client": "^9.0.6",
@@ -62,6 +66,7 @@
     "oxlint": "^1.61.0",
     "pa11y": "9.1.1",
     "rumdl": "^0.1.81",
+    "tsup": "6.7.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.10",

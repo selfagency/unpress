@@ -1,51 +1,147 @@
-# Testing with real WordPress sites
+# Manual testing against a live WordPress blog
 
-This document describes how to test the migration utility against real WordPress sites (public demos, local dev, or large production sites) and how to validate output.
+Use this guide to validate Unpress with a real WordPress site before release.
 
-1. Prepare an output directory:
+## Scope
+
+This test verifies:
+
+- WordPress API authentication
+- Content export and Markdown conversion
+- Taxonomies and author output
+- Media URL behavior
+- Generated 11ty project validity
+
+## Prerequisites
+
+- Node.js 20+ and npm/pnpm available
+- Local clone of this repository with dependencies installed (`pnpm install`)
+- Access to a WordPress site URL
+- A WordPress Application Password for a low-privilege test user
+- Docker (optional, only for Meilisearch test)
+
+## Safety notes
+
+- Unpress reads content; it does not write to WordPress.
+- Use a dedicated test user when possible.
+- Do not commit `.env` or any real credentials.
+
+## 1) Prepare local repo environment
 
 ```bash
-mkdir -p /tmp/unpress-test && cd /tmp/unpress-test
+cd /path/to/unpress
+pnpm install
 ```
 
-2. Create a `.env` file in the test directory:
+Create a local `.env` file in the repository root:
 
 ```dotenv
-WP_URL=https://demo.wp.example
-WP_USER=user
-WP_APP_PASSWORD=app-password
+WP_URL=https://your-live-blog.example
+WP_USER=your-test-user
+WP_APP_PASSWORD=your-app-password
 ```
 
-3. Run the CLI to generate and export from a WordPress site:
+## 2) Run a baseline migration
 
 ```bash
-# Example: run migration from the directory containing .env
-npx -y @selfagency/unpress --generate-site --out-dir ./out
+pnpm dev:cli -- --generate-site --out-dir ./out
 ```
 
-4. Inspect generated files under `./out/site`:
+Expected result: command exits successfully and creates `./out/site`.
 
-- `out/site/content/posts` - markdown content
-- `out/site/content/authors` - authors
-- `out/site/_includes` - templates
+## 3) Validate generated structure
 
-5. Optional: start Meilisearch and index the posts (if you want to test search):
+Check that key folders exist:
+
+- `out/site/content/posts`
+- `out/site/content/pages`
+- `out/site/content/authors`
+- `out/site/_includes`
+
+Quick check:
+
+```bash
+find out/site -maxdepth 3 -type d | sort
+```
+
+## 4) Manual content QA checklist
+
+Sample at least 5 posts across different dates/authors.
+
+- [ ] Frontmatter includes expected title/date/slug
+- [ ] Category and tag metadata are present
+- [ ] HTML was converted to readable Markdown
+- [ ] Internal links still point to expected targets
+- [ ] Embedded images have expected URLs/paths
+
+Sample at least 2 pages:
+
+- [ ] Parent/child pages (if used) look correct
+- [ ] Long-form content and headings are preserved
+
+Author/taxonomy checks:
+
+- [ ] Author files exist in `content/authors`
+- [ ] Category and tag archives are generated
+
+## 5) Build generated 11ty site
+
+From your repository root, run:
+
+```bash
+cp ./out/.eleventy.js ./out/.eleventy.cjs
+npx --yes @11ty/eleventy@3 --config=./out/.eleventy.cjs --input=./out/site --output=./out/dist
+```
+
+Expected result: static output in `./out/dist` with no build errors.
+
+## 6) Optional: validate search indexing (Meilisearch)
+
+Start Meilisearch from this repository:
 
 ```bash
 cd docs/meilisearch
 docker compose up -d
-# then from repo root
-npx -y @selfagency/unpress --out-dir ./out --index-meili --meili-host http://127.0.0.1:7700
 ```
 
-6. Manual checks:
+Then run indexing:
 
-- Open `out/site/index.html` with an 11ty dev server or build and serve the `dist` folder.
-- Verify authors list and individual author pages.
-- Verify that images are downloaded and the paths are correct.
-- Spot-check metadata (date, tags, categories).
+```bash
+pnpm dev:cli -- --out-dir ./out --index-meili --meili-host http://127.0.0.1:7700
+```
 
-7. Notes on large sites
+Validation:
 
-- For very large sites, run the export against a subset or use pagination to avoid memory/execution limits.
-- Consider running indexing in batches and increasing Meilisearch resources.
+- [ ] Indexing command exits successfully
+- [ ] Index exists in Meilisearch
+- [ ] Sample queries return expected posts
+
+## 7) Resume-path test (recommended)
+
+Run once with `--resume` after an interrupted run (or rerun) to verify state recovery:
+
+```bash
+pnpm dev:cli -- --generate-site --out-dir ./out --resume
+```
+
+Validation:
+
+- [ ] Command resumes cleanly
+- [ ] No duplicated content output
+
+## 8) Report template for QA notes
+
+Capture these details in your test report:
+
+- Test date and environment (OS, Node version)
+- WordPress source type (`api` or `xml`)
+- Command(s) executed
+- Output directory used
+- Pass/fail per checklist section
+- Any regressions with sample file paths
+
+## Related references
+
+- [CLI flags](/reference/cli-flags)
+- [Environment variables](/reference/environment)
+- [Generated site](/guide/generated-site)

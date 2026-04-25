@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
-import path from 'path';
-import { vi, describe, it, expect, beforeAll, afterAll } from 'vitest';
+import path from 'node:path';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { parseWpXmlItems } from '../src/xml-parser';
 
 const FIXTURE_XML = `<?xml version="1.0" encoding="UTF-8" ?>
