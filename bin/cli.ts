@@ -370,10 +370,17 @@ cli.command('[...args]').action(async (_args, flags) => {
               const fmLines = ['---'];
               for (const [key, value] of Object.entries(fm)) {
                 if (typeof value === 'string') {
-                  // Use regex replace to escape double quotes for broader JS compatibility
-                  fmLines.push(`${key}: "${value.replace(/"/g, '\\"')}"`);
+                  // Escape backslashes first, then double quotes for YAML double-quoted scalars
+                  const escapedValue = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+                  fmLines.push(`${key}: "${escapedValue}"`);
                 } else if (Array.isArray(value)) {
-                  fmLines.push(`${key}:`, ...(value as string[]).map(v => `  - "${v}"`));
+                  fmLines.push(
+                    `${key}:`,
+                    ...(value as string[]).map(v => {
+                      const escapedItem = v.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+                      return `  - "${escapedItem}"`;
+                    })
+                  );
                 } else {
                   fmLines.push(`${key}: ${value}`);
                 }
