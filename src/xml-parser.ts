@@ -1,6 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
-import fs from 'fs';
-import readline from 'readline';
+import fs from 'node:fs';
+import readline from 'node:readline';
 
 export interface XmlParseOptions {
   checkpointPath?: string;

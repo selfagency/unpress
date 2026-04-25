@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
-import fetch from 'node-fetch';
-import { execSync, execFileSync } from 'node:child_process';
 import path from 'node:path';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { execSync } from 'node:child_process';
+import { beforeAll, afterAll, describe, expect, it } from 'vitest';
+import fetch from 'node-fetch';
 import { indexPostsFromDir } from '../src/meilisearch';
 import { WordPressApi } from '../src/wordpress';
 import { parseWpXmlItems } from '../src/xml-parser';
@@ -15,17 +15,10 @@ const deterministicXmlPath = path.join(outputDir, 'unpress-e2e-export.xml');
 const meiliHost = 'http://127.0.0.1:7711';
 const meiliApiKey = 'masterKey';
 
-// Use a locked-down PATH for subprocess execution in tests to avoid accidental
-// execution of attacker-controlled binaries. CI should set SAFE_PATH; fallback to
-// a minimal set of system dirs common on macOS/Linux.
-const SAFE_PATH = process.env.SAFE_PATH || '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin';
-const SAFE_ENV = { ...process.env, PATH: SAFE_PATH };
-
 function hasDocker() {
   try {
-    // Use execFileSync-style checks to avoid shell parsing and rely on PATH we control
-    execFileSync('docker', ['--version'], { stdio: 'ignore', env: SAFE_ENV });
-    execFileSync('docker', ['compose', 'version'], { stdio: 'ignore', env: SAFE_ENV });
+    execSync('docker --version', { stdio: 'ignore' });
+    execSync('docker compose version', { stdio: 'ignore' });
     return true;
   } catch {
     return false;
@@ -36,25 +29,11 @@ const canRun = process.env.RUN_WORDPRESS_E2E === '1' && hasDocker();
 
 function compose(cmd: string, opts?: { ignoreError?: boolean }) {
   try {
-    // Validate compose file exists and is inside the fixtureDir
-    const composeResolved = path.resolve(composeFile);
-    const fixtureResolved = path.resolve(fixtureDir);
-    if (!composeResolved.startsWith(fixtureResolved)) {
-      throw new Error('docker-compose path is outside the test fixture directory');
-    }
-    if (!fs.existsSync(composeResolved)) {
-      throw new Error(`compose file missing: ${composeResolved}`);
-    }
-
-    // Split cmd into args in a safe manner (no shell interpolation)
-    const args = ['compose', '-f', composeResolved, ...cmd.split(/\s+/).filter(Boolean)];
-    const out = execFileSync('docker', args, {
-      cwd: fixtureResolved,
+    return execSync(`docker compose -f "${composeFile}" ${cmd}`, {
+      cwd: fixtureDir,
       stdio: 'pipe',
       encoding: 'utf8',
-      env: SAFE_ENV,
     });
-    return out as unknown as string;
   } catch (err) {
     if (opts?.ignoreError) return '';
     if (err && typeof err === 'object') {
@@ -115,11 +94,7 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
       .sort();
 
     expect(exportedXmls.length).toBeGreaterThan(0);
-    const exportedXmlPath = path.resolve(exportedXmls[0]);
-    const canonicalXmlPath = path.resolve(deterministicXmlPath);
-    if (exportedXmlPath !== canonicalXmlPath) {
-      await fs.copyFile(exportedXmlPath, canonicalXmlPath);
-    }
+    await fs.copyFile(exportedXmls[0], deterministicXmlPath);
 
     // Keep test fixture YAML in sync with actual exported file path.
     expect(await fs.pathExists(path.join(fixtureDir, 'unpress.api.yml'))).toBe(true);
@@ -164,17 +139,11 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
     const stateDir = path.join(outputDir, '.unpress', 'state');
     await fs.remove(stateDir);
 
-    // Run CLI via execFileSync to avoid shell interpolation and with a locked PATH
-    execFileSync(
-      'pnpm',
-      ['exec', 'tsx', 'bin/cli.ts', '--config', 'tests/e2e-wordpress/unpress.xml.yml', '--source', 'xml'],
-      {
-        cwd: path.resolve(process.cwd()),
-        stdio: 'inherit',
-        encoding: 'utf8',
-        env: SAFE_ENV,
-      },
-    );
+    execSync('pnpm exec tsx bin/cli.ts --config tests/e2e-wordpress/unpress.xml.yml --source xml', {
+      cwd: path.resolve(process.cwd()),
+      stdio: 'inherit',
+      encoding: 'utf8',
+    });
 
     const itemsDir = path.join(stateDir, 'items');
     expect(await fs.pathExists(itemsDir)).toBe(true);
@@ -212,25 +181,12 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
     await fs.remove(distDir);
 
     // Generate 11ty site structure with Unpress CLI (which also converts items to markdown)
-    execFileSync(
-      'pnpm',
-      [
-        'exec',
-        'tsx',
-        'bin/cli.ts',
-        '--config',
-        'tests/e2e-wordpress/unpress.xml.yml',
-        '--source',
-        'xml',
-        '--generate-site',
-        '--out-dir',
-        'tests/e2e-wordpress/output',
-      ],
+    execSync(
+      `pnpm exec tsx bin/cli.ts --config tests/e2e-wordpress/unpress.xml.yml --source xml --generate-site --out-dir tests/e2e-wordpress/output`,
       {
         cwd: path.resolve(process.cwd()),
         stdio: 'inherit',
         encoding: 'utf8',
-        env: SAFE_ENV,
       },
     );
 
@@ -275,16 +231,11 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
 
     // Build the 11ty site using the generated config in outputDir.
     await fs.copyFile(path.join(outputDir, '.eleventy.js'), path.join(outputDir, '.eleventy.cjs'));
-    execFileSync(
-      'pnpm',
-      ['exec', 'npx', '@11ty/eleventy', '--config=.eleventy.cjs', '--input=./site', '--output=./dist'],
-      {
-        cwd: outputDir,
-        stdio: 'inherit',
-        encoding: 'utf8',
-        env: SAFE_ENV,
-      },
-    );
+    execSync('pnpm exec npx @11ty/eleventy --config=.eleventy.cjs --input=./site --output=./dist', {
+      cwd: outputDir,
+      stdio: 'inherit',
+      encoding: 'utf8',
+    });
 
     // Verify dist output was generated
     expect(await fs.pathExists(distDir)).toBe(true);

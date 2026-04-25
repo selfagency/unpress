@@ -146,7 +146,7 @@ export class WordPressApi {
           // Use raw fetch on first page to read pagination headers
           const res = await this.requestRawWithRetries(url);
           const h = res.headers.get('X-WP-TotalPages') || res.headers.get('x-wp-totalpages');
-          total = parseInt(h || '1', 10);
+          total = Number.parseInt(h || '1', 10);
           data = (await res.json()) as any[];
         } else {
           data = (await this.requestWithRetries(url)) as any[];

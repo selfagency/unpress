@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
-import os from 'os';
-import path from 'path';
+import os from 'node:os';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import generate11tyProject from '../src/generator';
 

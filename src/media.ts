@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 import fetch from 'node-fetch';
-import path from 'path';
-import { pipeline } from 'stream';
-import { promisify } from 'util';
+import path from 'node:path';
+import { pipeline } from 'node:stream';
+import { promisify } from 'node:util';
 const streamPipeline = promisify(pipeline);
 
 /**

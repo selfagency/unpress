@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 services:
   meilisearch:
     # Pin image to a specific version (avoid `latest`) and run with reduced privileges

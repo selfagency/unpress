@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs-extra';
-import os from 'os';
-import path from 'path';
-import { processItems } from '../src/processor';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { writePostAndAuthorFiles } from '../src/convert';
+import { processItems } from '../src/processor';
 
 describe('processor', () => {
   let out = '';

@@ -1,8 +1,8 @@
 import fetch from 'node-fetch';
 import fs from 'node:fs';
 import path from 'node:path';
-import stream from 'stream';
-import { promisify } from 'util';
+import stream from 'node:stream';
+import { promisify } from 'node:util';
 import { safeResolve } from './path-utils.js';
 const pipeline = promisify(stream.pipeline);
 
@@ -105,7 +105,7 @@ export async function createSftpClientFromConfig(cfg?: {
   const client = new SftpClient();
   const connectCfg: any = {};
   connectCfg.host = cfg?.host ?? process.env.SFTP_HOST;
-  connectCfg.port = cfg?.port ?? (process.env.SFTP_PORT ? parseInt(process.env.SFTP_PORT, 10) : 22);
+  connectCfg.port = cfg?.port ?? (process.env.SFTP_PORT ? Number.parseInt(process.env.SFTP_PORT, 10) : 22);
   connectCfg.username = cfg?.username ?? process.env.SFTP_USER;
   if (cfg?.password ?? process.env.SFTP_PASSWORD) connectCfg.password = cfg?.password ?? process.env.SFTP_PASSWORD;
   if (cfg?.privateKey ?? process.env.SFTP_PRIVATE_KEY)
@@ -117,7 +117,7 @@ export async function createSftpClientFromConfig(cfg?: {
 export async function createSftpClientFromEnv() {
   const cfg: any = {};
   if (process.env.SFTP_HOST) cfg.host = process.env.SFTP_HOST;
-  if (process.env.SFTP_PORT) cfg.port = parseInt(process.env.SFTP_PORT, 10);
+  if (process.env.SFTP_PORT) cfg.port = Number.parseInt(process.env.SFTP_PORT, 10);
   if (process.env.SFTP_USER) cfg.username = process.env.SFTP_USER;
   if (process.env.SFTP_PASSWORD) cfg.password = process.env.SFTP_PASSWORD;
   if (process.env.SFTP_PRIVATE_KEY) cfg.privateKey = process.env.SFTP_PRIVATE_KEY;
