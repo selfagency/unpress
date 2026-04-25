@@ -51,11 +51,51 @@ export async function indexPostsFromDir(
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (cfg.apiKey) headers['X-Meili-API-Key'] = cfg.apiKey;
 
+  async function parseJsonSafe(res: any) {
+    if (typeof res?.json === 'function') {
+      try {
+        return await res.json();
+      } catch {
+        // fall through to text parsing
+      }
+    }
+    if (typeof res?.text === 'function') {
+      try {
+        const raw = await res.text();
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  async function waitForTask(taskUid: number, attempts = 60, intervalMs = 250) {
+    for (let i = 0; i < attempts; i++) {
+      const res = await fetch(`${cfg.host}/tasks/${taskUid}`, { headers });
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`Failed to fetch task ${taskUid}: ${res.status} ${body}`);
+      }
+      const task = (await res.json()) as any;
+      if (task?.status === 'succeeded') return;
+      if (task?.status === 'failed') {
+        const reason = task?.error?.message || task?.error?.code || 'unknown error';
+        throw new Error(`Meilisearch task ${taskUid} failed: ${reason}`);
+      }
+      await new Promise(r => setTimeout(r, intervalMs));
+    }
+    throw new Error(`Timed out waiting for Meilisearch task ${taskUid}`);
+  }
+
   async function safePost(url: string, body: any, attempts = 3) {
     for (let i = 0; i < attempts; i++) {
       try {
         const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
-        if (!res.ok) throw new Error(`Status ${res.status}`);
+        if (!res.ok) {
+          const details = await res.text();
+          throw new Error(`Status ${res.status} ${details}`);
+        }
         return res;
       } catch (err) {
         const wait = 1000 * Math.pow(2, i);
@@ -66,12 +106,45 @@ export async function indexPostsFromDir(
     throw new Error(`Failed POST ${url} after ${attempts} attempts`);
   }
 
-  try {
-    await safePost(`${cfg.host}/indexes`, { uid: index }, 2);
-  } catch (e) {
-    // ignore creation failure if index exists or service unavailable
-    warn('create index request failed (ignored):', e instanceof Error ? e.message : e);
+  async function ensureIndexExists(attempts = 5) {
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await fetch(`${cfg.host}/indexes`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ uid: index }),
+        });
+
+        if (res.ok) {
+          const payload = (await parseJsonSafe(res)) as any;
+          if (typeof payload?.taskUid === 'number') await waitForTask(payload.taskUid);
+          return;
+        }
+
+        const raw = await res.text();
+        let code: string | undefined;
+        try {
+          const parsed = JSON.parse(raw) as any;
+          code = parsed?.code;
+        } catch {
+          // ignore json parse error
+        }
+
+        if (code === 'index_already_exists' || res.status === 409) {
+          return;
+        }
+
+        throw new Error(`Status ${res.status} ${raw}`);
+      } catch (e) {
+        const wait = 1000 * Math.pow(2, i);
+        warn(`ensure index ${index} failed (attempt ${i + 1}/${attempts}):`, e instanceof Error ? e.message : e);
+        if (i < attempts - 1) await new Promise(r => setTimeout(r, wait));
+        else throw e;
+      }
+    }
   }
+
+  await ensureIndexExists();
 
   // push documents in batches
   const batchSize = 500;
@@ -86,15 +159,22 @@ export async function indexPostsFromDir(
   const queue = new PQueue(pqOpts as any);
 
   const uploadPromises: Promise<any>[] = [];
+  const taskWaitPromises: Promise<void>[] = [];
   for (let i = 0; i < docs.length; i += batchSize) {
     const batch = docs.slice(i, i + batchSize);
     progress(`scheduling upload documents ${i}-${i + batch.length}`, (i + batch.length) / docs.length);
-    const task = () =>
-      safePost(`${cfg.host}/indexes/${index}/documents`, batch, 3).catch(err => {
+    const task = async () => {
+      const res = await safePost(`${cfg.host}/indexes/${index}/documents`, batch, 5).catch(err => {
         const msg = err instanceof Error ? err.message : String(err);
         error('Meilisearch indexing failed for batch:', msg);
         throw new Error(`Meilisearch indexing failed: ${msg}`);
       });
+      const payload = (await parseJsonSafe(res)) as any;
+      if (typeof payload?.taskUid === 'number') {
+        taskWaitPromises.push(waitForTask(payload.taskUid));
+      }
+      return payload;
+    };
     uploadPromises.push(queue.add(task));
   }
 
@@ -102,6 +182,7 @@ export async function indexPostsFromDir(
   await queue.onIdle();
   // ensure any rejections surface
   await Promise.all(uploadPromises);
+  await Promise.all(taskWaitPromises);
   return { indexed: docs.length };
 }
 
