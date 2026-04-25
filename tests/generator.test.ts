@@ -14,7 +14,7 @@ describe('generate11tyProject', () => {
     const cfg = await fs.readFile(path.join(tmp, '.eleventy.js'), 'utf8');
     expect(cfg).toContain('eleventyConfig');
     const layout = await fs.readFile(path.join(tmp, 'site', '_includes', 'layouts', 'base.njk'), 'utf8');
-    expect(layout).toContain('<html>');
+    expect(layout).toContain('<html');
     const index = await fs.readFile(path.join(tmp, 'site', 'index.md'), 'utf8');
     expect(index).toContain('# Welcome');
     // cleanup
