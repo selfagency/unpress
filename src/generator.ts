@@ -30,6 +30,23 @@ layout: layouts/base.njk
 This is a generated 11ty site.
 `;
 
+  const fallbackBaseLayout = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{% if title %}{{ title }}{% endif %}</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <a href="#maincontent" class="sr-only">Skip to main</a>
+    <main id="maincontent" role="main">
+      {{ content | safe }}
+    </main>
+  </body>
+</html>
+`;
+
   // create directories
   await fs.ensureDir(safeResolve(root, 'site', '_includes', 'layouts'));
   await fs.ensureDir(safeResolve(root, 'site', 'content', 'posts'));
@@ -74,18 +91,18 @@ img { max-width: 100%; height: auto; }
   try {
     // Find the templates directory at package root
     const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-    const templatesDir = path.join(packageRoot, 'templates', '11ty');
+    const templatesDir = safeResolve(packageRoot, 'templates', '11ty');
 
     if (await fs.pathExists(templatesDir)) {
       const siteDir = safeResolve(root, 'site');
       const includesDir = safeResolve(root, 'site', '_includes');
-      const templatesIncludesDir = path.join(templatesDir, '_includes');
+      const templatesIncludesDir = safeResolve(templatesDir, '_includes');
 
       // Copy top-level template pages (author.njk, tags.njk, etc.) into site root
       const templateFiles = await fs.readdir(templatesDir);
       for (const file of templateFiles) {
         if (file.endsWith('.njk')) {
-          const src = path.join(templatesDir, file);
+          const src = safeResolve(templatesDir, file);
           const dest = safeResolve(siteDir, file);
           await fs.copy(src, dest);
         }
@@ -104,6 +121,13 @@ img { max-width: 100%; height: auto; }
     } catch {
       /* ignore */
     }
+  }
+
+  // Ensure a base layout always exists even if templates are unavailable.
+  const baseLayoutPath = safeResolve(root, 'site', '_includes', 'layouts', 'base.njk');
+  if (!(await fs.pathExists(baseLayoutPath))) {
+    await fs.ensureDir(safeResolve(root, 'site', '_includes', 'layouts'));
+    await fs.writeFile(baseLayoutPath, fallbackBaseLayout, 'utf8');
   }
 
   // progress message

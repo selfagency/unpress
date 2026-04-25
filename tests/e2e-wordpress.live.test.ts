@@ -210,15 +210,13 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
     expect(await fs.pathExists(path.join(siteDir, 'content', 'pages'))).toBe(true);
     expect(await fs.pathExists(path.join(siteDir, 'content', 'books'))).toBe(true);
 
-    // Build the 11ty site
-    execSync(
-      'pnpm exec npx @11ty/eleventy --input tests/e2e-wordpress/output/site --output tests/e2e-wordpress/output/dist',
-      {
-        cwd: path.resolve(process.cwd()),
-        stdio: 'inherit',
-        encoding: 'utf8',
-      },
-    );
+    // Build the 11ty site using the generated config in outputDir.
+    await fs.copyFile(path.join(outputDir, '.eleventy.js'), path.join(outputDir, '.eleventy.cjs'));
+    execSync('pnpm exec npx @11ty/eleventy --config=.eleventy.cjs --input=./site --output=./dist', {
+      cwd: outputDir,
+      stdio: 'inherit',
+      encoding: 'utf8',
+    });
 
     // Verify dist output was generated
     expect(await fs.pathExists(distDir)).toBe(true);

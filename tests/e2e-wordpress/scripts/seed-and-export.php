@@ -289,6 +289,15 @@ for ($i = 1; $i <= 12; $i++) {
     ]);
 }
 
+$existingPasswords = WP_Application_Passwords::get_user_application_passwords($admin->ID);
+if (is_array($existingPasswords)) {
+    foreach ($existingPasswords as $passwordRow) {
+        if (($passwordRow['name'] ?? null) === $wpAppPasswordName && isset($passwordRow['uuid'])) {
+            WP_Application_Passwords::delete_application_password($admin->ID, $passwordRow['uuid']);
+        }
+    }
+}
+
 $created = WP_Application_Passwords::create_new_application_password($admin->ID, [
     'name' => $wpAppPasswordName,
 ]);

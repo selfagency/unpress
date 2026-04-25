@@ -31,6 +31,15 @@ cli.option('--dry-run', 'Validate configuration and exit without performing netw
 
 cli.help();
 
+function sanitizeSlug(input: string) {
+  return String(input)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 cli.command('[...args]').action(async (_args, flags) => {
   try {
     const getFlag = (...keys: string[]) =>
@@ -53,7 +62,7 @@ cli.command('[...args]').action(async (_args, flags) => {
     let projectCfg: any = undefined;
     if (getFlag('config')) {
       const cfgArg = String(getFlag('config'));
-      const cfgPath = safeResolve(process.cwd(), cfgArg);
+      const cfgPath = path.isAbsolute(cfgArg) ? path.normalize(cfgArg) : safeResolve(process.cwd(), cfgArg);
       projectCfg = loadProjectConfigFromFile(cfgPath);
     }
     const mergedProject = mergeConfig(flags, projectCfg);
@@ -79,7 +88,8 @@ cli.command('[...args]').action(async (_args, flags) => {
     }
 
     // Optionally generate site first
-    const outDir = getFlag('outDir', 'out-dir') || process.cwd();
+    const outDirRaw = String(getFlag('outDir', 'out-dir') || process.cwd());
+    const outDir = path.isAbsolute(outDirRaw) ? path.normalize(outDirRaw) : safeResolve(process.cwd(), outDirRaw);
     if (getFlag('generateSite', 'generate-site')) {
       try {
         const gen = (await import('../src/generator')).default;
@@ -110,17 +120,28 @@ cli.command('[...args]').action(async (_args, flags) => {
 
     // Handle source-specific flows: API or XML (minimal wiring)
     if (sourceType === 'xml' || getFlag('source') === 'xml') {
-      const xmlFile = getFlag('xmlFile', 'xml-file') || mergedProject?.source?.xml?.file;
+      const xmlFileRaw = getFlag('xmlFile', 'xml-file') || mergedProject?.source?.xml?.file;
+      const xmlFile = xmlFileRaw
+        ? path.isAbsolute(String(xmlFileRaw))
+          ? path.normalize(String(xmlFileRaw))
+          : safeResolve(process.cwd(), String(xmlFileRaw))
+        : undefined;
       if (!xmlFile) {
         console.error('XML source selected but no --xml-file provided or configured in project config');
         process.exit(1);
       }
       try {
         const { parseWpXmlItems } = await import('../src/xml-parser');
-        const outDir = getFlag('outDir', 'out-dir') || process.cwd();
-        const stateDir = mergedProject?.resume?.stateDir || path.join(outDir, '.unpress', 'state');
+        const outDirRaw = String(getFlag('outDir', 'out-dir') || process.cwd());
+        const outDir = path.isAbsolute(outDirRaw) ? path.normalize(outDirRaw) : safeResolve(process.cwd(), outDirRaw);
+        const stateDirInput = mergedProject?.resume?.stateDir;
+        const stateDir = stateDirInput
+          ? path.isAbsolute(String(stateDirInput))
+            ? path.normalize(String(stateDirInput))
+            : safeResolve(process.cwd(), String(stateDirInput))
+          : safeResolve(outDir, '.unpress', 'state');
         await fs.ensureDir(stateDir);
-        const checkpointPath = path.join(stateDir, 'xml-checkpoint.json');
+        const checkpointPath = safeResolve(stateDir, 'xml-checkpoint.json');
 
         console.log(`Processing XML: ${xmlFile} -> state: ${checkpointPath}`);
 
@@ -175,7 +196,7 @@ cli.command('[...args]').action(async (_args, flags) => {
                     // do nothing
                   } else if (mode === 'local') {
                     // save to local state dir
-                    const localDest = await mediaAdapters.downloadToLocal(url, path.join(stateDir, 'media'));
+                    const localDest = await mediaAdapters.downloadToLocal(url, safeResolve(stateDir, 'media'));
                     mediaMap[url] = localDest;
                   } else if (mode === 'reupload') {
                     const driver = mediaCfg.reupload?.driver || 's3';
@@ -184,7 +205,7 @@ cli.command('[...args]').action(async (_args, flags) => {
                       if (s3cfg && s3cfg.bucket) {
                         try {
                           const res = await mediaAdapters.reuploadMediaToS3(url, {
-                            localDir: path.join(stateDir, 'media'),
+                            localDir: safeResolve(stateDir, 'media'),
                             s3: { client: s3Client, bucket: s3cfg.bucket, prefix: s3cfg.prefix },
                           });
                           mediaMap[url] = res;
@@ -198,7 +219,7 @@ cli.command('[...args]').action(async (_args, flags) => {
                       if (sftpCfg && sftpCfg.host) {
                         try {
                           const res = await mediaAdapters.reuploadMediaToSftp(url, {
-                            localDir: path.join(stateDir, 'media'),
+                            localDir: safeResolve(stateDir, 'media'),
                             sftp: { client: sftpClient, remotePath: sftpCfg.path || '/' },
                           });
                           mediaMap[url] = res;
@@ -221,7 +242,7 @@ cli.command('[...args]').action(async (_args, flags) => {
             }
 
             const filename = `item-${id}.json`;
-            await fs.writeJson(path.join(itemsDir, filename), { item, media_map: mediaMap }, { spaces: 2 });
+            await fs.writeJson(safeResolve(itemsDir, filename), { item, media_map: mediaMap }, { spaces: 2 });
           },
           { checkpointPath, resume: !!getFlag('resume') },
         );
@@ -232,10 +253,13 @@ cli.command('[...args]').action(async (_args, flags) => {
         if (getFlag('generateSite', 'generate-site')) {
           try {
             const { htmlToMarkdown } = await import('../src/convert');
-            const itemsDir = path.join(stateDir, 'items');
+            const itemsDir = safeResolve(stateDir, 'items');
             const itemFiles = await fs.readdir(itemsDir);
-            const outDir = getFlag('outDir', 'out-dir') || process.cwd();
-            const siteDir = path.join(outDir, 'site');
+            const outDirRaw = String(getFlag('outDir', 'out-dir') || process.cwd());
+            const outDir = path.isAbsolute(outDirRaw)
+              ? path.normalize(outDirRaw)
+              : safeResolve(process.cwd(), outDirRaw);
+            const siteDir = safeResolve(outDir, 'site');
 
             // Helper to extract string from CDATA objects
             const extractText = (val: any): string => {
@@ -254,7 +278,7 @@ cli.command('[...args]').action(async (_args, flags) => {
 
             for (const itemFile of itemFiles) {
               if (!itemFile.endsWith('.json')) continue;
-              const itemData = await fs.readJson(path.join(itemsDir, itemFile));
+              const itemData = await fs.readJson(safeResolve(itemsDir, itemFile));
               const item = itemData.item || itemData;
               if (!item) continue;
 
@@ -263,7 +287,7 @@ cli.command('[...args]').action(async (_args, flags) => {
 
               const postType = (item.post_type || 'post').toLowerCase();
               const contentSubdir = postTypeMap[postType] || 'posts';
-              const contentDir = path.join(siteDir, 'content', contentSubdir);
+              const contentDir = safeResolve(siteDir, 'content', contentSubdir);
               await fs.ensureDir(contentDir);
 
               const content = extractText(item['content:encoded'] || item.content || item.excerpt || '');
@@ -317,10 +341,11 @@ cli.command('[...args]').action(async (_args, flags) => {
               fmLines.push('---');
               fmLines.push('');
 
-              const slug = extractText(item['wp:post_name'] || `item-${item.post_id || Date.now()}`);
+              const rawSlug = extractText(item['wp:post_name'] || `item-${item.post_id || Date.now()}`);
+              const slug = sanitizeSlug(rawSlug) || `item-${item.post_id || Date.now()}`;
               const filename = `${slug}.md`;
               const fileContent = fmLines.join('\n') + markdown;
-              await fs.writeFile(path.join(contentDir, filename), fileContent, 'utf8');
+              await fs.writeFile(safeResolve(contentDir, filename), fileContent, 'utf8');
             }
 
             console.log(`Generated markdown files for ${itemFiles.filter(f => f.endsWith('.json')).length} items`);
