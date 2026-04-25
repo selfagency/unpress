@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "$#" -ne 1 ]; then
+if [[ "$#" -ne 1 ]]; then
   echo "Usage: $0 <file>" >&2
   exit 2
 fi
@@ -9,7 +9,7 @@ fi
 TARGET="$1"
 TARGET_ABS="$(realpath "$TARGET")"
 
-if [ ! -f "$TARGET_ABS" ]; then
+if [[ ! -f "$TARGET_ABS" ]]; then
   echo "File not found: $TARGET_ABS" >&2
   exit 3
 fi
