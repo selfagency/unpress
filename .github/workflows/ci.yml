@@ -57,7 +57,7 @@ jobs:
         run: pnpm run docs:build
 
       - name: Upload coverage to Codecov (optional)
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -96,13 +96,13 @@ jobs:
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
+        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload coverage reports to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
