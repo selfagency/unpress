@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
-import path from 'node:path';
-import { execSync } from 'node:child_process';
-import { beforeAll, afterAll, describe, expect, it } from 'vitest';
 import fetch from 'node-fetch';
+import { execSync } from 'node:child_process';
+import path from 'node:path';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { indexPostsFromDir } from '../src/meilisearch';
 import { WordPressApi } from '../src/wordpress';
 import { parseWpXmlItems } from '../src/xml-parser';

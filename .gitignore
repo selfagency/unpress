@@ -253,3 +253,6 @@ tests/processor-out/
 tests/out-author/
 tests/meili-retry/
 .rumdl_cache/
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md

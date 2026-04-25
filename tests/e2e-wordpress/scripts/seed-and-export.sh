@@ -18,10 +18,12 @@ mkdir -p "$WP_EXPORT_DIR"
 
 wp_cmd() {
   wp --allow-root --path="$WP_PATH" --url="$WP_URL_INTERNAL" "$@"
+  return $?
 }
 
 wp_try() {
   timeout 15s wp --allow-root --path="$WP_PATH" --url="$WP_URL_INTERNAL" "$@"
+  return $?
 }
 
 echo "Waiting for WordPress to respond..."

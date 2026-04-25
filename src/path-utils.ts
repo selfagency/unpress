@@ -6,7 +6,8 @@ import path from 'path';
  */
 export function sanitizePathComponent(segment: string): string {
   return segment
-    .replaceAll('\u0000', '')
+    .split('\0')
+    .join('')
     .replace(/^(\/|\\)+/, '')
     .split(/[/\\]/)
     .filter(part => part !== '..' && part !== '.')

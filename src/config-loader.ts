@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'yaml';
 import { z } from 'zod';
+import { safeResolve } from './path-utils.js';
 
 export const ProcessingSchema = z.object({
   concurrency: z.number().int().positive().optional(),
@@ -73,7 +74,9 @@ export const ProjectConfigSchema = z.object({
 export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
 
 function loadContentTypesFromFile(contentTypesPath: string) {
-  const resolvedPath = path.resolve(contentTypesPath);
+  // Resolve the provided path against the current working dir and
+  // ensure it cannot escape the repo via path traversal.
+  const resolvedPath = safeResolve(process.cwd(), contentTypesPath);
   if (!fs.existsSync(resolvedPath)) {
     throw new Error(`Content types file not found: ${resolvedPath}`);
   }
@@ -86,46 +89,63 @@ function loadContentTypesFromFile(contentTypesPath: string) {
   return result.data;
 }
 
-export function loadProjectConfigFromFile(path: string): ProjectConfig {
-  if (!fs.existsSync(path)) throw new Error(`Config file not found: ${path}`);
-  const raw = fs.readFileSync(path, 'utf8');
+export function loadProjectConfigFromFile(configPath: string): ProjectConfig {
+  const resolvedConfigPath = safeResolve(process.cwd(), configPath);
+  if (!fs.existsSync(resolvedConfigPath)) throw new Error(`Config file not found: ${resolvedConfigPath}`);
+  const raw = fs.readFileSync(resolvedConfigPath, 'utf8');
   const parsed = parse(raw);
   const result = ProjectConfigSchema.safeParse(parsed);
   if (!result.success) {
-    throw new Error(`Invalid config file ${path}: ${result.error.message}`);
+    throw new Error(`Invalid config file ${resolvedConfigPath}: ${result.error.message}`);
   }
 
   const config = result.data;
   if (typeof config.content_types === 'string') {
-    config.content_types = loadContentTypesFromFile(config.content_types);
+    // If the content types path in config is relative, resolve it against the
+    // directory containing the project config file to avoid surprises.
+    const cfgDir = path.dirname(resolvedConfigPath);
+    config.content_types = loadContentTypesFromFile(
+      path.isAbsolute(config.content_types) ? config.content_types : path.join(cfgDir, config.content_types),
+    );
   }
   return config;
 }
 
 export function mergeConfig(flags: Record<string, any>, fileConfig?: ProjectConfig): ProjectConfig {
-  // Very small merge: flags override fileConfig for a few known keys; expand as needed.
-  const merged: any = { ...fileConfig };
+  // Small merge: flags override fileConfig for a few known keys; expand as needed.
+  const merged: any = fileConfig ? { ...fileConfig } : {};
 
-  if (flags.source) merged.source = { ...merged.source, type: flags.source };
-  if (flags['source-type']) merged.source = { ...merged.source, type: flags['source-type'] };
-  if (flags['xml-file']) merged.source = { ...merged.source, xml: { file: flags['xml-file'] } };
-  const contentTypesFlag = flags['content-types'] || flags.types;
-  if (contentTypesFlag) {
+  function applySourceFlags(): void {
+    if (flags.source) merged.source = { ...merged.source, type: flags.source };
+    if (flags['source-type']) merged.source = { ...merged.source, type: flags['source-type'] };
+    if (flags['xml-file']) merged.source = { ...merged.source, xml: { file: flags['xml-file'] } };
+  }
+
+  function applyContentTypesFlag(): void {
+    const contentTypesFlag = flags['content-types'] || flags.types;
+    if (!contentTypesFlag) return;
     if (typeof contentTypesFlag === 'string') {
+      // Resolve against cwd to avoid path traversal and ensure containment
       merged.content_types = loadContentTypesFromFile(contentTypesFlag);
     } else if (Array.isArray(contentTypesFlag)) {
       merged.content_types = contentTypesFlag;
     }
   }
 
+  function applyProcessingFlags(): void {
+    if (!merged.processing) merged.processing = {};
+    if (typeof flags.concurrency === 'number') merged.processing.concurrency = flags.concurrency;
+    if (typeof flags.intervalCap === 'number') merged.processing.intervalCap = flags.intervalCap;
+    if (typeof flags.interval === 'number') merged.processing.interval = flags.interval;
+  }
+
+  applySourceFlags();
+  applyContentTypesFlag();
+  // If fileConfig had a content_types string reference, ensure it's resolved
   if (typeof merged.content_types === 'string') {
     merged.content_types = loadContentTypesFromFile(merged.content_types);
   }
-
-  if (!merged.processing) merged.processing = {};
-  if (typeof flags.concurrency === 'number') merged.processing.concurrency = flags.concurrency;
-  if (typeof flags.intervalCap === 'number') merged.processing.intervalCap = flags.intervalCap;
-  if (typeof flags.interval === 'number') merged.processing.interval = flags.interval;
+  applyProcessingFlags();
 
   // Validate merged result
   const parsed = ProjectConfigSchema.parse(merged);
