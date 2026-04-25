@@ -1,6 +1,18 @@
 name: unpress-e2e-wordpress
 
 services:
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    environment:
+      MEILI_MASTER_KEY: masterKey
+    ports:
+      - '7711:7700'
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://127.0.0.1:7700/health']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   db:
     image: mariadb:11.4
     environment:

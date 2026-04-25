@@ -2,6 +2,8 @@ import fs from 'fs-extra';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { beforeAll, afterAll, describe, expect, it } from 'vitest';
+import fetch from 'node-fetch';
+import { indexPostsFromDir } from '../src/meilisearch';
 import { WordPressApi } from '../src/wordpress';
 import { parseWpXmlItems } from '../src/xml-parser';
 
@@ -10,6 +12,8 @@ const composeFile = path.join(fixtureDir, 'docker-compose.yml');
 const outputDir = path.join(fixtureDir, 'output');
 const credentialsPath = path.join(outputDir, 'credentials.env');
 const deterministicXmlPath = path.join(outputDir, 'unpress-e2e-export.xml');
+const meiliHost = 'http://127.0.0.1:7711';
+const meiliApiKey = 'masterKey';
 
 function hasDocker() {
   try {
@@ -55,6 +59,20 @@ function parseEnvFile(filePath: string): Record<string, string> {
   return out;
 }
 
+async function waitForMeilisearch(host: string, attempts = 60, intervalMs = 1000) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(`${host}/health`);
+      if (res.ok) return;
+    } catch {
+      // keep polling
+    }
+    await new Promise(resolve => setTimeout(resolve, intervalMs));
+  }
+
+  throw new Error(`Meilisearch was not ready at ${host}`);
+}
+
 describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
   let envVars: Record<string, string> = {};
 
@@ -63,8 +81,9 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
     await fs.emptyDir(outputDir);
 
     compose('down -v --remove-orphans', { ignoreError: true });
-    compose('up -d db wordpress');
+    compose('up -d db wordpress meilisearch');
     compose('run --rm wpcli');
+    await waitForMeilisearch(meiliHost);
 
     expect(await fs.pathExists(credentialsPath)).toBe(true);
     envVars = parseEnvFile(credentialsPath);
@@ -269,6 +288,37 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
       expect(htmlContent).toMatch(/<main/);
     }
   }, 600000);
+
+  it('indexes generated posts into meilisearch and returns search hits', async () => {
+    const postsDir = path.join(outputDir, 'site', 'content', 'posts');
+
+    expect(await fs.pathExists(postsDir)).toBe(true);
+
+    const indexName = `wp_e2e_posts_${Date.now()}`;
+    const result = await indexPostsFromDir(postsDir, {
+      host: meiliHost,
+      apiKey: meiliApiKey,
+      indexName,
+    });
+
+    expect(result.indexed).toBeGreaterThanOrEqual(24);
+
+    const res = await fetch(`${meiliHost}/indexes/${indexName}/search`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${meiliApiKey}`,
+      },
+      body: JSON.stringify({ q: 'Hello world', limit: 5 }),
+    });
+
+    expect(res.ok).toBe(true);
+    const payload = (await res.json()) as { hits?: Array<{ slug?: string; title?: string }> };
+
+    expect(Array.isArray(payload.hits)).toBe(true);
+    expect(payload.hits?.length ?? 0).toBeGreaterThan(0);
+    expect(payload.hits?.some(hit => hit.slug === 'hello-world' || hit.title === 'Hello world!')).toBe(true);
+  }, 120000);
 });
 
 if (!canRun) {

@@ -1,6 +1,6 @@
 # WordPress live E2E fixture
 
-This fixture spins up a disposable WordPress + MariaDB stack, seeds deterministic content with WP-CLI, exports XML, and validates Unpress behavior against both API and XML flows.
+This fixture spins up a disposable WordPress + MariaDB + Meilisearch stack, seeds deterministic content with WP-CLI, exports XML, and validates Unpress behavior against API, XML, 11ty generation, and search indexing flows.
 
 ## What it seeds
 
@@ -13,6 +13,7 @@ This fixture spins up a disposable WordPress + MariaDB stack, seeds deterministi
 ## Files
 
 - `docker-compose.yml` - WordPress/MariaDB/WP-CLI stack
+- Meilisearch is included in the fixture and exercised by the live E2E search assertion
 - `scripts/seed-and-export.sh` - install, seed, app-password generation, XML export
 - `unpress.api.yml` - API source config example
 - `unpress.xml.yml` - XML source config example
