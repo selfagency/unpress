@@ -1,0 +1,30 @@
+package.json
+  h_5cf1e2c1161853 15
+scripts/add-shebang.sh
+  h_5cf1e2c1161853 1-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "cbfb4f8317e9339651568396bac3e22e3dc21fc4",
+  "prompts": {
+    "223b1102edcd6e60": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8e9b32f4-d740-4d72-8f1f-3d1d92c5653a",
+        "model": "copilot/auto"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 28,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
