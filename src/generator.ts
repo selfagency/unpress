@@ -1,8 +1,7 @@
-import fs from 'fs-extra';
-import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { isAllowedAbsolute, safeResolve } from './path-utils.js';
-import { ensureDirSafe, writeFileSafe, copySafe, readdirSafe, pathExistsSafe } from './safe-fs.js';
+import { copySafe, ensureDirSafe, pathExistsSafe, readdirSafe, writeFileSafe } from './safe-fs.js';
 
 async function createProjectDirs(baseRoot: string) {
   await ensureDirSafe(baseRoot, 'site', '_includes', 'layouts');

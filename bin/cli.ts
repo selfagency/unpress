@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 import cac from 'cac';
-import crypto from 'crypto';
 import fs from 'fs-extra';
-import path from 'path';
+import crypto from 'node:crypto';
+import path from 'node:path';
 import { loadConfig } from '../src/config';
 import { loadProjectConfigFromFile, mergeConfig } from '../src/config-loader';
 import { isAllowedAbsolute, isPathWithin, safeResolve, sanitizePathComponent } from '../src/path-utils';
@@ -177,14 +177,14 @@ cli.command('[...args]').action(async (_args, flags) => {
           const driver = mergedProject?.media?.reupload?.driver;
           if (driver === 's3') {
             try {
-              s3Client = mediaAdapters.createS3ClientFromConfig(mergedProject.media.reupload.s3);
+              s3Client = mediaAdapters.createS3ClientFromConfig(mergedProject.media.reupload?.s3);
             } catch {
               // fallback to env-based client
               s3Client = mediaAdapters.createS3ClientFromEnv();
             }
           } else if (driver === 'sftp') {
             try {
-              sftpClient = await mediaAdapters.createSftpClientFromConfig(mergedProject.media.reupload.sftp);
+              sftpClient = await mediaAdapters.createSftpClientFromConfig(mergedProject.media.reupload?.sftp);
             } catch {
               sftpClient = await mediaAdapters.createSftpClientFromEnv();
             }
@@ -234,7 +234,7 @@ cli.command('[...args]').action(async (_args, flags) => {
                         try {
                           const res = await mediaAdapters.reuploadMediaToS3(url, {
                             localDir: safeResolve(stateDir, 'media'),
-                            s3: { client: s3Client, bucket: s3cfg.bucket, prefix: s3cfg.prefix },
+                            s3: { client: s3Client, bucket: s3cfg.bucket },
                           });
                           mediaMap[url] = res;
                         } catch {

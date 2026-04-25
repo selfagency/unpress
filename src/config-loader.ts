@@ -1,9 +1,8 @@
-import fs from 'node:fs';
 import path from 'node:path';
 import { parse } from 'yaml';
 import { z } from 'zod';
 import { isAllowedAbsolute, safeResolve } from './path-utils.js';
-import { readFileSyncSafe, pathExistsSafe, pathExistsSyncSafe } from './safe-fs.js';
+import { pathExistsSyncSafe, readFileSyncSafe } from './safe-fs.js';
 
 export const ProcessingSchema = z.object({
   concurrency: z.number().int().positive().optional(),
