@@ -27,17 +27,38 @@ export class WordPressApi {
     const token = Buffer.from(`${username}:${appPassword}`).toString('base64');
     return `Basic ${token}`;
   }
+
+  private buildHeaders(initHeaders?: RequestInit['headers']): Record<string, string> {
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      Authorization: this.getAuthHeader(),
+    };
+
+    if (!initHeaders) return headers;
+
+    if (Array.isArray(initHeaders)) {
+      for (const [key, value] of initHeaders) headers[key] = String(value);
+      return headers;
+    }
+
+    if (typeof (initHeaders as any).forEach === 'function') {
+      (initHeaders as any).forEach((value: string, key: string) => {
+        headers[key] = String(value);
+      });
+      return headers;
+    }
+
+    Object.assign(headers, initHeaders as Record<string, string>);
+    return headers;
+  }
+
   async fetch(path: string, init: RequestInit = {}) {
     const url = `${this.baseUrl}${path}`;
     const controller = new AbortController();
     const timeout = (init as any).timeout ?? 30000; // 30s default
     const signal = controller.signal;
 
-    const headers: Record<string, string> = {
-      Accept: 'application/json',
-      Authorization: this.getAuthHeader(),
-      ...(init.headers as Record<string, string>),
-    };
+    const headers = this.buildHeaders(init.headers);
 
     const timer = setTimeout(() => controller.abort(), timeout);
     try {
@@ -58,11 +79,7 @@ export class WordPressApi {
     const timeout = (init as any).timeout ?? 30000;
     const signal = controller.signal;
 
-    const headers: Record<string, string> = {
-      Accept: 'application/json',
-      Authorization: this.getAuthHeader(),
-      ...(init.headers as Record<string, string>),
-    };
+    const headers = this.buildHeaders(init.headers);
 
     const timer = setTimeout(() => controller.abort(), timeout);
     try {
@@ -92,6 +109,20 @@ export class WordPressApi {
     throw lastErr;
   }
 
+  private async requestRawWithRetries(path: string, attempts = 3, perTryTimeout = 30000) {
+    let lastErr: any = null;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await this.fetchRaw(path, { method: 'GET', timeout: perTryTimeout } as any);
+      } catch (err) {
+        lastErr = err;
+        const wait = 500 * Math.pow(2, i);
+        await new Promise(r => setTimeout(r, wait));
+      }
+    }
+    throw lastErr;
+  }
+
   async fetchAllPostsPagesAndTaxonomiesPaged({
     perPage,
     onProgress,
@@ -113,16 +144,17 @@ export class WordPressApi {
 
         if (page === 1) {
           // Use raw fetch on first page to read pagination headers
-          const res = await this.fetchRaw(url);
+          const res = await this.requestRawWithRetries(url);
           const h = res.headers.get('X-WP-TotalPages') || res.headers.get('x-wp-totalpages');
           total = parseInt(h || '1', 10);
           data = (await res.json()) as any[];
         } else {
           data = (await this.requestWithRetries(url)) as any[];
         }
-        items.push(...(Array.isArray(data) ? data : []));
+        const pageItems = Array.isArray(data) ? data : [];
+        items.push(...pageItems);
         if (onProgress) onProgress(key, page, total);
-        if (page >= total || data.length < (perPage ?? 100)) break;
+        if (page >= total || pageItems.length < (perPage ?? 100)) break;
         page++;
       }
       results[key] = items;

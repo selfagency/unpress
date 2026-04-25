@@ -5,6 +5,7 @@ import { loadConfig } from '../src/config';
 import { loadProjectConfigFromFile, mergeConfig } from '../src/config-loader';
 import path from 'path';
 import fs from 'fs-extra';
+import { safeResolve } from '../src/path-utils';
 
 const cli = cac('unpress');
 
@@ -51,7 +52,8 @@ cli.command('[...args]').action(async (_args, flags) => {
     // Load optional YAML project config and merge with CLI flags (flags win)
     let projectCfg: any = undefined;
     if (getFlag('config')) {
-      const cfgPath = path.resolve(getFlag('config'));
+      const cfgArg = String(getFlag('config'));
+      const cfgPath = safeResolve(process.cwd(), cfgArg);
       projectCfg = loadProjectConfigFromFile(cfgPath);
     }
     const mergedProject = mergeConfig(flags, projectCfg);

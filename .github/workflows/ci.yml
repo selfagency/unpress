@@ -174,7 +174,7 @@ jobs:
           pnpm exec tsx bin/cli.ts --generate-site --out-dir ./out
           test -d out || (echo "Expected ./out to exist after generation" && ls -la && exit 1)
           cp ./out/.eleventy.js ./out/.eleventy.cjs
-          npx @11ty/eleventy@3 --config=./out/.eleventy.cjs --input=./out/site --output=./out/dist
+          npx --yes @11ty/eleventy@3 --config=./out/.eleventy.cjs --input=./out/site --output=./out/dist
 
       - name: Upload docs artifact
         uses: actions/upload-artifact@v4
