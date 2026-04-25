@@ -171,7 +171,7 @@ jobs:
           WP_USER: "ci"
           WP_APP_PASSWORD: "ci-password"
         run: |
-          pnpm run dev:cli -- --generate-site --out-dir ./out
+          pnpm exec tsx bin/cli.ts --generate-site --out-dir ./out
           test -d out || (echo "Expected ./out to exist after generation" && ls -la && exit 1)
           cp ./out/.eleventy.js ./out/.eleventy.cjs
           npx @11ty/eleventy@3 --config=./out/.eleventy.cjs --input=./out/site --output=./out/dist

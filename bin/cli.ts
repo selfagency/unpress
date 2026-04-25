@@ -30,28 +30,40 @@ cli.option('--dry-run', 'Validate configuration and exit without performing netw
 
 cli.help();
 
-cli.command('', async flags => {
+cli.command('[...args]').action(async (_args, flags) => {
   try {
+    const getFlag = (...keys: string[]) =>
+      keys.find(k => typeof (flags as any)[k] !== 'undefined')
+        ? (flags as any)[keys.find(k => typeof (flags as any)[k] !== 'undefined') as string]
+        : undefined;
+
     // Normalize flags (support both kebab-case and camelCase) to a known shape
     const normalized = {
-      wpUrl: flags.wpUrl || flags['wp-url'] || flags['wp_url'],
-      wpUser: flags.wpUser || flags['wp-user'] || flags['wp_user'],
-      wpAppPassword: flags.wpAppPassword || flags['wp-app-password'] || flags['wp_app_password'],
-      downloadMedia: typeof flags.downloadMedia === 'boolean' ? flags.downloadMedia : flags['download-media'] || false,
+      wpUrl: getFlag('wpUrl', 'wp-url', 'wp_url'),
+      wpUser: getFlag('wpUser', 'wp-user', 'wp_user'),
+      wpAppPassword: getFlag('wpAppPassword', 'wp-app-password', 'wp_app_password'),
+      downloadMedia:
+        typeof getFlag('downloadMedia', 'download-media') === 'boolean'
+          ? getFlag('downloadMedia', 'download-media')
+          : false,
     };
 
     // Load optional YAML project config and merge with CLI flags (flags win)
     let projectCfg: any = undefined;
-    if (flags['config']) {
-      const cfgPath = path.resolve(flags['config']);
+    if (getFlag('config')) {
+      const cfgPath = path.resolve(getFlag('config'));
       projectCfg = loadProjectConfigFromFile(cfgPath);
     }
     const mergedProject = mergeConfig(flags, projectCfg);
 
     // Determine source type early
-    const sourceType = mergedProject?.source?.type || flags['source'] || flags['source-type'];
+    const sourceType = mergedProject?.source?.type || getFlag('source', 'source-type', 'sourceType');
     const needsApiAuth =
-      sourceType === 'api' || (!sourceType && !flags['generate-site'] && !flags['index-meili'] && !flags['xml-file']);
+      sourceType === 'api' ||
+      (!sourceType &&
+        !getFlag('generateSite', 'generate-site') &&
+        !getFlag('indexMeili', 'index-meili') &&
+        !getFlag('xmlFile', 'xml-file'));
 
     // Only prompt for WordPress credentials when API source is needed
     let config: any = undefined;
@@ -59,14 +71,14 @@ cli.command('', async flags => {
       config = await loadConfig(normalized);
     }
     // If dry-run requested, validate and exit
-    if (flags['dry-run']) {
+    if (getFlag('dryRun', 'dry-run')) {
       console.log('Dry-run: validated config:', config || 'no API config needed');
       process.exit(0);
     }
 
     // Optionally generate site first
-    const outDir = flags['out-dir'] || process.cwd();
-    if (flags['generate-site']) {
+    const outDir = getFlag('outDir', 'out-dir') || process.cwd();
+    if (getFlag('generateSite', 'generate-site')) {
       try {
         const gen = (await import('../src/generator')).default;
         console.log(`Generating 11ty site into ${outDir}/site`);
@@ -79,10 +91,10 @@ cli.command('', async flags => {
     }
 
     // Optional Meilisearch indexing step (can run alone or after generation)
-    if (flags['index-meili']) {
-      const host = flags['meili-host'] || process.env.MEILI_HOST || 'http://127.0.0.1:7700';
-      const apiKey = flags['meili-api-key'] || process.env.MEILI_API_KEY;
-      const indexName = flags['meili-index'] || process.env.MEILI_INDEX || 'posts';
+    if (getFlag('indexMeili', 'index-meili')) {
+      const host = getFlag('meiliHost', 'meili-host') || process.env.MEILI_HOST || 'http://127.0.0.1:7700';
+      const apiKey = getFlag('meiliApiKey', 'meili-api-key') || process.env.MEILI_API_KEY;
+      const indexName = getFlag('meiliIndex', 'meili-index') || process.env.MEILI_INDEX || 'posts';
       try {
         const { indexPostsFromDir } = await import('../src/meilisearch');
         console.log(`Indexing posts from ${outDir}/site/content/posts -> ${host}`);
@@ -95,15 +107,15 @@ cli.command('', async flags => {
     }
 
     // Handle source-specific flows: API or XML (minimal wiring)
-    if (sourceType === 'xml' || flags['source'] === 'xml') {
-      const xmlFile = flags['xml-file'] || mergedProject?.source?.xml?.file;
+    if (sourceType === 'xml' || getFlag('source') === 'xml') {
+      const xmlFile = getFlag('xmlFile', 'xml-file') || mergedProject?.source?.xml?.file;
       if (!xmlFile) {
         console.error('XML source selected but no --xml-file provided or configured in project config');
         process.exit(1);
       }
       try {
         const { parseWpXmlItems } = await import('../src/xml-parser');
-        const outDir = flags['out-dir'] || process.cwd();
+        const outDir = getFlag('outDir', 'out-dir') || process.cwd();
         const stateDir = mergedProject?.resume?.stateDir || path.join(outDir, '.unpress', 'state');
         await fs.ensureDir(stateDir);
         const checkpointPath = path.join(stateDir, 'xml-checkpoint.json');
@@ -209,7 +221,7 @@ cli.command('', async flags => {
             const filename = `item-${id}.json`;
             await fs.writeJson(path.join(itemsDir, filename), { item, media_map: mediaMap }, { spaces: 2 });
           },
-          { checkpointPath, resume: !!flags['resume'] },
+          { checkpointPath, resume: !!getFlag('resume') },
         );
 
         console.log('XML processing complete');
