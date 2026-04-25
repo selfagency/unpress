@@ -42,7 +42,7 @@ export class WordPressApi {
     }
 
     if (typeof (initHeaders as any).forEach === 'function') {
-      (initHeaders as any).forEach((value: string, key: string) => {
+      Object.entries(initHeaders).forEach(([key, value]) => {
         headers[key] = String(value);
       });
       return headers;
@@ -55,12 +55,12 @@ export class WordPressApi {
   async fetch(path: string, init: RequestInit = {}) {
     const url = `${this.baseUrl}${path}`;
     const controller = new AbortController();
-    const timeout = (init as any).timeout ?? 30000; // 30s default
+    const timeout = (init as Record<string, unknown>)?.timeout ?? 30000; // 30s default
     const signal = controller.signal;
 
     const headers = this.buildHeaders(init.headers);
 
-    const timer = setTimeout(() => controller.abort(), timeout);
+    const timer = setTimeout(() => controller.abort(), Number(timeout));
     try {
       const res = await fetch(url, { ...init, headers, signal } as any);
       if (!res.ok) {
@@ -98,7 +98,7 @@ export class WordPressApi {
     let lastErr: any = null;
     for (let i = 0; i < attempts; i++) {
       try {
-        return await this.fetch(path, { method: 'GET', timeout: perTryTimeout } as any);
+        return await this.fetch(path, { method: 'GET', timeout: perTryTimeout } as Record<string, unknown>);
       } catch (err) {
         lastErr = err;
         // simple backoff
@@ -113,7 +113,7 @@ export class WordPressApi {
     let lastErr: any = null;
     for (let i = 0; i < attempts; i++) {
       try {
-        return await this.fetchRaw(path, { method: 'GET', timeout: perTryTimeout } as any);
+        return await this.fetchRaw(path, { method: 'GET', timeout: perTryTimeout } as Record<string, unknown>);
       } catch (err) {
         lastErr = err;
         const wait = 500 * Math.pow(2, i);

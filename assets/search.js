@@ -9,10 +9,13 @@
     const q = document.getElementById('q').value;
     if (!q) return;
     if (!cfg.host) {
-      results.innerHTML = '<p>Search is not configured. Enable Meilisearch to use search.</p>';
+      // Render a plain-text message to avoid HTML injection
+      results.textContent = 'Search is not configured. Enable Meilisearch to use search.';
       return;
     }
-    const url = '' + cfg.host + '/indexes/' + cfg.index || 'posts' + '/search';
+    // Compose URL safely and avoid operator-precedence bugs
+    const indexName = cfg.index || 'posts';
+    const url = String(cfg.host).replace(/\/$/, '') + '/indexes/' + encodeURIComponent(indexName) + '/search';
     const body = { q: q, limit: 10 };
     const headers = { 'Content-Type': 'application/json' };
     if (cfg.apiKey) headers['X-Meili-API-Key'] = cfg.apiKey;
@@ -20,14 +23,29 @@
       const res = await fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(body) });
       const json = await res.json();
       const hits = json.hits || [];
-      results.innerHTML =
-        hits
-          .map(
-            h =>
-              '<article><h3><a href="/' + h.slug + '/">' + h.title + '</a></h3><p>' + h.excerpt ||
-              '' + '</p></article>'
-          )
-          .join('') || '<p>No results</p>';
+      // Clear results and append DOM nodes to avoid using innerHTML with untrusted data
+      results.innerHTML = '';
+      if (!hits || hits.length === 0) {
+        const p = document.createElement('p');
+        p.textContent = 'No results';
+        results.appendChild(p);
+      } else {
+        for (const h of hits) {
+          const article = document.createElement('article');
+          const h3 = document.createElement('h3');
+          const a = document.createElement('a');
+          // Ensure slug is treated as text for URL parts
+          const slug = h && h.slug ? String(h.slug) : '';
+          a.setAttribute('href', '/' + encodeURIComponent(slug) + '/');
+          a.textContent = h && h.title ? String(h.title) : 'Untitled';
+          h3.appendChild(a);
+          article.appendChild(h3);
+          const p = document.createElement('p');
+          p.textContent = h && h.excerpt ? String(h.excerpt) : '';
+          article.appendChild(p);
+          results.appendChild(article);
+        }
+      }
     } catch {
       results.innerHTML = '<p>Error querying search service.</p>';
     }

@@ -15,7 +15,7 @@ export type MediaAdapterOptions = {
   localDir?: string;
   s3?: { client?: S3Client; bucket: string; prefix?: string };
   // ssh2-sftp-client has no bundled types in this project; accept any here
-  sftp?: { client?: any; remotePath?: string };
+  sftp?: { client?: import('ssh2').Client; remotePath?: string };
 };
 
 export async function downloadToLocal(url: string, destDir: string): Promise<string> {
@@ -39,7 +39,7 @@ export async function uploadToS3(localPath: string, client: S3Client, bucket: st
 
 export async function uploadToSftp(localPath: string, client: any, remotePath: string): Promise<string> {
   const remoteFile = path.posix.join(remotePath, path.basename(localPath));
-  await client.put(localPath, remoteFile);
+  await (client as any).put(localPath, remoteFile);
   return `sftp:${remoteFile}`;
 }
 
@@ -103,7 +103,7 @@ export async function createSftpClientFromConfig(cfg?: {
   privateKey?: string;
 }) {
   const client = new SftpClient();
-  const connectCfg: any = {};
+  const connectCfg: Record<string, unknown> = {};
   connectCfg.host = cfg?.host ?? process.env.SFTP_HOST;
   connectCfg.port = cfg?.port ?? (process.env.SFTP_PORT ? Number.parseInt(process.env.SFTP_PORT, 10) : 22);
   connectCfg.username = cfg?.username ?? process.env.SFTP_USER;

@@ -32,15 +32,6 @@ cli.option('--dry-run', 'Validate configuration and exit without performing netw
 
 cli.help();
 
-function sanitizeSlug(input: string) {
-  return String(input)
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9_-]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
 cli.command('[...args]').action(async (_args, flags) => {
   try {
     const getFlag = (...keys: string[]) => {
@@ -304,13 +295,13 @@ cli.command('[...args]').action(async (_args, flags) => {
             const siteDir = safeResolve(outDir, 'site');
 
             // Helper to extract string from CDATA objects
-            const extractText = (val: any): string => {
+            function extractText(val: any): string {
               if (!val) return '';
               if (typeof val === 'string') return val;
               if (typeof val === 'object' && val.__cdata) return val.__cdata;
               if (typeof val === 'object' && val['#text']) return val['#text'];
               return String(val);
-            };
+            }
 
             const postTypeMap: Record<string, string> = {
               post: 'posts',
@@ -388,8 +379,7 @@ cli.command('[...args]').action(async (_args, flags) => {
               fmLines.push('---');
               fmLines.push('');
 
-              const rawSlug = extractText(item['wp:post_name'] || `item-${item.post_id || Date.now()}`);
-              const slug = sanitizeSlug(rawSlug) || `item-${item.post_id || Date.now()}`;
+              extractText(item['wp:post_name'] || `item-${item.post_id || Date.now()}`);
               // Use a generated UUID for the filename to avoid relying on user-provided
               // slugs in filesystem names; keep the original slug in frontmatter.
               const filename = `${crypto.randomUUID()}.md`;

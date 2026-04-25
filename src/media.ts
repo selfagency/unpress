@@ -32,8 +32,8 @@ export async function downloadFile(url: string, dest: string): Promise<void> {
 export function findMediaUrls(markdown: string): string[] {
   const urlPattern = /!\[[^\]]*\]\(([^)]+)\)/g;
   const urls: string[] = [];
-  let match;
-  while ((match = urlPattern.exec(markdown))) {
+  let match: RegExpExecArray | null;
+  while ((match = urlPattern.exec(markdown)) !== null) {
     if (match[1]) urls.push(match[1]);
   }
   return urls;
