@@ -1,0 +1,9 @@
+.gitignore
+  h_5cf1e2c1161853 251
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "a0876606ef2f8f59feaa30578d451607ca0082bd",
+  "prompts": {}
+}

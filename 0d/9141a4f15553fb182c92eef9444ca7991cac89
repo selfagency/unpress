@@ -1,0 +1,31 @@
+skills/unpress-migration/references/env-vars.md
+  44969bbb529e9b3b 7-12,16-22,26-32,34,38-42
+skills/unpress-migration/references/cli-reference.md
+  44969bbb529e9b3b 7-12,16-20,22,26-28,33-38,42-47
+src/xml-parser.ts
+  h_5cf1e2c1161853 153-154
+templates/11ty/tags.njk
+  h_5cf1e2c1161853 8-9,11,15
+package.json
+  h_5cf1e2c1161853 46,54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "0d9141a4f15553fb182c92eef9444ca7991cac89",
+  "prompts": {
+    "44969bbb529e9b3b": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8d9b650c-6320-46e4-82b0-cf744646ac87",
+        "model": "z/glm-5.1"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 53,
+      "overriden_lines": 0
+    }
+  }
+}

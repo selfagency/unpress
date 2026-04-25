@@ -1,0 +1,9 @@
+.github/workflows/ci.yml
+  h_5cf1e2c1161853 31,106,139,203-220,225,230,237
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "e69f2e8d20b4f8231762244f7c3dd73e54b5fa8a",
+  "prompts": {}
+}
