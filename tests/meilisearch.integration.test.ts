@@ -28,5 +28,5 @@ describe('meilisearch integration', () => {
     const r = await fetch(url, { headers: apiKey ? { 'X-Meili-API-Key': apiKey } : {} });
     const docs = await r.json();
     expect(Array.isArray(docs)).toBe(true);
-  });
+  }, 30000);
 });
