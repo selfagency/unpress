@@ -20,7 +20,7 @@ export async function downloadFile(url: string, dest: string): Promise<void> {
 }
 
 /**
- * Find all media URLs in a Markdown string (img, audio, video, etc.).
+ * Find all Markdown image URLs in a Markdown string.
  * @param markdown - The Markdown content.
  * @returns Array of URLs.
  */
@@ -43,7 +43,7 @@ export function findMediaUrls(markdown: string): string[] {
 export function relinkMediaUrls(markdown: string, map: Record<string, string>): string {
   // Replace only URLs that appear in image/link markdown syntax
   return markdown.replace(/(!\[[^\]]*\]\()([^)]+)(\))/g, (full, prefix, url, suffix) => {
-    const replacement = map[url];
+    const replacement = Object.hasOwn(map, url) ? map[url] : undefined;
     if (replacement) return `${prefix}${replacement}${suffix}`;
     return full;
   });

@@ -64,7 +64,7 @@ test('parseWpXmlItems parses post and attachment items and writes checkpoint', a
   );
   expect(items.length).toBe(2);
 
-  const post = items.find(i => i.post_type === 'post' || i.post_type === 'post');
+  const post = items.find(i => i.post_type === 'post');
   expect(post).toBeDefined();
   expect(post.content).toContain('<p>hello world</p>');
   expect(post.excerpt).toBe('summary');

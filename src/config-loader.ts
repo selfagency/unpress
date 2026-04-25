@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import { parse } from 'yaml';
 import { z } from 'zod';
 
@@ -63,13 +64,27 @@ export const ContentTypeSchema = z.object({
 
 export const ProjectConfigSchema = z.object({
   source: SourceSchema.optional(),
-  content_types: z.array(ContentTypeSchema).optional(),
+  content_types: z.union([z.array(ContentTypeSchema), z.string()]).optional(),
   media: MediaSchema.optional(),
   processing: ProcessingSchema.optional(),
   resume: ResumeSchema.optional(),
 });
 
 export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
+
+function loadContentTypesFromFile(contentTypesPath: string) {
+  const resolvedPath = path.resolve(contentTypesPath);
+  if (!fs.existsSync(resolvedPath)) {
+    throw new Error(`Content types file not found: ${resolvedPath}`);
+  }
+  const raw = fs.readFileSync(resolvedPath, 'utf8');
+  const parsed = parse(raw);
+  const result = z.array(ContentTypeSchema).safeParse(parsed);
+  if (!result.success) {
+    throw new Error(`Invalid content types file ${resolvedPath}: ${result.error.message}`);
+  }
+  return result.data;
+}
 
 export function loadProjectConfigFromFile(path: string): ProjectConfig {
   if (!fs.existsSync(path)) throw new Error(`Config file not found: ${path}`);
@@ -79,18 +94,33 @@ export function loadProjectConfigFromFile(path: string): ProjectConfig {
   if (!result.success) {
     throw new Error(`Invalid config file ${path}: ${result.error.message}`);
   }
-  return result.data;
+
+  const config = result.data;
+  if (typeof config.content_types === 'string') {
+    config.content_types = loadContentTypesFromFile(config.content_types);
+  }
+  return config;
 }
 
 export function mergeConfig(flags: Record<string, any>, fileConfig?: ProjectConfig): ProjectConfig {
   // Very small merge: flags override fileConfig for a few known keys; expand as needed.
-  const merged: any = { ...(fileConfig || {}) };
+  const merged: any = { ...fileConfig };
 
-  if (flags.source) merged.source = { ...(merged.source || {}), type: flags.source };
-  if (flags['source-type']) merged.source = { ...(merged.source || {}), type: flags['source-type'] };
-  if (flags['xml-file']) merged.source = { ...(merged.source || {}), xml: { file: flags['xml-file'] } };
-  if (flags['content-types'])
-    merged.content_types = Array.isArray(flags['content-types']) ? flags['content-types'] : [flags['content-types']];
+  if (flags.source) merged.source = { ...merged.source, type: flags.source };
+  if (flags['source-type']) merged.source = { ...merged.source, type: flags['source-type'] };
+  if (flags['xml-file']) merged.source = { ...merged.source, xml: { file: flags['xml-file'] } };
+  const contentTypesFlag = flags['content-types'] || flags.types;
+  if (contentTypesFlag) {
+    if (typeof contentTypesFlag === 'string') {
+      merged.content_types = loadContentTypesFromFile(contentTypesFlag);
+    } else if (Array.isArray(contentTypesFlag)) {
+      merged.content_types = contentTypesFlag;
+    }
+  }
+
+  if (typeof merged.content_types === 'string') {
+    merged.content_types = loadContentTypesFromFile(merged.content_types);
+  }
 
   if (!merged.processing) merged.processing = {};
   if (typeof flags.concurrency === 'number') merged.processing.concurrency = flags.concurrency;
@@ -99,5 +129,5 @@ export function mergeConfig(flags: Record<string, any>, fileConfig?: ProjectConf
 
   // Validate merged result
   const parsed = ProjectConfigSchema.parse(merged);
-  return parsed;
+  return parsed as ProjectConfig;
 }

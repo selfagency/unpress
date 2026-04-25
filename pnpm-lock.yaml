@@ -47,6 +47,9 @@ importers:
       fs-extra:
         specifier: ^11.3.4
         version: 11.3.4
+      gray-matter:
+        specifier: ^4.0.3
+        version: 4.0.3
       http-server:
         specifier: ^14.1.1
         version: 14.1.1
@@ -68,6 +71,9 @@ importers:
       oxlint:
         specifier: ^1.61.0
         version: 1.61.0
+      p-queue:
+        specifier: 9.1.2
+        version: 9.1.2
       pa11y:
         specifier: 9.1.1
         version: 9.1.1(typescript@6.0.3)
@@ -111,12 +117,6 @@ importers:
       '@types/turndown':
         specifier: ^5.0.6
         version: 5.0.6
-      gray-matter:
-        specifier: ^4.0.3
-        version: 4.0.3
-      p-queue:
-        specifier: 9.1.2
-        version: 9.1.2
 
 packages:
 

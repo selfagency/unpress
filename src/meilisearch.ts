@@ -2,8 +2,8 @@ import fs from 'fs-extra';
 import matter from 'gray-matter';
 import fetch from 'node-fetch';
 import PQueue from 'p-queue';
-import path from 'path';
 import { error, info, progress, warn } from './logger.js';
+import { safeResolve } from './path-utils.js';
 
 interface MeiliConfig {
   host: string; // e.g. http://127.0.0.1:7700
@@ -30,7 +30,7 @@ export async function indexPostsFromDir(
   const docs: any[] = [];
   for (const f of files) {
     if (!f.endsWith('.md')) continue;
-    const full = path.join(postsDir, f);
+    const full = safeResolve(postsDir, f);
     const { data, content } = await readMarkdownFrontmatter(full);
     const doc = {
       id: data.slug || data.id || f.replace(/\.md$/, ''),

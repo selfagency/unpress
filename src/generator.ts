@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { safeResolve } from './path-utils.js';
 
 /**
  * Generate a minimal 11ty project structure in the given directory.
@@ -56,11 +57,11 @@ This is a generated 11ty site.
 `;
 
   // create directories
-  await fs.ensureDir(path.join(root, 'site', '_includes', 'layouts'));
-  await fs.ensureDir(path.join(root, 'site', 'content', 'posts'));
+  await fs.ensureDir(safeResolve(root, 'site', '_includes', 'layouts'));
+  await fs.ensureDir(safeResolve(root, 'site', 'content', 'posts'));
   // authors collection
-  await fs.ensureDir(path.join(root, 'site', 'content', 'authors'));
-  await fs.ensureDir(path.join(root, 'assets'));
+  await fs.ensureDir(safeResolve(root, 'site', 'content', 'authors'));
+  await fs.ensureDir(safeResolve(root, 'assets'));
 
   // optional: create a sample author file to seed the authors collection
   const sampleAuthor = `---
@@ -72,9 +73,9 @@ bio: "This is a sample author bio. Replace with real authors during migration."
 `;
 
   // write files
-  await fs.writeFile(path.join(root, '.eleventy.js'), eleventyConfig, 'utf8');
-  await fs.writeFile(path.join(root, 'site', '_includes', 'layouts', 'base.njk'), baseLayout, 'utf8');
-  await fs.writeFile(path.join(root, 'site', 'index.md'), indexMd, 'utf8');
+  await fs.writeFile(safeResolve(root, '.eleventy.js'), eleventyConfig, 'utf8');
+  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'base.njk'), baseLayout, 'utf8');
+  await fs.writeFile(safeResolve(root, 'site', 'index.md'), indexMd, 'utf8');
 
   // write tag/category/author templates
   const tagsTemplate = `---
@@ -128,13 +129,13 @@ pagination:
 </ul>
 `;
 
-  await fs.writeFile(path.join(root, 'site', '_includes', 'layouts', 'tags.njk'), tagsTemplate, 'utf8');
-  await fs.writeFile(path.join(root, 'site', '_includes', 'layouts', 'categories.njk'), categoriesTemplate, 'utf8');
-  await fs.writeFile(path.join(root, 'site', '_includes', 'layouts', 'authors.njk'), authorsIndex, 'utf8');
-  await fs.writeFile(path.join(root, 'site', '_includes', 'layouts', 'author.njk'), authorTemplate, 'utf8');
+  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'tags.njk'), tagsTemplate, 'utf8');
+  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'categories.njk'), categoriesTemplate, 'utf8');
+  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'authors.njk'), authorsIndex, 'utf8');
+  await fs.writeFile(safeResolve(root, 'site', '_includes', 'layouts', 'author.njk'), authorTemplate, 'utf8');
 
   // sample author file
-  await fs.writeFile(path.join(root, 'site', 'content', 'authors', 'site-author.md'), sampleAuthor, 'utf8');
+  await fs.writeFile(safeResolve(root, 'site', 'content', 'authors', 'site-author.md'), sampleAuthor, 'utf8');
 
   // basic styles
   const styles = `:root { color-scheme: light dark; }
@@ -151,7 +152,7 @@ img { max-width: 100%; height: auto; }
   width: 1px;
 }
 `;
-  await fs.writeFile(path.join(root, 'assets', 'styles.css'), styles, 'utf8');
+  await fs.writeFile(safeResolve(root, 'assets', 'styles.css'), styles, 'utf8');
   // progress message
   try {
     const { progress } = await import('./logger.js');
