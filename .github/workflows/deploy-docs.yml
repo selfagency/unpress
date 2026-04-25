@@ -36,23 +36,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate OpenAPI types for docs
-        shell: bash
-        run: |
-          if [ -f output/openapi-types.json ]; then
-            echo "output/openapi-types.json already exists."
-            exit 0
-          fi
-
-          script_name="$(node -e "const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json','utf8')); const scripts=pkg.scripts || {}; const candidates=['openapi:generate','generate:openapi','docs:generate-openapi','api:generate','build:openapi']; const found=candidates.find((name) => scripts[name]); if (found) process.stdout.write(found);")"
-
-          if [ -n "$script_name" ]; then
-            echo "Generating OpenAPI types with pnpm run $script_name"
-            pnpm run "$script_name"
-          fi
-
-          test -f output/openapi-types.json || { echo "Missing required file: output/openapi-types.json. Add the repository's OpenAPI generation step before docs:build."; exit 1; }
-
       - name: Build docs
         run: pnpm run docs:build
 
