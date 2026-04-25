@@ -379,7 +379,7 @@ cli.command('[...args]').action(async (_args, flags) => {
                     ...(value as string[]).map(v => {
                       const escapedItem = v.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
                       return `  - "${escapedItem}"`;
-                    })
+                    }),
                   );
                 } else {
                   fmLines.push(`${key}: ${value}`);
