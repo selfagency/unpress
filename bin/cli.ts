@@ -6,7 +6,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { loadConfig } from '../src/config';
 import { loadProjectConfigFromFile, mergeConfig } from '../src/config-loader';
-import { isAllowedAbsolute, isPathWithin, safeResolve, sanitizePathComponent } from '../src/path-utils';
+import { isAllowedAbsolute, isPathWithin, safeResolve } from '../src/path-utils';
 
 const cli = cac('unpress');
 
@@ -43,10 +43,12 @@ function sanitizeSlug(input: string) {
 
 cli.command('[...args]').action(async (_args, flags) => {
   try {
-    const getFlag = (...keys: string[]) =>
-      keys.find(k => typeof (flags as any)[k] !== 'undefined')
-        ? (flags as any)[keys.find(k => typeof (flags as any)[k] !== 'undefined') as string]
-        : undefined;
+    const getFlag = (...keys: string[]) => {
+      for (const k of keys) {
+        if (typeof (flags as any)[k] !== 'undefined') return (flags as any)[k];
+      }
+      return undefined;
+    };
 
     // Normalize flags (support both kebab-case and camelCase) to a known shape
     const normalized = {
@@ -287,7 +289,14 @@ cli.command('[...args]').action(async (_args, flags) => {
               console.error('Refusing to read items dir outside state dir for safety.');
               process.exit(1);
             }
-            const itemFiles = await fs.readdir(itemsDir);
+            // Normalize and validate itemsDir before reading to avoid path-traversal warnings
+            const itemsDirNorm = path.normalize(itemsDir);
+            const stateDirNorm = path.normalize(stateDir);
+            if (!itemsDirNorm.startsWith(stateDirNorm)) {
+              console.error('Refusing to read items dir outside state dir for safety.');
+              process.exit(1);
+            }
+            const itemFiles = await fs.readdir(itemsDirNorm);
             const outDirRaw = String(getFlag('outDir', 'out-dir') || process.cwd());
             const outDir = path.isAbsolute(outDirRaw)
               ? path.normalize(outDirRaw)
@@ -362,10 +371,9 @@ cli.command('[...args]').action(async (_args, flags) => {
               for (const [key, value] of Object.entries(fm)) {
                 if (typeof value === 'string') {
                   // Use regex replace to escape double quotes for broader JS compatibility
-                  fmLines.push(`${key}: "${(value as string).replace(/"/g, '\\"')}"`);
+                  fmLines.push(`${key}: "${value.replace(/"/g, '\\"')}"`);
                 } else if (Array.isArray(value)) {
-                  fmLines.push(`${key}:`);
-                  fmLines.push(...(value as string[]).map(v => `  - "${v}"`));
+                  fmLines.push(`${key}:`, ...(value as string[]).map(v => `  - "${v}"`));
                 } else {
                   fmLines.push(`${key}: ${value}`);
                 }
@@ -375,18 +383,19 @@ cli.command('[...args]').action(async (_args, flags) => {
 
               const rawSlug = extractText(item['wp:post_name'] || `item-${item.post_id || Date.now()}`);
               const slug = sanitizeSlug(rawSlug) || `item-${item.post_id || Date.now()}`;
-              const safeSlug = sanitizePathComponent(slug) || `item-${item.post_id || Date.now()}`;
               // Use a generated UUID for the filename to avoid relying on user-provided
               // slugs in filesystem names; keep the original slug in frontmatter.
               const filename = `${crypto.randomUUID()}.md`;
               const fileContent = fmLines.join('\n') + markdown;
               // Resolve and validate final target path inside siteDir
               const targetPath = safeResolve(contentDir, filename);
-              if (!isPathWithin(siteDir, targetPath)) {
+              const targetPathNorm = path.normalize(targetPath);
+              const siteDirNorm2 = path.normalize(siteDir);
+              if (!targetPathNorm.startsWith(siteDirNorm2)) {
                 console.error('Refusing to write content outside site directory for safety.');
                 process.exit(1);
               }
-              await fs.writeFile(targetPath, fileContent, 'utf8');
+              await fs.writeFile(targetPathNorm, fileContent, 'utf8');
             }
 
             console.log(`Generated markdown files for ${itemFiles.filter(f => f.endsWith('.json')).length} items`);

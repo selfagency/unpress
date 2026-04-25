@@ -42,6 +42,7 @@
     "src/lexicons",
     "plans",
     "out",
-    "assets"
+    "assets",
+    ".codacy"
   ]
 }

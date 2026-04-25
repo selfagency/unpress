@@ -16,7 +16,8 @@
     "src/lexicons",
     "plans",
     "out",
-    "assets"
+    "assets",
+    ".codacy"
   ],
   "arrowParens": "avoid",
   "bracketSpacing": true,

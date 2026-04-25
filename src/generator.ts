@@ -47,8 +47,6 @@ async function copyCustomTemplates(root: string) {
 
     if (await pathExistsSafe(packageRoot, 'templates', '11ty')) {
       const siteDir = safeResolve(root, 'site');
-      const includesDir = safeResolve(root, 'site', '_includes');
-      const templatesIncludesDir = safeResolve(templatesDir, '_includes');
 
       const templateFiles = await readdirSafe(packageRoot, 'templates', '11ty');
       for (const file of templateFiles) {
@@ -74,7 +72,6 @@ async function copyCustomTemplates(root: string) {
 }
 
 async function ensureBaseLayoutExists(root: string, fallbackBaseLayout: string) {
-  const baseLayoutPath = safeResolve(root, 'site', '_includes', 'layouts', 'base.njk');
   if (!(await pathExistsSafe(root, 'site', '_includes', 'layouts', 'base.njk'))) {
     await ensureDirSafe(root, 'site', '_includes', 'layouts');
     await writeFileSafe(root, fallbackBaseLayout, 'site', '_includes', 'layouts', 'base.njk');
