@@ -1,0 +1,14 @@
+.github/workflows/ci.yml
+  h_5cf1e2c1161853 53-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "133f3b9bc78ede7ddfbcc995d1e1fe57b1238303",
+  "prompts": {},
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
