@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'yaml';
 import { z } from 'zod';
-import { safeResolve } from './path-utils.js';
+import { isAllowedAbsolute, safeResolve } from './path-utils.js';
 
 export const ProcessingSchema = z.object({
   concurrency: z.number().int().positive().optional(),
@@ -90,7 +90,14 @@ function loadContentTypesFromFile(contentTypesPath: string) {
 }
 
 export function loadProjectConfigFromFile(configPath: string): ProjectConfig {
-  const resolvedConfigPath = safeResolve(process.cwd(), configPath);
+  let resolvedConfigPath: string;
+  if (path.isAbsolute(configPath)) {
+    const norm = path.normalize(configPath);
+    if (!isAllowedAbsolute(norm)) throw new Error(`Refusing to read config outside workspace or tmp: ${norm}`);
+    resolvedConfigPath = norm;
+  } else {
+    resolvedConfigPath = safeResolve(process.cwd(), configPath);
+  }
   if (!fs.existsSync(resolvedConfigPath)) throw new Error(`Config file not found: ${resolvedConfigPath}`);
   const raw = fs.readFileSync(resolvedConfigPath, 'utf8');
   const parsed = parse(raw);
@@ -104,9 +111,17 @@ export function loadProjectConfigFromFile(configPath: string): ProjectConfig {
     // If the content types path in config is relative, resolve it against the
     // directory containing the project config file to avoid surprises.
     const cfgDir = path.dirname(resolvedConfigPath);
-    config.content_types = loadContentTypesFromFile(
-      path.isAbsolute(config.content_types) ? config.content_types : path.join(cfgDir, config.content_types),
-    );
+    const ctRaw = config.content_types as string;
+    let ctResolved: string;
+    if (path.isAbsolute(ctRaw)) {
+      // Only allow absolute content_types files inside workspace or tmp
+      const norm = path.normalize(ctRaw);
+      if (!isAllowedAbsolute(norm)) throw new Error(`Refusing to read content_types outside workspace or tmp: ${norm}`);
+      ctResolved = norm;
+    } else {
+      ctResolved = safeResolve(cfgDir, ctRaw);
+    }
+    config.content_types = loadContentTypesFromFile(ctResolved);
   }
   return config;
 }

@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import { fileURLToPath } from 'node:url';
 import path from 'path';
-import { safeResolve } from './path-utils.js';
+import { isAllowedAbsolute, safeResolve } from './path-utils.js';
 
 async function createProjectDirs(baseRoot: string) {
   await fs.ensureDir(safeResolve(baseRoot, 'site', '_includes', 'layouts'));
@@ -94,8 +94,20 @@ async function notifyProgress(msg: string) {
  * Creates: .eleventy.js, site/content/posts, site/_includes/layouts/base.njk, site/index.md
  */
 export async function generate11tyProject(dest: string) {
-  // Resolve destination against cwd and ensure it cannot escape the workspace.
-  const root = safeResolve(process.cwd(), dest);
+  // Allow absolute destinations (useful for tests / temp dirs). For relative
+  // destinations, resolve against cwd and ensure the path doesn't escape the
+  // workspace using safeResolve.
+  let root: string;
+  if (path.isAbsolute(dest)) {
+    const norm = path.resolve(dest);
+    // Only allow absolute paths that are inside the workspace or the OS temp dir
+    if (!isAllowedAbsolute(norm)) {
+      throw new Error(`Refusing to generate site into absolute path outside workspace or tmp: ${norm}`);
+    }
+    root = norm;
+  } else {
+    root = safeResolve(process.cwd(), dest);
+  }
   const eleventyConfig = `module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy('assets');
   return {

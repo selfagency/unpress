@@ -11,7 +11,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && tsc -p tsconfig.build.json",
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && pnpm run build:cli && tsc -p tsconfig.build.json",
+    "build:cli": "tsup bin/cli.ts --format esm --platform node --target node18 --out-dir dist/bin --sourcemap && node scripts/add-shebang.js dist/bin/cli.js",
     "postbuild": "node scripts/write-dist-package.js",
     "dev:cli": "tsx bin/cli.ts",
     "docs:dev": "vitepress dev docs",
@@ -50,6 +51,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@codecov/vite-plugin": "^2.0.1",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.6.0",
     "@types/ssh2-sftp-client": "^9.0.6",
@@ -63,6 +65,7 @@
     "oxlint": "^1.61.0",
     "pa11y": "9.1.1",
     "rumdl": "^0.1.81",
+    "tsup": "^6.7.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.10",

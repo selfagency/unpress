@@ -1,5 +1,7 @@
 # Unpress — Instamatically convert your WordPress site to an 11ty static site
 
+![NPM Version](https://img.shields.io/npm/v/@selfagency/unpress) [![CI](https://github.com/selfagency/unpress/actions/workflows/ci.yml/badge.svg)](https://github.com/selfagency/unpress/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/selfagency/unpress/graph/badge.svg?token=bu8564ydRz)](https://codecov.io/gh/selfagency/unpress) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/485824d3c24849baac6d2d77077b9169)](https://app.codacy.com/gh/selfagency/unpress/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=selfagency_unpress&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=selfagency_unpress)
+
 `unpress` is a CLI utility that migrates WordPress posts, pages, taxonomies, and media into a generated 11ty site.
 
 Quick features implemented in this workspace:

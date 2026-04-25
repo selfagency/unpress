@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { loadConfig } from '../src/config';
 import { loadProjectConfigFromFile, mergeConfig } from '../src/config-loader';
-import { safeResolve, sanitizePathComponent } from '../src/path-utils';
+import { isAllowedAbsolute, isPathWithin, safeResolve, sanitizePathComponent } from '../src/path-utils';
 
 const cli = cac('unpress');
 
@@ -91,6 +91,10 @@ cli.command('[...args]').action(async (_args, flags) => {
     // Optionally generate site first
     const outDirRaw = String(getFlag('outDir', 'out-dir') || process.cwd());
     const outDir = path.isAbsolute(outDirRaw) ? path.normalize(outDirRaw) : safeResolve(process.cwd(), outDirRaw);
+    if (path.isAbsolute(outDir) && !isAllowedAbsolute(outDir)) {
+      console.error('Refusing to generate site into absolute path outside workspace or tmp for safety.');
+      process.exit(1);
+    }
     if (getFlag('generateSite', 'generate-site')) {
       try {
         const gen = (await import('../src/generator')).default;
@@ -110,8 +114,9 @@ cli.command('[...args]').action(async (_args, flags) => {
       const indexName = getFlag('meiliIndex', 'meili-index') || process.env.MEILI_INDEX || 'posts';
       try {
         const { indexPostsFromDir } = await import('../src/meilisearch');
-        console.log(`Indexing posts from ${outDir}/site/content/posts -> ${host}`);
-        const res = await indexPostsFromDir(`${outDir}/site/content/posts`, { host, apiKey, indexName });
+        const postsDir = safeResolve(outDir, 'site', 'content', 'posts');
+        console.log(`Indexing posts from ${postsDir} -> ${host}`);
+        const res = await indexPostsFromDir(postsDir, { host, apiKey, indexName });
         console.log('Indexing result:', res);
       } catch (err) {
         console.error('Meilisearch indexing failed:', err instanceof Error ? err.message : err);
@@ -125,7 +130,16 @@ cli.command('[...args]').action(async (_args, flags) => {
       let xmlFile: string | undefined;
       if (xmlFileRaw) {
         const xmlFileStr = String(xmlFileRaw);
-        xmlFile = path.isAbsolute(xmlFileStr) ? path.normalize(xmlFileStr) : safeResolve(process.cwd(), xmlFileStr);
+        if (path.isAbsolute(xmlFileStr)) {
+          const norm = path.normalize(xmlFileStr);
+          if (!isAllowedAbsolute(norm)) {
+            console.error('Refusing to read XML file outside workspace or tmp for safety.');
+            process.exit(1);
+          }
+          xmlFile = norm;
+        } else {
+          xmlFile = safeResolve(process.cwd(), xmlFileStr);
+        }
       } else {
         xmlFile = undefined;
       }
@@ -184,12 +198,8 @@ cli.command('[...args]').action(async (_args, flags) => {
             await fs.ensureDir(itemsDir);
             // Extra runtime validation to satisfy static analyzers: ensure stateDir
             // is contained within the project workspace root.
-            const normalizedWorkspace = path.resolve(process.cwd());
-            const normalizedState = path.resolve(stateDir);
-            if (
-              !normalizedState.startsWith(normalizedWorkspace + path.sep) &&
-              normalizedState !== normalizedWorkspace
-            ) {
+            // Ensure stateDir is within workspace for safety
+            if (!isPathWithin(process.cwd(), stateDir)) {
               console.error('Configured stateDir escapes the workspace root; refusing to proceed for safety.');
               process.exit(1);
             }
@@ -272,6 +282,11 @@ cli.command('[...args]').action(async (_args, flags) => {
           try {
             const { htmlToMarkdown } = await import('../src/convert');
             const itemsDir = safeResolve(stateDir, 'items');
+            // Validate itemsDir containment before reading
+            if (!isPathWithin(stateDir, itemsDir)) {
+              console.error('Refusing to read items dir outside state dir for safety.');
+              process.exit(1);
+            }
             const itemFiles = await fs.readdir(itemsDir);
             const outDirRaw = String(getFlag('outDir', 'out-dir') || process.cwd());
             const outDir = path.isAbsolute(outDirRaw)
@@ -367,8 +382,7 @@ cli.command('[...args]').action(async (_args, flags) => {
               const fileContent = fmLines.join('\n') + markdown;
               // Resolve and validate final target path inside siteDir
               const targetPath = safeResolve(contentDir, filename);
-              const normalizedSite = path.resolve(siteDir);
-              if (!targetPath.startsWith(normalizedSite + path.sep) && targetPath !== normalizedSite) {
+              if (!isPathWithin(siteDir, targetPath)) {
                 console.error('Refusing to write content outside site directory for safety.');
                 process.exit(1);
               }
