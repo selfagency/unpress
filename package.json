@@ -12,7 +12,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && pnpm run build:cli && tsc -p tsconfig.build.json",
-    "build:cli": "tsup bin/cli.ts --format esm --platform node --target node18 --out-dir dist/bin --sourcemap && node scripts/add-shebang.js dist/bin/cli.js",
+    "build:cli": "tsup bin/cli.ts --format esm --platform node --target node18 --out-dir dist/bin --sourcemap && bash scripts/add-shebang.sh dist/bin/cli.js",
     "postbuild": "node scripts/write-dist-package.js",
     "dev:cli": "tsx bin/cli.ts",
     "docs:dev": "vitepress dev docs",
