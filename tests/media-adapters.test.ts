@@ -11,7 +11,6 @@ describe('readPrivateKeySafely', () => {
     originalCwd = process.cwd();
     tmpDir = path.join(originalCwd, '.unpress/test-keys');
     process.env.HOME = tmpDir;
-    vi.spyOn(fs, 'chmodSync').mockImplementation(() => {});
   });
 
   afterEach(() => {
