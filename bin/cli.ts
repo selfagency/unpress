@@ -244,39 +244,26 @@ cli.command('[...args]').action(async (_args, flags) => {
                       }
                     } else if (driver === 'sftp') {
                       const sftpCfg = mediaCfg.reupload?.sftp;
-                      if (sftpCfg && sftpCfg.host) {
-                        try {
-                          const res = await mediaAdapters.reuploadMediaToSftp(url, {
-                            localDir: safeResolve(stateDir, 'media'),
-                            sftp: { client: sftpClient, remotePath: sftpCfg.path || '/' },
-                          });
-                          mediaMap[url] = res;
-                        } catch {
-                          const fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
-                          mediaMap[url] = `sftp:${sftpCfg.path || '/'}${fname}`;
-                        }
+                      if (sftpCfg?.host && uploader) {
+                        const uploadMethod = uploader.uploadToSftp.bind(uploader);
+                        const res = await reuploadWithFallback(url, uploadMethod, safeResolve(stateDir, 'media'), {
+                          remotePath: sftpCfg.path,
+                        });
+                        mediaMap[url] = res;
                       }
                     } else if (driver === 'scp') {
                       const scpCfg = mediaCfg.reupload?.scp;
-                      if (scpCfg?.host) {
-                        try {
-                          const res = await mediaAdapters.reuploadMediaToScp(url, {
-                            localDir: safeResolve(stateDir, 'media'),
-                            scp: {
-                              client: scpClient,
-                              host: scpCfg.host,
-                              user: scpCfg.user,
-                              password: scpCfg.password,
-                              privateKey: scpCfg.privateKey,
-                              remotePath: scpCfg.path || '/',
-                              port: scpCfg.port,
-                            },
-                          });
-                          mediaMap[url] = res;
-                        } catch {
-                          const fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
-                          mediaMap[url] = `scp://${scpCfg.host}${scpCfg.path || '/'}${fname}`;
-                        }
+                      if (scpCfg?.host && uploader) {
+                        const uploadMethod = uploader.uploadViaScp.bind(uploader);
+                        const res = await reuploadWithFallback(url, uploadMethod, safeResolve(stateDir, 'media'), {
+                          host: scpCfg.host,
+                          user: scpCfg.user,
+                          password: scpCfg.password,
+                          privateKey: scpCfg.privateKey,
+                          remotePath: scpCfg.path,
+                          port: scpCfg.port,
+                        });
+                        mediaMap[url] = res;
                       }
                     }
                   }
@@ -439,5 +426,26 @@ cli.command('[...args]').action(async (_args, flags) => {
     process.exit(1);
   }
 });
+
+// Helper function for reupload with fallback to filename
+async function reuploadWithFallback<T>(
+  url: string,
+  uploadMethod: (...args: any[]) => Promise<T>,
+  localDir: string,
+  config: any,
+): Promise<T> {
+  try {
+    return await uploadMethod(url, { localDir, ...config });
+  } catch {
+    const fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    return uploadMethod(url, { localDir, ...config, method: 'fallback' }) as Promise<T>;
+  }
+}
+
+// Helper to reuse media configuration logic
+function findMediaDriver(cfg?: any): string {
+  return cfg?.driver || 's3';
+}
 
 cli.parse();

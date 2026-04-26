@@ -191,10 +191,14 @@ async function uploadViaSftpImpl(clientConfig: any, localPath: string, remoteFil
   }
 
   const client = new ssh2SftpClient(clientConfig);
-  await client.put(localPath, remoteFile);
-  const url = `sftp://${clientConfig.host}${remoteFile}`;
-  client.end();
-  return url;
+  try {
+    await client.put(localPath, remoteFile);
+    const url = `sftp://${clientConfig.host}${remoteFile}`;
+    client.end();
+    return url;
+  } catch (err: any) {
+    throw new Error(`SFTP transfer failed: ${err.message}`);
+  }
 }
 
 export async function uploadViaSftp(
@@ -207,29 +211,27 @@ export async function uploadViaSftp(
     privateKey?: string;
     port?: number;
   },
+  remotePathPrefix?: string,
 ): Promise<string> {
-  try {
-    const sftpConfig: any = {
-      host: opts.host,
-      port: opts.port || 22,
-      username: opts.user,
-    };
+  const prefix = opts.port === 22 && !remotePathPrefix ? '/' : remotePathPrefix;
+  const fullRemotePath = getRemoteFilePath(remoteFile, prefix);
 
-    if (opts.privateKey) {
-      const keyData = readPrivateKeySafely(opts.privateKey);
-      sftpConfig.privateKey = keyData;
-    } else if (opts.password) {
-      sftpConfig.password = opts.password;
-    }
+  const sftpConfig: any = {
+    host: opts.host,
+    port: opts.port || 22,
+    username: opts.user,
+  };
 
-    const client = new ssh2SftpClient(sftpConfig);
-    await client.put(localPath, remoteFile);
-    const url = `sftp://${opts.host}${remoteFile}`;
-    client.end();
-    return url;
-  } catch (err: any) {
-    throw new Error(`SFTP transfer failed: ${err.message}`);
+  if (opts.privateKey) {
+    sftpConfig.privateKey = readPrivateKeySafely(opts.privateKey);
+  } else if (opts.password) {
+    sftpConfig.password = opts.password;
   }
+
+  return createClientAndUpload(sftpConfig, async (client, _, __) => {
+    await client.put(localPath, fullRemotePath);
+    return `sftp://${opts.host}${fullRemotePath}`;
+  });
 }
 
 export async function uploadViaScp(
@@ -242,29 +244,35 @@ export async function uploadViaScp(
     privateKey?: string;
     port?: number;
   },
+  remotePathPrefix?: string,
 ): Promise<string> {
-  try {
-    const scpOptions: any = {
-      host: opts.host,
-      port: opts.port || 22,
-      username: opts.user,
-    };
+  const fullRemotePath = getRemoteFilePath(remoteFile, remotePathPrefix);
 
-    if (opts.privateKey) {
-      const keyData = readPrivateKeySafely(opts.privateKey);
-      scpOptions.privateKey = keyData;
-    } else if (opts.password) {
-      scpOptions.password = opts.password;
-    }
+  const scpOptions: any = {
+    host: opts.host,
+    port: opts.port || 22,
+    username: opts.user,
+  };
 
-    const client = await ScpClient(scpOptions);
-    await client.uploadFile(localPath, remoteFile);
-    const url = `scp://${opts.host}${remoteFile}`;
-    client.close();
-    return url;
-  } catch (err: any) {
-    throw new Error(`SCP upload failed: ${err.message}`);
+  if (opts.privateKey) {
+    scpOptions.privateKey = readPrivateKeySafely(opts.privateKey);
+  } else if (opts.password) {
+    scpOptions.password = opts.password;
   }
+
+  return new Promise((resolve, reject) => {
+    const client: any = new (ScpClient as any)(scpOptions);
+    client
+      .uploadFile(localPath, fullRemotePath)
+      .then(() => {
+        client.close();
+        resolve(`scp://${opts.host}${fullRemotePath}`);
+      })
+      .catch((err: Error) => {
+        client.close();
+        reject(err);
+      });
+  });
 }
 
 // Helpers to construct clients from configuration or environment variables
@@ -336,6 +344,27 @@ export async function createScpClientFromConfig(cfg?: NonNullable<MediaAdapterOp
     const client = await ScpClient(scpConfig);
     return client;
   } catch (err: any) {
-    throw new Error(`Failed to connect to SCP server: ${err.message}`);
+    throw new Error(`Failed to connect to SCP server: ${err.message} (${err.code})`);
+  }
+}
+
+// Helper function to extract remote file path from SFTP/SCP config
+function getRemoteFilePath(remoteFile: string, prefix?: string | ((path: string) => string)): string {
+  return typeof prefix === 'function' ? prefix(remoteFile) : `${prefix || '/'}${remoteFile}`;
+}
+
+// Helper function for SFTP client instantiation with proper async handling
+async function createClientAndUpload<T>(
+  config: any,
+  uploadMethod: (client: any, path1: string, path2: string) => Promise<T>,
+): Promise<T> {
+  const client = new ssh2SftpClient(config);
+  try {
+    const result = await uploadMethod(client, config.host, config.port);
+    client.end();
+    return result;
+  } catch {
+    client.end();
+    throw new Error('Client upload failed');
   }
 }

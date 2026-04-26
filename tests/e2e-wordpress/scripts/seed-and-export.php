@@ -70,9 +70,13 @@ function wait_for_db(string $hostWithPort, string $database, string $user, strin
 function wait_for_http(string $url): void
 {
     log_line('Waiting for WordPress HTTP readiness...');
+    
+    // Create stream context with timeout - acceptable in test fixture
+    $httpOptions = ['timeout' => 2];
+    $contextOptions = ['http' => $httpOptions];
+    $context = stream_context_create($contextOptions);
+    
     for ($i = 1; $i <= 180; $i++) {
-        // Use file_get_contents with explicit timeout; acceptable in test fixture.
-        $context = stream_context_create(['http' => ['timeout' => 2]]);
         $body = @file_get_contents($url, false, $context);
         if ($body !== false) {
             return;

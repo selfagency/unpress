@@ -15,7 +15,8 @@ export const MediaReuploadS3Schema = z.object({
   region: z.string().optional(),
   endpoint: z.string().optional(),
 });
-export const MediaReuploadSftpSchema = z.object({
+// SFTP and SCP schemas are identical - reuse the same schema
+export const MediaRemoteUploadSchema = z.object({
   host: z.string(),
   port: z.number().optional(),
   path: z.string().optional(),
@@ -23,14 +24,8 @@ export const MediaReuploadSftpSchema = z.object({
   password: z.string().optional(),
   privateKey: z.string().optional(),
 });
-export const MediaReuploadScpSchema = z.object({
-  host: z.string(),
-  port: z.number().optional(),
-  path: z.string().optional(),
-  user: z.string().optional(),
-  password: z.string().optional(),
-  privateKey: z.string().optional(),
-});
+export const MediaReuploadSftpSchema = MediaRemoteUploadSchema;
+export const MediaReuploadScpSchema = MediaRemoteUploadSchema;
 
 export const MediaSchema = z.object({
   mode: z.enum(['local', 'reupload', 'leave']).optional(),
