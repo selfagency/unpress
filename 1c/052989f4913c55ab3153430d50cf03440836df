@@ -1,0 +1,36 @@
+assets/search.ts
+  a2b65e130108a30c 1-91
+src/media-adapters.ts
+  h_5cf1e2c1161853 4,8,194,226
+vite.config.ts
+  a2b65e130108a30c 19-22,24,26-31,33-39
+src/index.ts
+  a2b65e130108a30c 1,3-5
+.gitignore
+  a2b65e130108a30c 259
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "1c052989f4913c55ab3153430d50cf03440836df",
+  "prompts": {
+    "a2b65e130108a30c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_234cfa054ffeMsm1zAaujA2mVV",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 159,
+      "total_deletions": 59,
+      "accepted_lines": 120,
+      "overriden_lines": 2
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
