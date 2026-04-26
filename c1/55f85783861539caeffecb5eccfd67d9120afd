@@ -1,0 +1,23 @@
+src/wordpress.ts
+  a2b65e130108a30c 55-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "c155f85783861539caeffecb5eccfd67d9120afd",
+  "prompts": {
+    "a2b65e130108a30c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_234cfa054ffeMsm1zAaujA2mVV",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 86,
+      "total_deletions": 90,
+      "accepted_lines": 11,
+      "overriden_lines": 0
+    }
+  }
+}
