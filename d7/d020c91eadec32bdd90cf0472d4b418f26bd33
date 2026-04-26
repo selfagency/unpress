@@ -1,0 +1,29 @@
+bin/cli.ts
+  a2b65e130108a30c 169,187,189,241-242,440
+assets/search.ts
+  a2b65e130108a30c 53-54,70-71,73-75
+tests/cli.test.ts
+  a2b65e130108a30c 11
+assets/search.js
+  a2b65e130108a30c 29-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "d7d020c91eadec32bdd90cf0472d4b418f26bd33",
+  "prompts": {
+    "a2b65e130108a30c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_234cfa054ffeMsm1zAaujA2mVV",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 18,
+      "total_deletions": 22,
+      "accepted_lines": 17,
+      "overriden_lines": 0
+    }
+  }
+}
