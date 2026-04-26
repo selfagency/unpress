@@ -169,7 +169,7 @@ export async function indexPostsFromDir(
   await ensureIndexExists();
 
   // push documents in batches
-  const batchSize = 500;
+  const batchSpan = 500;
   if (docs.length === 0) {
     info(`No markdown documents found in ${postsDir}`);
     return { indexed: 0 };
@@ -179,13 +179,12 @@ export async function indexPostsFromDir(
   if (typeof cfg.intervalCap === 'number' && cfg.intervalCap > 0) pqOpts.intervalCap = cfg.intervalCap;
   if (typeof cfg.interval === 'number' && cfg.interval > 0) pqOpts.interval = cfg.interval;
   const queue = new PQueue(pqOpts);
-
   const uploadPromises: Promise<any>[] = [];
   const taskWaitPromises: Promise<void>[] = [];
-  for (let i = 0; i < docs.length; i += batchSize) {
-    const batch = docs.slice(i, i + batchSize);
+  for (let i = 0; i < docs.length; i += batchSpan) {
+    const batch = docs.slice(i, i + batchSpan);
     progress(`scheduling upload documents ${i}-${i + batch.length}`, (i + batch.length) / docs.length);
-    async function task() {
+    const uploaded = async function task() {
       const res = await safePost(`${cfg.host}/indexes/${index}/documents`, batch, 5).catch(err => {
         const msg = err instanceof Error ? err.message : String(err);
         error('Meilisearch indexing failed for batch:', msg);
@@ -196,8 +195,8 @@ export async function indexPostsFromDir(
         taskWaitPromises.push(waitForTask(cfg, payload.taskUid));
       }
       return payload;
-    }
-    uploadPromises.push(queue.add(task));
+    };
+    uploadPromises.push(queue.add(uploaded));
   }
 
   // wait for all uploads to complete

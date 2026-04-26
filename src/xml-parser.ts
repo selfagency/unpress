@@ -2,6 +2,20 @@ import { XMLParser } from 'fast-xml-parser';
 import fs from 'node:fs';
 import readline from 'node:readline';
 
+// Helper function to unwrapp XML values and handle CDATA/text fields
+function unwrapValue(value: unknown): unknown {
+  if (value && typeof value === 'object' && value !== null) {
+    if ('__cdata' in value) return (value as { __cdata: unknown }).__cdata;
+    if ('#text' in value) return (value as { '#text': unknown })['#text'];
+    const keys = Object.keys(value);
+    if (keys.length === 1) {
+      const key = keys[0] as string;
+      return unwrapValue((value as Record<string, unknown>)[key]);
+    }
+  }
+  return value;
+}
+
 export interface XmlParseOptions {
   checkpointPath?: string;
   resume?: boolean;
@@ -37,19 +51,6 @@ export async function parseWpXmlItems(
     // strip namespace prefixes
     tagNameProcessor: (name: string) => name.replace(/^.*:/, ''),
   } as any);
-
-  function unwrapValue(value: unknown): unknown {
-    if (value && typeof value === 'object' && value !== null) {
-      if ('__cdata' in value) return (value as { __cdata: unknown }).__cdata;
-      if ('#text' in value) return (value as { '#text': unknown })['#text'];
-      const keys = Object.keys(value);
-      if (keys.length === 1) {
-        const key = keys[0] as string;
-        return unwrapValue((value as Record<string, unknown>)[key]);
-      }
-    }
-    return value;
-  }
 
   for await (const line of rl) {
     if (!inItem) {

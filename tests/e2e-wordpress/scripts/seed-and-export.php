@@ -13,7 +13,7 @@ function env_var(string $name, string $default): string
 
 function log_line(string $message): void
 {
-    fwrite(STDERR, esc_html($message) . PHP_EOL);
+    fprintf(STDERR, "%s\n", esc_html($message));
 }
 
 function fail(string $message): never

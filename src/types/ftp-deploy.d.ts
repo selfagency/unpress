@@ -1,5 +1,5 @@
 declare module 'ftp-deploy' {
-  import { EventEmitter } from 'events';
+  import { EventEmitter } from 'node:events';
 
   interface FtpDeployConfig {
     host: string;

@@ -24,9 +24,8 @@ export function metadataToFrontmatter(meta: Record<string, any>): string {
   };
   // Remove undefined/null
   for (const k of Object.keys(frontmatter)) {
-    const key = k as keyof typeof frontmatter;
-    if (frontmatter[key] == null || frontmatter[key] === '') {
-      delete frontmatter[key];
+    if (frontmatter[k as keyof typeof frontmatter] == null || frontmatter[k as keyof typeof frontmatter] === '') {
+      delete frontmatter[k as keyof typeof frontmatter];
     }
   }
   // Use gray-matter to produce a consistent frontmatter block.

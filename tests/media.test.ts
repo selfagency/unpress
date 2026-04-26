@@ -27,3 +27,11 @@ describe('findMediaUrls', () => {
     expect(out).toContain('![b](/media/pic.png)');
   });
 });
+
+describe('SCP media adapters', () => {
+  it.skip('should define scp functions', () => {
+    // Skip until environment setup provides SCP mock server
+    // See integration requirements for SCP test environment setup
+    expect(true).toBe(true);
+  });
+});

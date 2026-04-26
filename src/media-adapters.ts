@@ -12,10 +12,33 @@ const execFileAsync = promisify(execFile);
 // S3
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
+// SFTP
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const ssh2SftpClient = require('ssh2-sftp-client');
+
+// SCP
+import { Client as ScpClient } from 'node-scp';
+
 export type MediaAdapterOptions = {
   localDir?: string;
   s3?: { client?: S3Client; bucket: string; prefix?: string };
   ftp?: { host: string; user: string; password: string; remotePath?: string };
+  sftp?: {
+    host: string;
+    user: string;
+    password?: string;
+    privateKey?: string;
+    remotePath?: string;
+    port?: number;
+  };
+  scp?: {
+    host: string;
+    user: string;
+    password?: string;
+    privateKey?: string;
+    remotePath?: string;
+    port?: number;
+  };
 };
 
 export async function downloadToLocal(url: string, destDir: string): Promise<string> {
@@ -94,6 +117,75 @@ export async function reuploadMediaToFtp(url: string, opts: MediaAdapterOptions)
   return `ftp:${remoteFile}`;
 }
 
+async function uploadViaScp(
+  tmp: string,
+  remoteFile: string,
+  opts: {
+    host: string;
+    user: string;
+    password?: string;
+    privateKey?: string;
+    port?: number;
+  },
+): Promise<string> {
+  try {
+    const scpOptions: any = {
+      host: opts.host,
+      port: opts.port || 22,
+      username: opts.user,
+    };
+
+    if (opts.privateKey) {
+      const keyData = fs.readFileSync(opts.privateKey);
+      scpOptions.privateKey = keyData;
+    } else if (opts.password) {
+      scpOptions.password = opts.password;
+    }
+
+    const client = await ScpClient(scpOptions);
+    await client.uploadFile(tmp, remoteFile);
+    const url = `scp://${opts.host}${remoteFile}`;
+    await client.close();
+    return url;
+  } catch (err: any) {
+    throw new Error(`SCP upload failed: ${err.message}`);
+  }
+}
+
+export async function reuploadMediaToSftp(url: string, opts: MediaAdapterOptions): Promise<string> {
+  if (!opts.sftp) throw new Error('SFTP configuration not provided');
+
+  const tmp = await downloadToLocal(url, opts.localDir || '.unpress/media');
+  const remoteFile = path.posix.join(opts.sftp.remotePath || '/', path.basename(tmp));
+
+  const sftpConfig = {
+    host: opts.sftp.host,
+    user: opts.sftp.user,
+    password: opts.sftp.password,
+    privateKey: opts.sftp.privateKey,
+    port: opts.sftp.port,
+  };
+
+  await uploadViaSftp(tmp, remoteFile, ssh2SftpClient(sftpConfig) as any);
+
+  return `sftp://${opts.sftp.host}${remoteFile}`;
+}
+
+async function uploadViaSftp(tmp: string, remoteFile: string, client: any): Promise<void> {
+  await client.put(tmp, remoteFile);
+}
+
+export async function reuploadMediaToScp(url: string, opts: MediaAdapterOptions): Promise<string> {
+  if (!opts.scp) throw new Error('SCP configuration not provided');
+
+  const tmp = await downloadToLocal(url, opts.localDir || '.unpress/media');
+  const remoteFile = path.posix.join(opts.scp.remotePath || '/', path.basename(tmp));
+
+  const res = await uploadViaScp(tmp, remoteFile, opts.scp);
+
+  return res;
+}
+
 // Helpers to construct clients from configuration or environment variables
 export function createS3ClientFromConfig(cfg?: {
   endpoint?: string;
@@ -129,4 +221,42 @@ export function createS3ClientFromEnv() {
     cfg.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || process.env.S3_SECRET_KEY;
   cfg.forcePathStyle = process.env.S3_FORCE_PATH_STYLE === 'true' || false;
   return createS3ClientFromConfig(cfg);
+}
+
+export async function createSftpClientFromConfig(cfg?: NonNullable<MediaAdapterOptions['sftp']>) {
+  const sftpConfig: any = {
+    host: cfg?.host || process.env.SFTP_HOST || 'localhost',
+    port: cfg?.port || parseInt(process.env.SFTP_PORT || '22', 10),
+    username: cfg?.user || process.env.SFTP_USER || 'root',
+    readyTimeout: 30000,
+  };
+
+  if (cfg?.password) sftpConfig.password = cfg.password;
+  if (cfg?.privateKey) sftpConfig.privateKey = cfg.privateKey;
+
+  const client = new ssh2SftpClient();
+  await client.connect(sftpConfig);
+  return client;
+}
+
+export async function createSftpClientFromEnv() {
+  return createSftpClientFromConfig(undefined);
+}
+
+export async function createScpClientFromConfig(cfg?: NonNullable<MediaAdapterOptions['scp']>) {
+  const scpConfig: any = {
+    host: cfg?.host || process.env.SCP_HOST || 'localhost',
+    port: cfg?.port || parseInt(process.env.SCP_PORT || '22', 10),
+    username: cfg?.user || process.env.SCP_USER || 'root',
+  };
+
+  if (cfg?.password) scpConfig.password = cfg.password;
+  if (cfg?.privateKey) scpConfig.privateKey = cfg.privateKey;
+
+  try {
+    const client = await ScpClient(scpConfig);
+    return client;
+  } catch (err: any) {
+    throw new Error(`Failed to connect to SCP server: ${err.message}`);
+  }
 }

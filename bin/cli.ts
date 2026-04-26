@@ -166,6 +166,7 @@ cli.command('[...args]').action(async (_args, flags) => {
         // construct upload clients if reupload is configured
         let s3Client: any = undefined;
         let sftpClient: any = undefined;
+        let scpClient: any = undefined;
         if (mergedProject?.media?.mode === 'reupload') {
           const driver = mergedProject?.media?.reupload?.driver;
           if (driver === 's3') {
@@ -180,6 +181,12 @@ cli.command('[...args]').action(async (_args, flags) => {
               sftpClient = await mediaAdapters.createSftpClientFromConfig(mergedProject.media.reupload?.sftp);
             } catch {
               sftpClient = await mediaAdapters.createSftpClientFromEnv();
+            }
+          } else if (driver === 'scp') {
+            try {
+              scpClient = await mediaAdapters.createScpClientFromConfig(mergedProject.media.reupload?.scp);
+            } catch {
+              scpClient = await mediaAdapters.createScpClientFromConfig(undefined);
             }
           }
         }
@@ -247,6 +254,28 @@ cli.command('[...args]').action(async (_args, flags) => {
                         } catch {
                           const fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
                           mediaMap[url] = `sftp:${sftpCfg.path || '/'}${fname}`;
+                        }
+                      }
+                    } else if (driver === 'scp') {
+                      const scpCfg = mediaCfg.reupload?.scp;
+                      if (scpCfg && scpCfg.host) {
+                        try {
+                          const res = await mediaAdapters.reuploadMediaToScp(url, {
+                            localDir: safeResolve(stateDir, 'media'),
+                            scp: {
+                              client: scpClient,
+                              host: scpCfg.host,
+                              user: scpCfg.user,
+                              password: scpCfg.password,
+                              privateKey: scpCfg.privateKey,
+                              remotePath: scpCfg.path || '/',
+                              port: scpCfg.port,
+                            },
+                          });
+                          mediaMap[url] = res;
+                        } catch {
+                          const fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
+                          mediaMap[url] = `scp://${scpCfg.host}${scpCfg.path || '/'}${fname}`;
                         }
                       }
                     }

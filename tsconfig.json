@@ -5,7 +5,7 @@
     "outDir": "./dist",
     "module": "nodenext",
     "target": "esnext",
-    "types": ["node", "web"],
+    "types": ["node", "web", "ssh2-sftp-client"],
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
