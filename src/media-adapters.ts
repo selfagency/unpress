@@ -1,11 +1,11 @@
 import fetch from 'node-fetch';
 // import { execFile } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import stream from 'node:stream';
 import { promisify } from 'node:util';
-import { safeResolve, isPathWithin } from './path-utils.js';
-import os from 'node:os';
+import { isPathWithin, safeResolve } from './path-utils.js';
 
 const pipeline = promisify(stream.pipeline);
 
@@ -143,7 +143,7 @@ async function uploadViaScpImpl(scpConfig: any, localPath: string, remoteFile: s
   const client = await ScpClient(scpOptions);
   await client.uploadFile(localPath, remoteFile);
   const url = `scp://${scpConfig.host}${remoteFile}`;
-  await client.close();
+  client.close();
   return url;
 }
 
@@ -191,10 +191,10 @@ async function uploadViaSftpImpl(clientConfig: any, localPath: string, remoteFil
     throw new Error('Invalid SFTP client configuration');
   }
 
-  const client = await ssh2SftpClient(clientConfig);
+  const client = ssh2SftpClient(clientConfig);
   await client.put(localPath, remoteFile);
   const url = `sftp://${clientConfig.host}${remoteFile}`;
-  await client.end();
+  client.end();
   return url;
 }
 
@@ -223,10 +223,10 @@ export async function uploadViaSftp(
       sftpConfig.password = opts.password;
     }
 
-    const client = await ssh2SftpClient(sftpConfig);
+    const client = ssh2SftpClient(sftpConfig);
     await client.put(localPath, remoteFile);
     const url = `sftp://${opts.host}${remoteFile}`;
-    await client.end();
+    client.end();
     return url;
   } catch (err: any) {
     throw new Error(`SFTP transfer failed: ${err.message}`);
@@ -261,7 +261,7 @@ export async function uploadViaScp(
     const client = await ScpClient(scpOptions);
     await client.uploadFile(localPath, remoteFile);
     const url = `scp://${opts.host}${remoteFile}`;
-    await client.close();
+    client.close();
     return url;
   } catch (err: any) {
     throw new Error(`SCP upload failed: ${err.message}`);
