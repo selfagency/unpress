@@ -1,0 +1,84 @@
+package.json
+  c642f1b243291a50 48,50
+docs/reference/project-config.md
+  79069937e78378a2 146-163
+src/media-adapters.ts
+  79069937e78378a2 15-21,26-41,120-188,225-262
+src/types/ftp-deploy.d.ts
+  79069937e78378a2 2
+bin/cli.ts
+  79069937e78378a2 169,185-190,258-279
+docs/guide/media.md
+  79069937e78378a2 366-481,578
+src/frontmatter.ts
+  79069937e78378a2 27-28
+tests/media.test.ts
+  79069937e78378a2 30-37
+docs/reference/environment.md
+  79069937e78378a2 48-58
+src/config-loader.ts
+  79069937e78378a2 20,22-32,39,42
+tsconfig.json
+  79069937e78378a2 8
+tests/e2e-wordpress/scripts/seed-and-export.php
+  79069937e78378a2 16
+src/meilisearch.ts
+  79069937e78378a2 172,184-185,187,198-199
+src/xml-parser.ts
+  79069937e78378a2 5-18
+tests/cli.test.ts
+  79069937e78378a2 1-37,39-178
+src/types/ssh2-sftp-client.d.ts
+  79069937e78378a2 1-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "0bbf9866924afe6454f7af7020f48344cb07840b",
+  "prompts": {
+    "79069937e78378a2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_237a38c9affeKa5KMaVvxcdjqX",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 2510,
+      "total_deletions": 1110,
+      "accepted_lines": 1046,
+      "overriden_lines": 1
+    },
+    "9d56ed0115534bef": {
+      "agent_id": {
+        "tool": "github-copilot-tab",
+        "id": "ai_tab-1777183359508",
+        "model": "default"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    },
+    "c642f1b243291a50": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "5f8f50a8-49fb-40b7-982d-c0a38d56cab1",
+        "model": "mistral/devstral-latest"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 1,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
