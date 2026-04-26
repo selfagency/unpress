@@ -33,6 +33,8 @@ declare module 'ssh2-sftp-client' {
     command(command: string): any;
     end(): void;
   }
-
-  export default function SftpClient(options?: any): SftpClient;
 }
+
+// Default export for CommonJS compatibility
+// eslint-disable-next-line @typescript-eslint/consistent-type-exports
+export { SftpClient as default } from 'ssh2-sftp-client';

@@ -53,7 +53,6 @@ export function readPrivateKeySafely(privateKeyPath: string): string {
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 // SFTP
-// @ts-ignore - CommonJS compatible default export treated as class
 import ssh2SftpClient from 'ssh2-sftp-client';
 
 // SCP
@@ -191,7 +190,7 @@ async function uploadViaSftpImpl(clientConfig: any, localPath: string, remoteFil
     throw new Error('Invalid SFTP client configuration');
   }
 
-  const client = ssh2SftpClient(clientConfig);
+  const client = new ssh2SftpClient(clientConfig);
   await client.put(localPath, remoteFile);
   const url = `sftp://${clientConfig.host}${remoteFile}`;
   client.end();
@@ -223,7 +222,7 @@ export async function uploadViaSftp(
       sftpConfig.password = opts.password;
     }
 
-    const client = ssh2SftpClient(sftpConfig);
+    const client = new ssh2SftpClient(sftpConfig);
     await client.put(localPath, remoteFile);
     const url = `sftp://${opts.host}${remoteFile}`;
     client.end();

@@ -6,12 +6,6 @@
     index?: string;
   }
 
-  type Hit = {
-    title?: string;
-    slug?: string;
-    excerpt?: string;
-  };
-
   const cfg: SearchConfig = globalThis?.MEILI_CONFIG || {};
   const form = document.getElementById('search-form');
   const results = document.getElementById('results');
@@ -20,7 +14,7 @@
     return;
   }
 
-  form.addEventListener('submit', async (e: Event) => {
+  form.addEventListener('submit', async (e: Event): Promise<void> => {
     e.preventDefault();
     const qInput = document.getElementById('q');
     if (!qInput) return;
@@ -57,7 +51,11 @@
         p.textContent = 'No results';
         results.appendChild(p);
       } else {
-        const createArticleNode = (title?: string, slug?: string, excerpt?: string): HTMLElement => {
+        const createArticleNode = (
+          title?: string,
+          slug?: string,
+          excerpt?: string
+        ): HTMLElement => {
           const article = document.createElement('article');
           const h3 = document.createElement('h3');
           const a = document.createElement('a');
