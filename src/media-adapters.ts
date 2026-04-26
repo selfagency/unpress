@@ -1,15 +1,16 @@
 import fetch from 'node-fetch';
+import { exec } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import stream from 'node:stream';
 import { promisify } from 'node:util';
 import { safeResolve } from './path-utils.js';
+
 const pipeline = promisify(stream.pipeline);
+const execAsync = promisify(exec);
 
 // S3
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-// FTP
-import FtpDeploy from 'ftp-deploy';
 
 export type MediaAdapterOptions = {
   localDir?: string;
@@ -40,19 +41,16 @@ export async function uploadToFtp(
   localPath: string,
   ftpConfig: { host: string; user: string; password: string; remotePath?: string },
 ): Promise<string> {
-  const ftpDeploy = new FtpDeploy();
   const remoteFile = path.posix.join(ftpConfig.remotePath || '/', path.basename(localPath));
 
-  const config = {
-    host: ftpConfig.host,
-    user: ftpConfig.user,
-    password: ftpConfig.password,
-    include: [localPath],
-    deleteRemote: false,
-    forcePasv: true,
-  };
+  const { stderr } = await execAsync(
+    `lftp -e "set ftp:passive-mode true; put ${localPath} -o ${remoteFile}" -u ${ftpConfig.user},${ftpConfig.password} ftp://${ftpConfig.host}`,
+  );
 
-  await ftpDeploy.deploy(config);
+  if (stderr && !stderr.includes('successfully transferred')) {
+    throw new Error(`Failed to upload via FTP: ${stderr}`);
+  }
+
   return `ftp:${remoteFile}`;
 }
 
@@ -67,7 +65,17 @@ export async function reuploadMediaToS3(url: string, opts: MediaAdapterOptions):
 export async function reuploadMediaToFtp(url: string, opts: MediaAdapterOptions): Promise<string> {
   if (!opts.ftp) throw new Error('FTP configuration not provided');
   const tmp = await downloadToLocal(url, opts.localDir || '.unpress/media');
-  return uploadToFtp(tmp, opts.ftp);
+  const remoteFile = path.posix.join(opts.ftp.remotePath || '/', path.basename(tmp));
+
+  const { stderr } = await execAsync(
+    `lftp -e "set ftp:passive-mode true; put ${tmp} -o ${remoteFile}" -u ${opts.ftp.user},${opts.ftp.password} ftp://${opts.ftp.host}`,
+  );
+
+  if (stderr && !stderr.includes('successfully transferred')) {
+    throw new Error(`Failed to upload ${tmp} via FTP: ${stderr}`);
+  }
+
+  return `ftp:${remoteFile}`;
 }
 
 // Helpers to construct clients from configuration or environment variables
