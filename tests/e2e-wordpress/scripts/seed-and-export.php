@@ -26,8 +26,11 @@ class UnpressURLError extends RuntimeException
 
 function fail(string $message): never
 {
-    log_line($message);
-    throw new UnpressException($message);
+    // Log already escapes content via htmlspecialchars
+    // For the exception, we create a sanitized copy to prevent XSS in error output
+    $sanitized = htmlspecialchars($message, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    log_line($sanitized);
+    throw new UnpressException($sanitized);
 }
 
 function wait_for_core(string $wpPath): void
