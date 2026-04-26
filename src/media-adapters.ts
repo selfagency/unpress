@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { exec } from 'node:child_process';
+import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import stream from 'node:stream';
@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { safeResolve } from './path-utils.js';
 
 const pipeline = promisify(stream.pipeline);
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 // S3
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -42,10 +42,15 @@ export async function uploadToFtp(
   ftpConfig: { host: string; user: string; password: string; remotePath?: string },
 ): Promise<string> {
   const remoteFile = path.posix.join(ftpConfig.remotePath || '/', path.basename(localPath));
+  const lftpCommands = `set ftp:passive-mode true; put "${localPath}" -o "${remoteFile}"`;
 
-  const { stderr } = await execAsync(
-    `lftp -e "set ftp:passive-mode true; put ${localPath} -o ${remoteFile}" -u ${ftpConfig.user},${ftpConfig.password} ftp://${ftpConfig.host}`,
-  );
+  const { stderr } = await execFileAsync('lftp', [
+    '-e',
+    lftpCommands,
+    '-u',
+    `${ftpConfig.user},${ftpConfig.password}`,
+    `ftp://${ftpConfig.host}`,
+  ]);
 
   if (stderr && !stderr.includes('successfully transferred')) {
     throw new Error(`Failed to upload via FTP: ${stderr}`);
@@ -66,10 +71,15 @@ export async function reuploadMediaToFtp(url: string, opts: MediaAdapterOptions)
   if (!opts.ftp) throw new Error('FTP configuration not provided');
   const tmp = await downloadToLocal(url, opts.localDir || '.unpress/media');
   const remoteFile = path.posix.join(opts.ftp.remotePath || '/', path.basename(tmp));
+  const lftpCommands = `set ftp:passive-mode true; put "${tmp}" -o "${remoteFile}"`;
 
-  const { stderr } = await execAsync(
-    `lftp -e "set ftp:passive-mode true; put ${tmp} -o ${remoteFile}" -u ${opts.ftp.user},${opts.ftp.password} ftp://${opts.ftp.host}`,
-  );
+  const { stderr } = await execFileAsync('lftp', [
+    '-e',
+    lftpCommands,
+    '-u',
+    `${opts.ftp.user},${opts.ftp.password}`,
+    `ftp://${opts.ftp.host}`,
+  ]);
 
   if (stderr && !stderr.includes('successfully transferred')) {
     throw new Error(`Failed to upload ${tmp} via FTP: ${stderr}`);
