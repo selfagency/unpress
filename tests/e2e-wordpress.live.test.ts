@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
-import path from 'node:path';
-import { execSync } from 'node:child_process';
-import { beforeAll, afterAll, describe, expect, it } from 'vitest';
 import fetch from 'node-fetch';
+import { execSync } from 'node:child_process';
+import path from 'node:path';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { indexPostsFromDir } from '../src/meilisearch';
 import { WordPressApi } from '../src/wordpress';
 import { parseWpXmlItems } from '../src/xml-parser';
@@ -94,7 +94,10 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
       .sort();
 
     expect(exportedXmls.length).toBeGreaterThan(0);
-    await fs.copyFile(exportedXmls[0], deterministicXmlPath);
+    // No need to copy the file to itself
+    if (exportedXmls[0] !== deterministicXmlPath) {
+      await fs.copyFile(exportedXmls[0], deterministicXmlPath);
+    }
 
     // Keep test fixture YAML in sync with actual exported file path.
     expect(await fs.pathExists(path.join(fixtureDir, 'unpress.api.yml'))).toBe(true);
