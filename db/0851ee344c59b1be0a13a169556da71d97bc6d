@@ -1,0 +1,38 @@
+tests/cli.test.ts
+  731d5c674db96d04 11-12,14,18,20-22,29,36
+tests/e2e-wordpress/scripts/seed-and-export.php
+  731d5c674db96d04 19-22,26,41,60
+bin/cli.ts
+  731d5c674db96d04 261,332
+assets/search.js
+  731d5c674db96d04 33,37-39,43,45-50
+src/meilisearch.ts
+  731d5c674db96d04 187-200
+src/media-adapters.ts
+  731d5c674db96d04 229,236,241
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "db0851ee344c59b1be0a13a169556da71d97bc6d",
+  "prompts": {
+    "731d5c674db96d04": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_237831706ffeSGc8W3YY0Rt9NB",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 60,
+      "total_deletions": 62,
+      "accepted_lines": 52,
+      "overriden_lines": 1
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
