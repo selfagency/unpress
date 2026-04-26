@@ -1,0 +1,15 @@
+---
+layout: layouts/base.njk
+title: "Categories"
+---
+
+<h2>Categories</h2>
+<ul>
+  {# If you're generating a categories collection, iterate it here #}
+  {% for category in collections.categories | default([]) %}
+    <li>
+      <a href="{{ category.url }}">{{ category.data.title or category.data.name }}</a>
+      <span> ({{ category.items | length }})</span>
+    </li>
+  {% endfor %}
+</ul>

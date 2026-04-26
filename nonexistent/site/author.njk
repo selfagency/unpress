@@ -1,0 +1,40 @@
+---
+layout: layouts/base.njk
+title: "Author"
+pagination:
+  data: collections.authorPosts
+  size: 10
+---
+
+<article class="author-profile">
+  <header>
+    <h2>{{ pagination.items[0].data.author.name if pagination.items[0] and pagination.items[0].data.author else page.fileSlug }}</h2>
+    {% if pagination.items[0] and pagination.items[0].data.author and pagination.items[0].data.author.image %}
+      <img src="{{ pagination.items[0].data.author.image }}" alt="Portrait of {{ pagination.items[0].data.author.name }}" width="128" height="128" />
+    {% endif %}
+    {% if pagination.items[0] and pagination.items[0].data.author and pagination.items[0].data.author.bio %}
+      <p>{{ pagination.items[0].data.author.bio }}</p>
+    {% endif %}
+  </header>
+
+  <section aria-labelledby="author-posts">
+    <h3 id="author-posts">Posts by this author</h3>
+    <ul>
+      {% for post in pagination.items %}
+        <li>
+          <a href="{{ post.url }}">{{ post.data.title }}</a>
+          <time datetime="{{ post.date | date: "%Y-%m-%d" }}">{{ post.date | date: "%B %d, %Y" }}</time>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <nav aria-label="Author pagination">
+      {% if pagination.href.previous %}
+        <a href="{{ pagination.href.previous }}">Previous</a>
+      {% endif %}
+      {% if pagination.href.next %}
+        <a href="{{ pagination.href.next }}">Next</a>
+      {% endif %}
+    </nav>
+  </section>
+</article>

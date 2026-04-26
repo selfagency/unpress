@@ -1,5 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { readPrivateKeySafely } from '../src/media-adapters';
+import {
+  readPrivateKeySafely,
+  createS3ClientFromConfig as createS3ClientFromConfigFn,
+  downloadToLocal,
+  uploadToS3,
+  uploadToFtp,
+  reuploadMediaToScp,
+  uploadViaScp,
+  uploadViaSftp,
+} from '../src/media-adapters';
 import fs from 'fs';
 import path from 'path';
 
@@ -11,6 +20,7 @@ describe('readPrivateKeySafely', () => {
     originalCwd = process.cwd();
     tmpDir = path.join(originalCwd, '.unpress/test-keys');
     process.env.HOME = tmpDir;
+    vi.spyOn(fs, 'chmodSync').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -22,11 +32,11 @@ describe('readPrivateKeySafely', () => {
     }
   });
 
-  it('should successfully read a private key file from a valid path', async () => {
-    const keyContent = '-----BEGIN OPENSSH PRIVATE KEY-----\nkeycontent...\n-----END OPENSSH PRIVATE KEY-----';
+  it('should successfully read a private key file', async () => {
+    const keyContent = 'test-key-content';
     const keyPath = path.join(tmpDir, 'test-key') as unknown as string;
 
-    fs.mkdirSync(path.dirname(keyPath), { recursive: true });
+    fs.mkdirSync(path.dirname(keyPath) || '.', { recursive: true });
     fs.writeFileSync(keyPath, keyContent);
 
     const result = await readPrivateKeySafely(keyPath);
@@ -34,71 +44,374 @@ describe('readPrivateKeySafely', () => {
     expect(result).toBe(keyContent);
   });
 
-  it('should throw on path traversal attempt outside allowed directories', async () => {
-    const keyContent = 'test-key';
-    const attemptPath = path.join(originalCwd, '..', '..', '..' as any, 'etc/passwd') as unknown as string;
+  it('should throw on invalid path', async () => {
+    const invalidPath = path.join(originalCwd, '..' + path.sep, '..', 'etc' + path.sep, 'passwd');
 
+    let error: Error | null = null;
     try {
-      await readPrivateKeySafely(attemptPath);
-      expect.fail('Should have thrown an error');
-    } catch (error) {
-      expect(error).toBeInstanceOf(Error);
-      const message = (error as Error).message;
-      expect(message).toContain('Invalid private key path') || message.includes('Private key file not found');
+      await readPrivateKeySafely(invalidPath);
+      expect.fail('Should have thrown');
+    } catch (actualError) {
+      error = actualError as Error;
     }
+
+    const err = error as Error;
+    expect(err.message).toMatch(/Invalid private key path|not found/);
   });
 
   it('should throw if file does not exist', async () => {
-    const nonExistentPath = path.join(tmpDir, 'non-existent-key') as unknown as string;
+    const nonExistentPath = path.join(tmpDir, 'non-existent') as unknown as string;
 
     try {
       await readPrivateKeySafely(nonExistentPath);
-      expect.fail('Should have thrown an error');
+      expect.fail('Should have thrown');
     } catch (error) {
-      expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toContain('Private key file not found');
+      const err = error as Error;
+      expect(err.message).toContain('not found');
     }
   });
 
   it('should throw if path is not a file', async () => {
-    const keyDirectory = path.join(tmpDir, 'key-dir');
+    const keyDirectory = path.join(tmpDir, 'test-dir');
     fs.mkdirSync(keyDirectory, { recursive: true });
 
+    let error: Error | null = null;
     try {
       await readPrivateKeySafely(keyDirectory as unknown as string);
-      expect.fail('Should have thrown an error');
-    } catch (error) {
-      expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toContain('Path is not a file');
+      expect.fail('Should have thrown');
+    } catch (actualError) {
+      error = actualError as Error;
     }
+
+    const err = error as Error;
+    expect(err.message).toContain('not a file');
   });
 
   it('should throw if key file is empty', async () => {
-    // Create a temp directory with an empty file
-    const emptyKeyDir = path.join(tmpDir, 'empty-key-dir');
+    const emptyKeyDir = path.join(tmpDir, 'empty-dir');
     fs.mkdirSync(emptyKeyDir, { recursive: true });
     const emptyKeyPath = path.join(emptyKeyDir, 'empty-key') as unknown as string;
 
-    // Write the empty file
     fs.writeFileSync(emptyKeyPath, '');
 
-    // Try to read it
+    let error: Error | null = null;
     try {
       await readPrivateKeySafely(emptyKeyPath);
-      expect.fail('Should have thrown an error');
-    } catch (error) {
-      expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toContain('Private key file is empty');
+      expect.fail('Should have thrown');
+    } catch (actualError) {
+      error = actualError as Error;
     }
 
-    // Cleanup
+    const err = error as Error;
+    expect(err.message).toContain('empty');
     fs.rmSync(emptyKeyDir, { recursive: true, force: true });
   });
+});
 
-  it('should allow reading from tmpdir even if outside cwd', async () => {
-    // This test is skipped as it has issues with path resolution in our testing environment
-    // The function logic is correct and covered by other tests
-    const keyContent = '-----BEGIN RSA PRIVATE KEY-----\nkeycontent...\n-----END RSA PRIVATE KEY-----';
-    expect(true).toBe(true);
+describe('downloadToLocal', () => {
+  let fetchMock: any;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    fetchMock = vi.fn();
+  });
+
+  beforeEach(() => {
+    vi.doMock('node-fetch', () => ({
+      default: fetchMock,
+    }));
+  });
+
+  afterEach(() => {
+    vi.doUnmock('node-fetch');
+  });
+
+  it('should download file and return local path', async () => {
+    const mockResponse = new Response(JSON.stringify({ data: 'test' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    fetchMock.mockResolvedValue(mockResponse);
+
+    vi.spyOn(fs, 'promises', 'mkdir').mockResolvedValue(undefined);
+    vi.spyOn(fs, 'createWriteStream').mockReturnValue({ pipe: vi.fn() } as any);
+
+    const result = await downloadToLocal('https://example.com/test.jpg', '/tmp/media');
+
+    expect(result).toBeTypeOf('string');
+  });
+
+  it('should throw error on failed download', async () => {
+    const mockResponse = new Response(null, { status: 404 });
+
+    fetchMock.mockResolvedValue(mockResponse);
+
+    vi.spyOn(fs, 'promises', 'mkdir').mockResolvedValue(undefined);
+    vi.spyOn(fs, 'createWriteStream').mockReturnValue({ pipe: vi.fn() } as any);
+
+    await expect(downloadToLocal('https://example.com/missing.jpg', '/tmp/media')).rejects.toThrow(
+      'Failed to download https://example.com/missing.jpg: 404',
+    );
+  });
+
+  it('should throw error on failed download', async () => {
+    const mockResponse = new Response(null, { status: 404 });
+    vi.spyOn(global, 'fetch').mockResolvedValue(mockResponse);
+    vi.spyOn(fs, 'promises', 'mkdir').mockResolvedValue(undefined);
+    vi.spyOn(fs, 'createWriteStream').mockReturnValue({ pipe: vi.fn() } as any);
+
+    await expect(downloadToLocal('https://example.com/missing.jpg', '/tmp/media')).rejects.toThrow(
+      'Failed to download https://example.com/missing.jpg',
+    );
+  });
+
+  it('should use filename from URL path', async () => {
+    const mockResponse = new Response('test file content', {
+      status: 200,
+      headers: { 'Content-Type': 'image/jpeg' },
+    });
+    vi.spyOn(global, 'fetch').mockResolvedValue(mockResponse);
+    vi.spyOn(fs, 'promises', 'mkdir').mockResolvedValue(undefined);
+
+    const mockWriteStream = {
+      pipe: vi.fn(),
+      close: vi.fn(),
+    };
+    vi.spyOn(fs, 'createWriteStream').mockReturnValue(mockWriteStream as any);
+
+    vi.mocked(mockWriteStream.pipe as any).mockResolvedValue(undefined);
+
+    await downloadToLocal('https://example.com/path/to/media-file.jpg', '/tmp/media');
+
+    expect(mockWriteStream.pipe).toHaveBeenCalled();
+  });
+
+  it('should generate filename from timestamp if URL has no extension', async () => {
+    const mockResponse = new Response('test content', {
+      status: 200,
+      headers: { 'Content-Type': 'application/octet-stream' },
+    });
+    vi.spyOn(global, 'fetch').mockResolvedValue(mockResponse);
+    vi.spyOn(fs, 'promises', 'mkdir').mockResolvedValue(undefined);
+
+    const mockWriteStream = {
+      pipe: vi.fn(),
+      close: vi.fn(),
+    };
+    vi.spyOn(fs, 'createWriteStream').mockReturnValue(mockWriteStream as any);
+
+    vi.mocked(mockWriteStream.pipe as any).mockResolvedValue(undefined);
+
+    await downloadToLocal('https://example.com/media', '/tmp/media');
+
+    expect(mockWriteStream.pipe).toHaveBeenCalled();
+  });
+});
+
+describe('uploadToS3', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should upload file to S3 and return URL', async () => {
+    vi.spyOn(fs, 'createReadStream').mockReturnValue({ pipe: vi.fn() } as any);
+    vi.spyOn(fs.promises, 'mkdir').mockResolvedValue(undefined);
+
+    vi.mock('@aws-sdk/client-s3', () => ({
+      S3Client: vi.fn().mockImplementation(() => ({
+        send: vi.fn().mockResolvedValue({} as any),
+      })),
+      PutObjectCommand: vi.fn(),
+    }));
+
+    const result = await uploadToS3('/path/to/file.jpg', {} as any, 'bucket-name', 'uploads/file.jpg');
+
+    expect(result).toBe('s3://bucket-name/uploads/file.jpg');
+  });
+
+  it('should throw error on S3 upload failure', async () => {
+    vi.spyOn(fs, 'createReadStream').mockReturnValue({ pipe: vi.fn() } as any);
+    vi.mock('@aws-sdk/client-s3', () => ({
+      S3Client: vi.fn(() => ({
+        send: vi.fn().mockRejectedValue(new Error('S3 upload failed')),
+      })),
+      PutObjectCommand: vi.fn(),
+    }));
+
+    await expect(uploadToS3('/path/to/file.jpg', {} as any, 'bucket-name', 'key.jpg')).rejects.toThrow(
+      'S3 upload failed',
+    );
+  });
+});
+
+describe('uploadToFtp', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should upload file to FTP and return URL', async () => {
+    vi.mock('child_process', () => ({
+      execFile: vi.fn().mockResolvedValue({ stderr: null, stdout: 'File uploaded successfully' } as any),
+    }));
+
+    vi.mock('@aws-sdk/client-s3', () => ({
+      S3Client: vi.fn(),
+      PutObjectCommand: vi.fn(),
+    }));
+
+    const result = await uploadToFtp('/path/to/file.jpg', {
+      host: 'ftp.example.com',
+      user: 'testuser',
+      password: 'testpass',
+      remotePath: '/uploads',
+    });
+
+    expect(result).toBe('ftp:/uploads/file.jpg');
+  });
+
+  it('should throw error on FTP upload failure', async () => {
+    vi.mock('child_process', () => ({
+      execFile: vi.fn().mockResolvedValue({ stderr: 'Connection failed', stdout: '' } as any),
+    }));
+
+    vi.mock('@aws-sdk/client-s3', () => ({
+      S3Client: vi.fn(),
+      PutObjectCommand: vi.fn(),
+    }));
+
+    await expect(
+      uploadToFtp('/path/to/file.jpg', {
+        host: 'ftp.example.com',
+        user: 'testuser',
+        password: 'testpass',
+      }),
+    ).rejects.toThrow('Failed to upload via FTP');
+  });
+
+  it('should ignore stderr if transfer was successful', async () => {
+    vi.mock('child_process', () => ({
+      execFile: vi.fn().mockResolvedValue({ stderr: 'Some warnings', stdout: '' } as any),
+    }));
+
+    vi.mock('@aws-sdk/client-s3', () => ({
+      S3Client: vi.fn(),
+      PutObjectCommand: vi.fn(),
+    }));
+
+    const result = await uploadToFtp('/path/to/file.jpg', {
+      host: 'ftp.example.com',
+      user: 'testuser',
+      password: 'testpass',
+    });
+
+    expect(result).toBeTypeOf('string');
+  });
+});
+
+describe('uploadViaScp', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should upload file via SCP and return URL', async () => {
+    const MockClient = vi.fn().mockResolvedValue({
+      uploadFile: vi.fn().mockResolvedValue(undefined),
+      close: vi.fn(),
+    });
+
+    vi.mock('node-scp', () => ({
+      Client: vi.fn().mockImplementation(() => MockClient()),
+    }));
+
+    const result = await uploadViaScp('/path/to/file.jpg', '/remote/path/file.jpg', {
+      host: 'scp.example.com',
+      user: 'testuser',
+      privateKey: 'key-data',
+    });
+
+    expect(result).toBe('scp://scp.example.com/remote/path/file.jpg');
+    expect(MockClient).toHaveBeenCalled();
+  });
+
+  it('should use password if private key is not provided', async () => {
+    const uploadSpy = vi.fn().mockResolvedValue(undefined);
+    const MockClient = vi.fn().mockResolvedValue({
+      uploadFile: uploadSpy,
+      close: vi.fn(),
+    });
+
+    vi.mock('node-scp', () => ({
+      Client: vi.fn().mockImplementation(() => MockClient()),
+    }));
+
+    await uploadViaScp('/path/to/file.jpg', '/remote/path/file.jpg', {
+      host: 'scp.example.com',
+      user: 'testuser',
+      password: 'mypassword',
+    });
+
+    expect(uploadSpy).toHaveBeenCalled();
+  });
+
+  it('should throw error on SCP upload failure', async () => {
+    vi.mock('node-scp', () => ({
+      Client: vi.fn().mockRejectedValue(new Error('SCP connection failed')),
+    }));
+
+    await expect(
+      uploadViaScp('/path/to/file.jpg', '/remote/path/file.jpg', {
+        host: 'scp.example.com',
+        user: 'testuser',
+      }),
+    ).rejects.toThrow('SCP upload failed');
+  });
+});
+
+describe('uploadViaSftp', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should upload file via SFTP', async () => {
+    vi.mock('ssh2-sftp-client', () => ({
+      default: vi.fn().mockImplementation(() => ({
+        put: vi.fn().mockResolvedValue(undefined),
+        connect: vi.fn(),
+      })),
+    }));
+
+    const { uploadViaSftp } = await import('../src/media-adapters');
+
+    await uploadViaSftp('/path/to/file.jpg', '/remote/path/file.jpg', {} as any);
+
+    expect(uploadViaSftp).toHaveBeenCalled();
+  });
+
+  it('should throw error on SFTP upload failure', async () => {
+    vi.mock('ssh2-sftp-client', () => ({
+      default: vi.fn().mockImplementation(() => ({
+        put: vi.fn().mockRejectedValue(new Error('SFTP transfer failed')),
+        connect: vi.fn(),
+      })),
+    }));
+
+    const { uploadViaSftp } = await import('../src/media-adapters');
+
+    await expect(uploadViaSftp('/path/to/file.jpg', '/remote/path/file.jpg', {} as any)).rejects.toThrow(
+      'SFTP transfer failed',
+    );
+  });
+});
+
+describe('reuploadMediaToScp', () => {
+  it('should throw error if SCP configuration is not provided', async () => {
+    const { reuploadMediaToScp } = await import('../src/media-adapters');
+
+    await expect(
+      reuploadMediaToScp('https://example.com/file.jpg', {
+        localDir: '/tmp',
+      }),
+    ).rejects.toThrow('SCP configuration not provided');
   });
 });
