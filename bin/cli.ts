@@ -258,7 +258,7 @@ cli.command('[...args]').action(async (_args, flags) => {
                       }
                     } else if (driver === 'scp') {
                       const scpCfg = mediaCfg.reupload?.scp;
-                      if (scpCfg && scpCfg.host) {
+                      if (scpCfg?.host) {
                         try {
                           const res = await mediaAdapters.reuploadMediaToScp(url, {
                             localDir: safeResolve(stateDir, 'media'),
@@ -329,7 +329,7 @@ cli.command('[...args]').action(async (_args, flags) => {
               if (typeof val === 'string') return val;
               if (typeof val === 'object' && val.__cdata) return val.__cdata;
               if (typeof val === 'object' && val['#text']) return val['#text'];
-              return String(val);
+              return val && typeof val === 'object' ? '' : '';
             }
 
             const postTypeMap: Record<string, string> = {

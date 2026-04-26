@@ -184,19 +184,20 @@ export async function indexPostsFromDir(
   for (let i = 0; i < docs.length; i += batchSpan) {
     const batch = docs.slice(i, i + batchSpan);
     progress(`scheduling upload documents ${i}-${i + batch.length}`, (i + batch.length) / docs.length);
-    const uploaded = async function task() {
-      const res = await safePost(`${cfg.host}/indexes/${index}/documents`, batch, 5).catch(err => {
-        const msg = err instanceof Error ? err.message : String(err);
-        error('Meilisearch indexing failed for batch:', msg);
-        throw new Error(`Meilisearch indexing failed: ${msg}`);
-      });
-      const payload = (await parseJsonSafe(res)) as any;
-      if (typeof payload?.taskUid === 'number') {
-        taskWaitPromises.push(waitForTask(cfg, payload.taskUid));
-      }
-      return payload;
-    };
-    uploadPromises.push(queue.add(uploaded));
+    uploadPromises.push(queue.add(() => uploadBatch(batch)));
+  }
+
+  async function uploadBatch(batch: any[]) {
+    const res = await safePost(`${cfg.host}/indexes/${index}/documents`, batch, 5).catch(err => {
+      const msg = err instanceof Error ? err.message : String(err);
+      error('Meilisearch indexing failed for batch:', msg);
+      throw new Error(`Meilisearch indexing failed: ${msg}`);
+    });
+    const payload = (await parseJsonSafe(res)) as any;
+    if (typeof payload?.taskUid === 'number') {
+      taskWaitPromises.push(waitForTask(cfg, payload.taskUid));
+    }
+    return payload;
   }
 
   // wait for all uploads to complete

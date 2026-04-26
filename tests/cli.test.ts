@@ -8,41 +8,32 @@ describe('CLI flag normalization', () => {
     vi.restoreAllMocks();
   });
 
-  it('should get flag value from CLI flags', () => {
-    const flags = { 'wp-url': 'https://example.com' };
-    const getFlag = (...keys: string[]) => {
+  const createGetFlag = (flags: any) => {
+    return (...keys: string[]) => {
       for (const k of keys) {
-        if (typeof (flags as any)[k] !== 'undefined') return (flags as any)[k];
+        if (flags[k] !== undefined) return flags[k];
       }
       return undefined;
     };
+  };
 
+  it('should get flag value from CLI flags', () => {
+    const flags = { 'wp-url': 'https://example.com' };
+    const getFlag = createGetFlag(flags);
     const result = getFlag('wpUrl', 'wp-url', 'wp_url');
     expect(result).toBe('https://example.com');
   });
 
   it('should return undefined for missing flags', () => {
     const flags = {};
-    const getFlag = (...keys: string[]) => {
-      for (const k of keys) {
-        if (typeof (flags as any)[k] !== 'undefined') return (flags as any)[k];
-      }
-      return undefined;
-    };
-
+    const getFlag = createGetFlag(flags);
     const result = getFlag('wpUrl', 'wp-url');
     expect(result).toBeUndefined();
   });
 
   it('should prioritize later keys in getFlag', () => {
     const flags = { 'wp-url': 'first', wp_user: 'second' };
-    const getFlag = (...keys: string[]) => {
-      for (const k of keys) {
-        if (typeof (flags as any)[k] !== 'undefined') return (flags as any)[k];
-      }
-      return undefined;
-    };
-
+    const getFlag = createGetFlag(flags);
     const result = getFlag('wp_url', 'wp-user', 'wp_user');
     expect(result).toBe('second');
   });

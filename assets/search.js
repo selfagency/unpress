@@ -30,20 +30,24 @@
         p.textContent = 'No results';
         results.appendChild(p);
       } else {
-        for (const h of hits) {
+        const createArticleNode = (title, slug, excerpt) => {
           const article = document.createElement('article');
           const h3 = document.createElement('h3');
           const a = document.createElement('a');
-          // Ensure slug is treated as text for URL parts
-          const slug = h?.slug ? String(h.slug) : '';
-          a.setAttribute('href', `/${encodeURIComponent(slug)}/`);
-          a.textContent = h?.title ? String(h.title) : 'Untitled';
+          const slugValue = slug ? String(slug) : '';
+          a.setAttribute('href', `/${encodeURIComponent(slugValue)}/`);
+          a.textContent = title ? String(title) : 'Untitled';
           h3.appendChild(a);
           article.appendChild(h3);
           const p = document.createElement('p');
-          p.textContent = h?.excerpt ? String(h.excerpt) : '';
+          p.textContent = excerpt ? String(excerpt) : '';
           article.appendChild(p);
-          results.appendChild(article);
+          return article;
+        };
+
+        for (const h of hits) {
+          const node = createArticleNode(h?.title, h?.slug, h?.excerpt);
+          results.appendChild(node);
         }
       }
     } catch {

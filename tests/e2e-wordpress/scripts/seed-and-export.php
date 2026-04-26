@@ -16,10 +16,14 @@ function log_line(string $message): void
     fprintf(STDERR, "%s\n", esc_html($message));
 }
 
+class UnpressException extends RuntimeException
+{
+}
+
 function fail(string $message): never
 {
     log_line($message);
-    throw new RuntimeException($message);
+    throw new UnpressException($message);
 }
 
 function wait_for_core(string $wpPath): void
@@ -34,7 +38,7 @@ function wait_for_core(string $wpPath): void
         usleep(2000000); // 2 seconds in microseconds.
     }
 
-    throw new RuntimeException("WordPress core files never appeared in {$wpPath}.");
+    throw new UnpressException("WordPress core files never appeared in {$wpPath}.");
 }
 
 function wait_for_db(string $hostWithPort, string $database, string $user, string $password): void
@@ -53,7 +57,7 @@ function wait_for_db(string $hostWithPort, string $database, string $user, strin
         usleep(2000000); // 2 seconds in microseconds.
     }
 
-    throw new RuntimeException('Database never became reachable from the seed container.');
+    throw new UnpressException('Database never became reachable from the seed container.');
 }
 
 function wait_for_http(string $url): void

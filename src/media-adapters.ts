@@ -226,21 +226,19 @@ export function createS3ClientFromEnv() {
 export async function createSftpClientFromConfig(cfg?: NonNullable<MediaAdapterOptions['sftp']>) {
   const sftpConfig: any = {
     host: cfg?.host || process.env.SFTP_HOST || 'localhost',
-    port: cfg?.port || parseInt(process.env.SFTP_PORT || '22', 10),
+    port: cfg?.port || Number.parseInt(process.env.SFTP_PORT || '22', 10),
     username: cfg?.user || process.env.SFTP_USER || 'root',
-    readyTimeout: 30000,
   };
 
   if (cfg?.password) sftpConfig.password = cfg.password;
   if (cfg?.privateKey) sftpConfig.privateKey = cfg.privateKey;
 
-  const client = new ssh2SftpClient();
-  await client.connect(sftpConfig);
+  const client = await ScpClient(sftpConfig);
   return client;
 }
 
 export async function createSftpClientFromEnv() {
-  return createSftpClientFromConfig(undefined);
+  return createSftpClientFromConfig();
 }
 
 export async function createScpClientFromConfig(cfg?: NonNullable<MediaAdapterOptions['scp']>) {
