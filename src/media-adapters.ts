@@ -363,8 +363,8 @@ async function createClientAndUpload<T>(
     const result = await uploadMethod(client, config.host, config.port);
     client.end();
     return result;
-  } catch {
+  } catch (err: any) {
     client.end();
-    throw new Error('Client upload failed');
+    throw new Error(`SFTP transfer failed: ${err.message}`);
   }
 }

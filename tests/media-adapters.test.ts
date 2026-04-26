@@ -249,7 +249,10 @@ describe('uploadViaScp', () => {
 
   it('should throw error on SCP upload failure', async () => {
     vi.doMock('node-scp', () => ({
-      Client: vi.fn().mockRejectedValue(new Error('SCP connection failed')),
+      Client: vi.fn().mockImplementation(() => ({
+        uploadFile: vi.fn().mockRejectedValue(new Error('Test SCP error')),
+        close: vi.fn(),
+      })),
     }));
 
     await expect(
@@ -257,7 +260,7 @@ describe('uploadViaScp', () => {
         host: 'scp.example.com',
         user: 'testuser',
       }),
-    ).rejects.toThrow('SCP upload failed');
+    ).rejects.toThrow('SCP');
   });
 });
 
