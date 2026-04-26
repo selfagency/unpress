@@ -1,0 +1,73 @@
+tests/media-adapters.test.ts
+  31f9255bc69c4063 2,116,120,133,135,154,158,185,189,210,216,231,238,252,271-272,287
+  a2b65e130108a30c 61,115,132,209,230,270
+__mocks__/node-scp/index.ts
+  31f9255bc69c4063 1-3
+tests/e2e-wordpress.live.test.ts
+  31f9255bc69c4063 88,98,107,342-344,346
+  a2b65e130108a30c 89,99,108,110,228,232,234,236,296,301,303,305
+src/types/ssh2-sftp-client.d.ts
+  a2b65e130108a30c 18,37
+.oxfmtrc.json
+  31f9255bc69c4063 20-21
+.oxlintrc.json
+  31f9255bc69c4063 46-47
+tests/media.test.ts
+  31f9255bc69c4063 27,34,284
+src/media-adapters.ts
+  31f9255bc69c4063 116
+  a2b65e130108a30c 2,57-58
+tests/meilisearch.old.test.ts
+  a2b65e130108a30c 20,38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "5246f09ea9f274b003cdbfe59043a3d927faf85b",
+  "prompts": {
+    "31f9255bc69c4063": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_235c0a5afffenHu4o5dSvTGESU",
+        "model": "deepinfra/Qwen/Qwen3-Coder-480B-A35B-Instruct"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 103,
+      "total_deletions": 110,
+      "accepted_lines": 38,
+      "overriden_lines": 1
+    },
+    "a2b65e130108a30c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_234cfa054ffeMsm1zAaujA2mVV",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 49,
+      "total_deletions": 32,
+      "accepted_lines": 26,
+      "overriden_lines": 0
+    },
+    "d037e63beaa6531c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_235e18b6affemIIzp2MR1tzi8z",
+        "model": "deepinfra/Qwen/Qwen3-Coder-480B-A35B-Instruct"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 3,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
