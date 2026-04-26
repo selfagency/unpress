@@ -60,7 +60,7 @@ export function findMediaUrls(markdown: string): string[] {
  */
 export function relinkMediaUrls(markdown: string, map: Record<string, string>): string {
   // Replace all links (image and non-image) in markdown syntax
-  return markdown.replace(/(\[[^\]]*\]\()([^)]+)(\))/g, (full, prefix, url, suffix) => {
+  return markdown.replaceAll(/(\[[^\]]*\]\()([^)]+)(\))/g, (full, prefix, url, suffix) => {
     const replacement = Object.hasOwn(map, url) ? map[url] : undefined;
     if (replacement) return `${prefix}${replacement}${suffix}`;
     return full;

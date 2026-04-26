@@ -23,7 +23,7 @@ describe('meilisearch indexer', () => {
     await fs.writeFile(path.join(tmp, 'hello.md'), md, 'utf8');
 
     let callCount = 0;
-    global.fetch = vi.fn().mockImplementation(async () => {
+    globalThis.fetch = vi.fn().mockImplementation(async () => {
       callCount++;
       if (callCount === 1) {
         return { ok: true, status: 201, text: async () => '{ taskUid: 1 }' };
@@ -40,7 +40,7 @@ describe('meilisearch indexer', () => {
     const md = `---\ntitle: "Test"\nslug: "test"\n---\nTest content`;
     await fs.writeFile(path.join(tmp, 'test.md'), md, 'utf8');
 
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, text: async () => '' });
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, text: async () => '' });
 
     const res = await indexPostsFromDir(tmp, { host: 'http://127.0.0.1:7700' });
 

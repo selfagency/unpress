@@ -15,7 +15,7 @@ declare module 'ssh2-sftp-client' {
     agent?: string;
   }
 
-  export interface SftpClient {
+  export class SftpClient {
     constructor(name?: string);
     connect(config: SftpClientConfig): Promise<this>;
     list(pathname: string, options?: any): Promise<any[]>;

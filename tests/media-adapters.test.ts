@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { readPrivateKeySafely, uploadToS3, uploadToFtp, uploadViaScp } from '../src/media-adapters';
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 describe('readPrivateKeySafely', () => {
   let tmpDir: string;
