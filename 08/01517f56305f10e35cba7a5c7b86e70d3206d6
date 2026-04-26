@@ -1,0 +1,61 @@
+src/xml-parser.ts
+  h_5cf1e2c1161853 41-44,48,121
+tests/e2e-wordpress/scripts/seed-and-export.php
+  h_5cf1e2c1161853 16,33,37,56,63-65,73
+src/media-adapters.ts
+  9f7c21c19346b3fb 77
+  h_5cf1e2c1161853 92
+src/types/ftp-deploy.d.ts
+  h_5cf1e2c1161853 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "0801517f56305f10e35cba7a5c7b86e70d3206d6",
+  "prompts": {
+    "7a9eac57feb0dc9a": {
+      "agent_id": {
+        "tool": "github-copilot-tab",
+        "id": "ai_tab-1777181471684",
+        "model": "default"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 1
+    },
+    "9c8083a999bc0109": {
+      "agent_id": {
+        "tool": "github-copilot-tab",
+        "id": "ai_tab-1777181482708",
+        "model": "default"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 2,
+      "accepted_lines": 0,
+      "overriden_lines": 1
+    },
+    "9f7c21c19346b3fb": {
+      "agent_id": {
+        "tool": "github-copilot-tab",
+        "id": "ai_tab-1777181491072",
+        "model": "default"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
