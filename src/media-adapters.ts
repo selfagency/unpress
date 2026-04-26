@@ -67,23 +67,29 @@ export async function reuploadMediaToS3(url: string, opts: MediaAdapterOptions):
   return uploadToS3(tmp, client, opts.s3.bucket, key);
 }
 
-export async function reuploadMediaToFtp(url: string, opts: MediaAdapterOptions): Promise<string> {
-  if (!opts.ftp) throw new Error('FTP configuration not provided');
-  const tmp = await downloadToLocal(url, opts.localDir || '.unpress/media');
-  const remoteFile = path.posix.join(opts.ftp.remotePath || '/', path.basename(tmp));
+async function uploadViaFtp(tmp: string, remoteFile: string, opts: MediaAdapterOptions): Promise<void> {
   const lftpCommands = `set ftp:passive-mode true; put "${tmp}" -o "${remoteFile}"`;
 
   const { stderr } = await execFileAsync('lftp', [
     '-e',
     lftpCommands,
     '-u',
-    `${opts.ftp.user},${opts.ftp.password}`,
-    `ftp://${opts.ftp.host}`,
+    `${opts.ftp?.user},${opts.ftp?.password}`,
+    `ftp://${opts.ftp?.host}`,
   ]);
 
   if (stderr && !stderr.includes('successfully transferred')) {
     throw new Error(`Failed to upload ${tmp} via FTP: ${stderr}`);
   }
+}
+
+export async function reuploadMediaToFtp(url: string, opts: MediaAdapterOptions): Promise<string> {
+  if (!opts.ftp) throw new Error('FTP configuration not provided');
+
+  const tmp = await downloadToLocal(url, opts.localDir || '.unpress/media');
+  const remoteFile = path.posix.join(opts.ftp.remotePath || '/', path.basename(tmp));
+
+  await uploadViaFtp(tmp, remoteFile, opts);
 
   return `ftp:${remoteFile}`;
 }

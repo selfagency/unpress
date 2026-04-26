@@ -25,7 +25,7 @@ declare module 'ftp-deploy' {
 
   class FtpDeployer extends EventEmitter {
     eventObject: FtpDeployEventObject;
-    ftp: any;
+    ftp: unknown;
 
     constructor();
 

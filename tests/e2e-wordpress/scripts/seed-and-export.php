@@ -13,7 +13,7 @@ function env_var(string $name, string $default): string
 
 function log_line(string $message): void
 {
-    fwrite(STDERR, $message . PHP_EOL);
+    fwrite(STDERR, esc_html($message) . PHP_EOL);
 }
 
 function fail(string $message): never
@@ -30,11 +30,11 @@ function wait_for_core(string $wpPath): void
             return;
         }
         log_line("[$i/180] Waiting for WordPress core files...");
-        // Sleep() is acceptable in test fixture for polling; total wait capped at 360s.
+        // Sleep() is acceptable in test fixture for polling; total wait capped at 360 seconds.
         usleep(2000000); // 2 seconds in microseconds.
     }
 
-    fail("WordPress core files never appeared in {$wpPath}");
+    throw new RuntimeException("WordPress core files never appeared in {$wpPath}.");
 }
 
 function wait_for_db(string $hostWithPort, string $database, string $user, string $password): void
@@ -53,20 +53,16 @@ function wait_for_db(string $hostWithPort, string $database, string $user, strin
         usleep(2000000); // 2 seconds in microseconds.
     }
 
-    fail('Database never became reachable from the seed container');
+    throw new RuntimeException('Database never became reachable from the seed container.');
 }
 
 function wait_for_http(string $url): void
 {
     log_line('Waiting for WordPress HTTP readiness...');
     for ($i = 1; $i <= 180; $i++) {
-        // Use curl with explicit timeout; acceptable in test fixture.
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 2);
-        curl_setopt($ch, CURLOPT_FAILONERROR, false);
-        $body = curl_exec($ch);
-        curl_close($ch);
+        // Use file_get_contents with explicit timeout; acceptable in test fixture.
+        $context = stream_context_create(['http' => ['timeout' => 2]]);
+        $body = @file_get_contents($url, false, $context);
         if ($body !== false) {
             return;
         }
@@ -74,7 +70,7 @@ function wait_for_http(string $url): void
         sleep(2);
     }
 
-    fail("WordPress never became reachable at {$url}");
+    throw new RuntimeException("WordPress never became reachable at {$url}.");
 }
 
 function normalize_term_id(int|array|false|null $term): ?int
