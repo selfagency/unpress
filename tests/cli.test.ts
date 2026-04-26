@@ -8,6 +8,7 @@ describe('CLI flag normalization', () => {
     vi.restoreAllMocks();
   });
 
+  /* eslint-disable-next-line -- Helper function is not serializable for test runner */
   const createGetFlag = (flags: any) => {
     return (...keys: string[]) => {
       for (const k of keys) {

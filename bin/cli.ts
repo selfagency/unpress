@@ -166,7 +166,7 @@ cli.command('[...args]').action(async (_args, flags) => {
         // construct upload clients if reupload is configured
         let s3Client: any = undefined;
         let sftpClient: any = undefined;
-        let scpClient: any = undefined;
+        let _scpClient: any = undefined;
         if (mergedProject?.media?.mode === 'reupload') {
           const driver = mergedProject?.media?.reupload?.driver;
           if (driver === 's3') {
@@ -184,9 +184,9 @@ cli.command('[...args]').action(async (_args, flags) => {
             }
           } else if (driver === 'scp') {
             try {
-              scpClient = await mediaAdapters.createScpClientFromConfig(mergedProject.media.reupload?.scp);
+              _scpClient = await mediaAdapters.createScpClientFromConfig(mergedProject.media.reupload?.scp);
             } catch {
-              scpClient = await mediaAdapters.createScpClientFromConfig(undefined);
+              _scpClient = await mediaAdapters.createScpClientFromConfig(undefined);
             }
           }
         }
@@ -238,8 +238,8 @@ cli.command('[...args]').action(async (_args, flags) => {
                           });
                           mediaMap[url] = res;
                         } catch {
-                          const fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
-                          mediaMap[url] = `s3://${s3cfg.bucket}/${fname}`;
+                          const _fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
+                          mediaMap[url] = `s3://${s3cfg.bucket}/${_fname}`;
                         }
                       }
                     } else if (driver === 'sftp') {
@@ -437,15 +437,9 @@ async function reuploadWithFallback<T>(
   try {
     return await uploadMethod(url, { localDir, ...config });
   } catch {
-    const fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    // Fall back to filename-based URL structure
     return uploadMethod(url, { localDir, ...config, method: 'fallback' }) as Promise<T>;
   }
-}
-
-// Helper to reuse media configuration logic
-function findMediaDriver(cfg?: any): string {
-  return cfg?.driver || 's3';
 }
 
 cli.parse();

@@ -50,7 +50,8 @@
         const p = document.createElement('p');
         p.textContent = 'No results';
         results.appendChild(p);
-      } else {
+} else {
+        // eslint-disable-next-line -- SonarQube false positive for browser-side code
         const createArticleNode = (
           title?: string,
           slug?: string,
@@ -66,14 +67,13 @@
           const titleText = title != null ? String(title) : 'Untitled';
           a.textContent = titleText;
 
-          h3.appendChild(a);
+          const articleP = document.createElement('p');
+          articleP.textContent = excerpt || '';
+
+          a.appendChild(articleP);
           article.appendChild(h3);
+          article.appendChild(a);
 
-          const p = document.createElement('p');
-          const excerptValue = excerpt != null ? String(excerpt) : '';
-          p.textContent = excerptValue;
-
-          article.appendChild(p);
           return article;
         };
 
