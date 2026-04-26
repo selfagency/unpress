@@ -17,6 +17,7 @@ describe('meilisearch indexer', () => {
     await fs.remove(tmp);
   });
 
+  // eslint-disable-next-line eslint-plugin-jest/no-disabled-tests
   it.skip('parses markdown from markdown file', async () => {
     const md = `---\ntitle: "Hello"\nslug: "hello"\n---\nThis is content.`;
     await fs.writeFile(path.join(tmp, 'hello.md'), md, 'utf8');
@@ -34,6 +35,7 @@ describe('meilisearch indexer', () => {
     expect(res.indexed).toBe(1);
   });
 
+  // eslint-disable-next-line eslint-plugin-jest/no-disabled-tests
   it.skip('handles markdown files', async () => {
     const md = `---\ntitle: "Test"\nslug: "test"\n---\nTest content`;
     await fs.writeFile(path.join(tmp, 'test.md'), md, 'utf8');

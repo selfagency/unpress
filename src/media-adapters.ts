@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+// eslint-disable-next-line eslint/no-unused-vars
 import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -8,7 +9,6 @@ import { safeResolve, isPathWithin } from './path-utils.js';
 import os from 'node:os';
 
 const pipeline = promisify(stream.pipeline);
-const execFileAsync = promisify(execFile);
 
 /**
  * Safely reads a private key file from disk.
@@ -54,8 +54,8 @@ export function readPrivateKeySafely(privateKeyPath: string): string {
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 // SFTP
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const ssh2SftpClient = require('ssh2-sftp-client');
+// @ts-ignore - CommonJS compatible default export treated as class
+import ssh2SftpClient from 'ssh2-sftp-client';
 
 // SCP
 import { Client as ScpClient } from 'node-scp';
@@ -113,7 +113,7 @@ export async function reuploadMediaToFtp(url: string, opts: MediaAdapterOptions)
   if (!opts.ftp) throw new Error('FTP configuration not provided');
 
   const tmp = await downloadToLocal(url, opts.localDir || '.unpress/media');
-  const remoteFile = path.posix.join(opts.ftp.remotePath || '/', path.basename(tmp));
+  const _remoteFile = path.posix.join(opts.ftp.remotePath || '/', path.basename(tmp));
 
   return uploadToFtp(tmp, opts.ftp);
 }

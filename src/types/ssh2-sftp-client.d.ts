@@ -15,7 +15,7 @@ declare module 'ssh2-sftp-client' {
     agent?: string;
   }
 
-  export class SftpClient {
+  export interface SftpClient {
     constructor(name?: string);
     connect(config: SftpClientConfig): Promise<this>;
     list(pathname: string, options?: any): Promise<any[]>;
@@ -34,5 +34,5 @@ declare module 'ssh2-sftp-client' {
     end(): void;
   }
 
-  export {};
+  export default function SftpClient(options?: any): SftpClient;
 }

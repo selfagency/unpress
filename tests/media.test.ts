@@ -24,14 +24,14 @@ describe('findMediaUrls', () => {
     expect(findMediaUrls('![alt text [missing] ](')).toEqual([]);
   });
 
-  it.skip('handles nested brackets with URL', () => {
+  it('handles nested brackets with URL', () => {
     // This test requires regex refinement to handle nested brackets properly
     // Skipping until regex is more robust
     const md = '![alt [text]](https://example.com/image.jpg)';
     expect(findMediaUrls(md)).toEqual(['https://example.com/image.jpg']);
   });
 
-  it.skip('handles multiple nested brackets', () => {
+  it('handles multiple nested brackets', () => {
     // This test requires regex refinement to handle multiple nested brackets
     const md = '![alt [nested] for [text]](https://example.com/image.jpg)';
     expect(findMediaUrls(md)).toEqual(['https://example.com/image.jpg']);
@@ -281,7 +281,7 @@ describe('relinkMediaUrls', () => {
 });
 
 describe('SCP media adapters', () => {
-  it.skip('should define scp functions', () => {
+  it('should define scp functions', () => {
     // Skip until environment setup provides SCP mock server
     // See integration requirements for SCP test environment setup
     expect(true).toBe(true);
