@@ -52,12 +52,8 @@ export class WordPressApi {
     return headers;
   }
 
-  async fetch(path: string, init: RequestInit = {}) {
-    const url = `${this.baseUrl}${path}`;
-    return this.fetchWithTimeout(url, init, async () => {
-      const res = await fetch(url, init);
-      return res as unknown as Response;
-    });
+  async fetch(path: string, init: RequestInit = {}): Promise<any> {
+    return this.requestWithRetries(path);
   }
 
   /** Raw fetch that returns the Response object for header access. */
