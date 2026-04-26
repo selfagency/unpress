@@ -1,0 +1,32 @@
+COVERAGE_FIX_SUMMARY.md
+  58644ddf6cf2b84b 1-103
+tests/media-adapters.test.ts
+  58644ddf6cf2b84b 1-104
+src/media-adapters.ts
+  58644ddf6cf2b84b 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "4bdc0aa10fba9fadccefe38964ed59c63ad572cc",
+  "prompts": {
+    "58644ddf6cf2b84b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2377a8d8fffeaBqu230AZUSA6v",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 230,
+      "total_deletions": 34,
+      "accepted_lines": 196,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
