@@ -1,0 +1,28 @@
+src/media-adapters.ts
+  79069937e78378a2 7-8,13-52,180,202,209-214,216
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "5afbc130ccc67da4739db685a31d3d251409283a",
+  "prompts": {
+    "79069937e78378a2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_237a38c9affeKa5KMaVvxcdjqX",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 59,
+      "total_deletions": 9,
+      "accepted_lines": 57,
+      "overriden_lines": 1
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
