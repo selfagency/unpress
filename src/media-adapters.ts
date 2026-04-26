@@ -17,7 +17,7 @@ const execFileAsync = promisify(execFile);
  * @returns The private key content as a string
  * @throws Error if the path is invalid or file cannot be read
  */
-function readPrivateKeySafely(privateKeyPath: string): string {
+export function readPrivateKeySafely(privateKeyPath: string): string {
   // Only allow paths with directory traversal attempts if they resolve to a safe location
   // Prevent attacks like '../../etc/passwd'
   const resolvedPath = path.resolve(privateKeyPath);
