@@ -340,6 +340,5 @@ try {
     log_line('Seed and export complete');
     log_line('XML: ' . $xmlPath);
 } catch (RuntimeException $e) {
-    log_line('Error: ' . $e->getMessage());
     exit(1);
 }

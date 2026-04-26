@@ -209,5 +209,5 @@ jobs:
       - name: Publish to npm
         run: npm publish ./dist --tag $NPM_DIST_TAG
         env:
-
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_DIST_TAG: ${{ contains(needs.detect-tag.outputs.release_tag, '-') && 'next' || 'latest' }}

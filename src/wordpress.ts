@@ -42,7 +42,7 @@ export class WordPressApi {
     }
 
     if (typeof (initHeaders as any).forEach === 'function') {
-      Object.entries(initHeaders).forEach(([key, value]) => {
+      (initHeaders as any).forEach((value: unknown, key: string) => {
         headers[key] = String(value);
       });
       return headers;

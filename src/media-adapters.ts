@@ -8,14 +8,13 @@ const pipeline = promisify(stream.pipeline);
 
 // S3
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-// SFTP
-import SftpClient from 'ssh2-sftp-client';
+// FTP
+import FtpDeploy from 'ftp-deploy';
 
 export type MediaAdapterOptions = {
   localDir?: string;
   s3?: { client?: S3Client; bucket: string; prefix?: string };
-  // ssh2-sftp-client has no bundled types in this project; accept any here
-  sftp?: { client?: import('ssh2').Client; remotePath?: string };
+  ftp?: { host: string; user: string; password: string; remotePath?: string };
 };
 
 export async function downloadToLocal(url: string, destDir: string): Promise<string> {
@@ -37,10 +36,24 @@ export async function uploadToS3(localPath: string, client: S3Client, bucket: st
   return `s3://${bucket}/${key}`;
 }
 
-export async function uploadToSftp(localPath: string, client: unknown, remotePath: string): Promise<string> {
-  const remoteFile = path.posix.join(remotePath, path.basename(localPath));
-  await (client as any).put(localPath, remoteFile);
-  return `sftp:${remoteFile}`;
+export async function uploadToFtp(
+  localPath: string,
+  ftpConfig: { host: string; user: string; password: string; remotePath?: string },
+): Promise<string> {
+  const ftpDeploy = new FtpDeploy();
+  const remoteFile = path.posix.join(ftpConfig.remotePath || '/', path.basename(localPath));
+
+  const config = {
+    host: ftpConfig.host,
+    user: ftpConfig.user,
+    password: ftpConfig.password,
+    include: [localPath],
+    deleteRemote: false,
+    forcePasv: true,
+  };
+
+  await ftpDeploy.deploy(config);
+  return `ftp:${remoteFile}`;
 }
 
 export async function reuploadMediaToS3(url: string, opts: MediaAdapterOptions): Promise<string> {
@@ -51,11 +64,10 @@ export async function reuploadMediaToS3(url: string, opts: MediaAdapterOptions):
   return uploadToS3(tmp, client, opts.s3.bucket, key);
 }
 
-export async function reuploadMediaToSftp(url: string, opts: MediaAdapterOptions): Promise<string> {
-  if (!opts.sftp) throw new Error('SFTP configuration not provided');
+export async function reuploadMediaToFtp(url: string, opts: MediaAdapterOptions): Promise<string> {
+  if (!opts.ftp) throw new Error('FTP configuration not provided');
   const tmp = await downloadToLocal(url, opts.localDir || '.unpress/media');
-  const client = opts.sftp.client || (await createSftpClientFromEnv());
-  return uploadToSftp(tmp, client, opts.sftp.remotePath || '/');
+  return uploadToFtp(tmp, opts.ftp);
 }
 
 // Helpers to construct clients from configuration or environment variables
@@ -93,33 +105,4 @@ export function createS3ClientFromEnv() {
     cfg.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || process.env.S3_SECRET_KEY;
   cfg.forcePathStyle = process.env.S3_FORCE_PATH_STYLE === 'true' || false;
   return createS3ClientFromConfig(cfg);
-}
-
-export async function createSftpClientFromConfig(cfg?: {
-  host?: string;
-  port?: number;
-  username?: string;
-  password?: string;
-  privateKey?: string;
-}) {
-  const client = new SftpClient();
-  const connectCfg: Record<string, unknown> = {};
-  connectCfg.host = cfg?.host ?? process.env.SFTP_HOST;
-  connectCfg.port = cfg?.port ?? (process.env.SFTP_PORT ? Number.parseInt(process.env.SFTP_PORT, 10) : 22);
-  connectCfg.username = cfg?.username ?? process.env.SFTP_USER;
-  if (cfg?.password ?? process.env.SFTP_PASSWORD) connectCfg.password = cfg?.password ?? process.env.SFTP_PASSWORD;
-  if (cfg?.privateKey ?? process.env.SFTP_PRIVATE_KEY)
-    connectCfg.privateKey = cfg?.privateKey ?? process.env.SFTP_PRIVATE_KEY;
-  await client.connect(connectCfg);
-  return client;
-}
-
-export async function createSftpClientFromEnv() {
-  const cfg: any = {};
-  if (process.env.SFTP_HOST) cfg.host = process.env.SFTP_HOST;
-  if (process.env.SFTP_PORT) cfg.port = Number.parseInt(process.env.SFTP_PORT, 10);
-  if (process.env.SFTP_USER) cfg.username = process.env.SFTP_USER;
-  if (process.env.SFTP_PASSWORD) cfg.password = process.env.SFTP_PASSWORD;
-  if (process.env.SFTP_PRIVATE_KEY) cfg.privateKey = process.env.SFTP_PRIVATE_KEY;
-  return createSftpClientFromConfig(cfg);
 }
