@@ -1,0 +1,120 @@
+nonexistent/site/_includes/search.njk
+  ddb679ebc476f3b4 1-15
+nonexistent/site/tags.njk
+  ddb679ebc476f3b4 1-25
+assets/search.js
+  ddb679ebc476f3b4 3-25,27-45,47-50,52-53,55-56
+nonexistent/site/categories.njk
+  ddb679ebc476f3b4 1-15
+nonexistent/site/_includes/layouts/base.njk
+  ddb679ebc476f3b4 1-28
+tests/logger.test.ts
+  ddb679ebc476f3b4 1,33-38,41-53
+  9389c64a3d9ce2cd 2,4-18,20-25,27-31
+vitest.config.ts
+  7e922979a25e462f 10-12
+tests/media-adapters.test.ts
+  ee2a196188333e6e 112-113,116-120,122,125-129,134-136,143-153,155,161-162,164,166,178,187,199,208,217,219-220,222,224,378-379,383-384,386,388,393-394,398-399,401,408-409,411-412,415
+  9389c64a3d9ce2cd 3,11,35-36,39,47-48,52-53,63,67,69-70,75,81,91,100
+  7e922979a25e462f 2,4-9,109-111,114-115,123-124,130-131,133,137-142,156-160,163,167-171,173-177,180-182,184-186,188-192,194-198,201-203,205-207,209-216,218,221,226-236,238,240-242,244-254,256-259,261-266,268-274,276-279,281-286,289-293,295-298,300-304,306-319,321-323,325-329,331-340,342-344,346-350,352-358,360-364,367-377,382,385,387,389-392,397,400,403-407
+  ddb679ebc476f3b4 23,50,54-55,57-59,78,82-83,85-87,97,101-102,105-106
+nonexistent/.eleventy.js
+  ddb679ebc476f3b4 1-9
+nonexistent/assets/styles.css
+  ddb679ebc476f3b4 1-13
+nonexistent/site/authors.njk
+  ddb679ebc476f3b4 1-24
+nonexistent/site/content/authors/site-author.md
+  ddb679ebc476f3b4 1-5
+tests/generator.test.ts
+  9389c64a3d9ce2cd 8-21,23,26,35-78,80-93,96-111,118-130
+  ddb679ebc476f3b4 4,95,112-117
+src/media.ts
+  79069937e78378a2 40-42,49
+  ee2a196188333e6e 34-39,43-48,51,62-63
+tests/media.test.ts
+  ee2a196188333e6e 71-72,75,77,174,180
+  9389c64a3d9ce2cd 9,24-26,30-33,36-57,123-136,146-172,175-179,181-184,186-197
+  7e922979a25e462f 1,5-8,23,27-29,34-35,58-70,73-74,76,78-122,173,198-236,238-279
+nonexistent/site/author.njk
+  ddb679ebc476f3b4 1-40
+nonexistent/site/index.md
+  ddb679ebc476f3b4 1-5,7-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "8631134d49083906a016867fc7bf3d7d833f026d",
+  "prompts": {
+    "79069937e78378a2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_237a38c9affeKa5KMaVvxcdjqX",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 107,
+      "total_deletions": 1,
+      "accepted_lines": 107,
+      "overriden_lines": 0
+    },
+    "7e922979a25e462f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2360c63acffeFJo1kNP7p410mP",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 1423,
+      "total_deletions": 507,
+      "accepted_lines": 375,
+      "overriden_lines": 32
+    },
+    "9389c64a3d9ce2cd": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2362f81a2ffeQIS3eaDEQ1aWna",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 1314,
+      "total_deletions": 417,
+      "accepted_lines": 295,
+      "overriden_lines": 1
+    },
+    "ddb679ebc476f3b4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_23618909affeqMKrfS3qYlJ3p9",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 417,
+      "total_deletions": 194,
+      "accepted_lines": 278,
+      "overriden_lines": 1
+    },
+    "ee2a196188333e6e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_236023bc0ffeLMIdS03wUjo6Ha",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 235,
+      "total_deletions": 265,
+      "accepted_lines": 90,
+      "overriden_lines": 13
+    }
+  },
+  "humans": {
+    "h_5cf1e2c1161853": {
+      "author": "Daniel Sieradski"
+    }
+  }
+}
