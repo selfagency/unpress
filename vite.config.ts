@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const nodeBuiltins = new Set(builtinModules.flatMap(mod => [mod, `node:${mod}`]));
+const nativeModules = new Set(['ssh2', 'cpu-features']);
 
 export default defineConfig({
   build: {
@@ -20,8 +21,8 @@ export default defineConfig({
     },
     rollupOptions: {
       // Avoid passing non-serializable function references into the config
-      // by listing known Node builtins as externals instead of a predicate.
-      external: Array.from(nodeBuiltins),
+      // by listing known Node builtins and native modules as externals.
+      external: [...Array.from(nodeBuiltins), ...Array.from(nativeModules)],
       output: {
         exports: 'named',
       },

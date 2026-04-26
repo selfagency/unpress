@@ -13,7 +13,7 @@ function env_var(string $name, string $default): string
 
 function log_line(string $message): void
 {
-    fprintf(STDERR, "%s\n", esc_html($message));
+    fprintf(STDERR, "%s\n", htmlspecialchars($message, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 }
 
 class UnpressException extends RuntimeException
