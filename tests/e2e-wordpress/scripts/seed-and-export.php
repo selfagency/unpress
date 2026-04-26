@@ -20,6 +20,10 @@ class UnpressException extends RuntimeException
 {
 }
 
+class UnpressURLError extends RuntimeException
+{
+}
+
 function fail(string $message): never
 {
     log_line($message);
@@ -74,7 +78,7 @@ function wait_for_http(string $url): void
         sleep(2);
     }
 
-    throw new RuntimeException("WordPress never became reachable at {$url}.");
+    throw new UnpressURLError("WordPress never became reachable at {$url}.");
 }
 
 function normalize_term_id(int|array|false|null $term): ?int
@@ -326,11 +330,16 @@ try {
         fail('Could not write XML export to ' . $xmlPath);
     }
 
-    $credentials = implode(PHP_EOL, [
-        'WP_URL=' . $wpUrlExternal,
-        'WP_USER=' . $wpAdminUser,
-        'WP_APP_PASSWORD=' . $appPassword,
-        'WP_XML_FILE=' . $xmlPath,
+    $escapedUrl = htmlspecialchars($wpUrlExternal, ENT_QUOTES, 'UTF-8');
+$escapedUser = htmlspecialchars($wpAdminUser, ENT_QUOTES, 'UTF-8');
+$escapedPassword = htmlspecialchars($appPassword, ENT_QUOTES, 'UTF-8');
+$escapedXmlPath = htmlspecialchars($xmlPath, ENT_QUOTES, 'UTF-8');
+
+$credentials = implode(PHP_EOL, [
+        'WP_URL=' . $escapedUrl,
+        'WP_USER=' . $escapedUser,
+        'WP_APP_PASSWORD=' . $escapedPassword,
+        'WP_XML_FILE=' . $escapedXmlPath,
     ]) . PHP_EOL;
 
     if (file_put_contents($wpExportDir . '/credentials.env', $credentials) === false) {

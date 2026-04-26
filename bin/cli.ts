@@ -329,7 +329,7 @@ cli.command('[...args]').action(async (_args, flags) => {
               if (typeof val === 'string') return val;
               if (typeof val === 'object' && val.__cdata) return val.__cdata;
               if (typeof val === 'object' && val['#text']) return val['#text'];
-              return val && typeof val === 'object' ? '' : '';
+              return '';
             }
 
             const postTypeMap: Record<string, string> = {
@@ -408,7 +408,6 @@ cli.command('[...args]').action(async (_args, flags) => {
               fmLines.push('---');
               fmLines.push('');
 
-              extractText(item['wp:post_name'] || `item-${item.post_id || Date.now()}`);
               // Use a generated UUID for the filename to avoid relying on user-provided
               // slugs in filesystem names; keep the original slug in frontmatter.
               const filename = `${crypto.randomUUID()}.md`;

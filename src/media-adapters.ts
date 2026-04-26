@@ -294,7 +294,7 @@ export async function createSftpClientFromEnv() {
 export async function createScpClientFromConfig(cfg?: NonNullable<MediaAdapterOptions['scp']>) {
   const scpConfig: any = {
     host: cfg?.host || process.env.SCP_HOST || 'localhost',
-    port: cfg?.port || parseInt(process.env.SCP_PORT || '22', 10),
+    port: cfg?.port || Number(process.env.SCP_PORT || '22'),
     username: cfg?.user || process.env.SCP_USER || 'root',
   };
 

@@ -34,13 +34,15 @@
           const article = document.createElement('article');
           const h3 = document.createElement('h3');
           const a = document.createElement('a');
-          const slugValue = slug ? String(slug) : '';
+          const slugValue = slug != null ? String(slug) : '';
           a.setAttribute('href', `/${encodeURIComponent(slugValue)}/`);
-          a.textContent = title ? String(title) : 'Untitled';
+          const titleText = title != null ? String(title) : 'Untitled';
+          a.textContent = titleText;
           h3.appendChild(a);
           article.appendChild(h3);
           const p = document.createElement('p');
-          p.textContent = excerpt ? String(excerpt) : '';
+          const excerptValue = excerpt != null ? String(excerpt) : '';
+          p.textContent = excerptValue;
           article.appendChild(p);
           return article;
         };
