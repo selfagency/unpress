@@ -4,10 +4,51 @@ import fs from 'node:fs';
 import path from 'node:path';
 import stream from 'node:stream';
 import { promisify } from 'node:util';
-import { safeResolve } from './path-utils.js';
+import { safeResolve, isPathWithin } from './path-utils.js';
+import os from 'node:os';
 
 const pipeline = promisify(stream.pipeline);
 const execFileAsync = promisify(execFile);
+
+/**
+ * Safely reads a private key file from disk.
+ * Validates the path to prevent path traversal attacks.
+ * @param privateKeyPath Path to the private key file
+ * @returns The private key content as a string
+ * @throws Error if the path is invalid or file cannot be read
+ */
+function readPrivateKeySafely(privateKeyPath: string): string {
+  // Only allow paths with directory traversal attempts if they resolve to a safe location
+  // Prevent attacks like '../../etc/passwd'
+  const resolvedPath = path.resolve(privateKeyPath);
+  const allowedBase = path.resolve(process.cwd());
+
+  // Validate path doesn't escape the allowed base directories
+  if (!isPathWithin(allowedBase, resolvedPath)) {
+    const tmpDir = os.tmpdir();
+    if (!isPathWithin(tmpDir, resolvedPath)) {
+      throw new Error(`Invalid private key path: ${privateKeyPath} (outside allowed directories)`);
+    }
+  }
+
+  // Check if file exists and is readable
+  if (!fs.existsSync(resolvedPath)) {
+    throw new Error(`Private key file not found: ${privateKeyPath}`);
+  }
+
+  const stat = fs.statSync(resolvedPath);
+  if (!stat.isFile()) {
+    throw new Error(`Path is not a file: ${privateKeyPath}`);
+  }
+
+  // Read the file
+  const keyData = fs.readFileSync(resolvedPath, 'utf8');
+  if (!keyData || keyData.trim().length === 0) {
+    throw new Error(`Private key file is empty: ${privateKeyPath}`);
+  }
+
+  return keyData;
+}
 
 // S3
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -136,7 +177,7 @@ async function uploadViaScp(
     };
 
     if (opts.privateKey) {
-      const keyData = fs.readFileSync(opts.privateKey);
+      const keyData = readPrivateKeySafely(opts.privateKey);
       scpOptions.privateKey = keyData;
     } else if (opts.password) {
       scpOptions.password = opts.password;
@@ -158,13 +199,22 @@ export async function reuploadMediaToSftp(url: string, opts: MediaAdapterOptions
   const tmp = await downloadToLocal(url, opts.localDir || '.unpress/media');
   const remoteFile = path.posix.join(opts.sftp.remotePath || '/', path.basename(tmp));
 
-  const sftpConfig = {
+  const sftpConfig: any = {
     host: opts.sftp.host,
     user: opts.sftp.user,
     password: opts.sftp.password,
-    privateKey: opts.sftp.privateKey,
     port: opts.sftp.port,
   };
+
+  if (opts.sftp.privateKey) {
+    // Validate if the key appears to be a file path
+    try {
+      sftpConfig.privateKey = readPrivateKeySafely(opts.sftp.privateKey);
+    } catch {
+      // If it looks like a passphrase or other non-file value, keep as-is
+      sftpConfig.privateKey = opts.sftp.privateKey;
+    }
+  }
 
   await uploadViaSftp(tmp, remoteFile, ssh2SftpClient(sftpConfig) as any);
 
