@@ -166,7 +166,6 @@ cli.command('[...args]').action(async (_args, flags) => {
         // construct upload clients if reupload is configured
         let s3Client: any = undefined;
         let sftpClient: any = undefined;
-        let _scpClient: any = undefined;
         if (mergedProject?.media?.mode === 'reupload') {
           const driver = mergedProject?.media?.reupload?.driver;
           if (driver === 's3') {
@@ -181,12 +180,6 @@ cli.command('[...args]').action(async (_args, flags) => {
               sftpClient = await mediaAdapters.createSftpClientFromConfig(mergedProject.media.reupload?.sftp);
             } catch {
               sftpClient = await mediaAdapters.createSftpClientFromEnv();
-            }
-          } else if (driver === 'scp') {
-            try {
-              _scpClient = await mediaAdapters.createScpClientFromConfig(mergedProject.media.reupload?.scp);
-            } catch {
-              _scpClient = await mediaAdapters.createScpClientFromConfig(undefined);
             }
           }
         }
@@ -238,32 +231,23 @@ cli.command('[...args]').action(async (_args, flags) => {
                           });
                           mediaMap[url] = res;
                         } catch {
-                          const _fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
-                          mediaMap[url] = `s3://${s3cfg.bucket}/${_fname}`;
+                          const fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
+                          mediaMap[url] = `s3://${s3cfg.bucket}/${fname}`;
                         }
                       }
                     } else if (driver === 'sftp') {
                       const sftpCfg = mediaCfg.reupload?.sftp;
-                      if (sftpCfg?.host && uploader) {
-                        const uploadMethod = uploader.uploadToSftp.bind(uploader);
-                        const res = await reuploadWithFallback(url, uploadMethod, safeResolve(stateDir, 'media'), {
-                          remotePath: sftpCfg.path,
-                        });
-                        mediaMap[url] = res;
-                      }
-                    } else if (driver === 'scp') {
-                      const scpCfg = mediaCfg.reupload?.scp;
-                      if (scpCfg?.host && uploader) {
-                        const uploadMethod = uploader.uploadViaScp.bind(uploader);
-                        const res = await reuploadWithFallback(url, uploadMethod, safeResolve(stateDir, 'media'), {
-                          host: scpCfg.host,
-                          user: scpCfg.user,
-                          password: scpCfg.password,
-                          privateKey: scpCfg.privateKey,
-                          remotePath: scpCfg.path,
-                          port: scpCfg.port,
-                        });
-                        mediaMap[url] = res;
+                      if (sftpCfg && sftpCfg.host) {
+                        try {
+                          const res = await mediaAdapters.reuploadMediaToSftp(url, {
+                            localDir: safeResolve(stateDir, 'media'),
+                            sftp: { client: sftpClient, remotePath: sftpCfg.path || '/' },
+                          });
+                          mediaMap[url] = res;
+                        } catch {
+                          const fname = path.basename(new URL(url).pathname || `file-${Date.now()}`);
+                          mediaMap[url] = `sftp:${sftpCfg.path || '/'}${fname}`;
+                        }
                       }
                     }
                   }
@@ -311,12 +295,12 @@ cli.command('[...args]').action(async (_args, flags) => {
             const siteDir = safeResolve(outDir, 'site');
 
             // Helper to extract string from CDATA objects
-            function extractText(val: unknown): string {
+            function extractText(val: any): string {
               if (!val) return '';
               if (typeof val === 'string') return val;
               if (typeof val === 'object' && val.__cdata) return val.__cdata;
               if (typeof val === 'object' && val['#text']) return val['#text'];
-              return '';
+              return String(val);
             }
 
             const postTypeMap: Record<string, string> = {
@@ -395,6 +379,7 @@ cli.command('[...args]').action(async (_args, flags) => {
               fmLines.push('---');
               fmLines.push('');
 
+              extractText(item['wp:post_name'] || `item-${item.post_id || Date.now()}`);
               // Use a generated UUID for the filename to avoid relying on user-provided
               // slugs in filesystem names; keep the original slug in frontmatter.
               const filename = `${crypto.randomUUID()}.md`;
@@ -426,20 +411,5 @@ cli.command('[...args]').action(async (_args, flags) => {
     process.exit(1);
   }
 });
-
-// Helper function for reupload with fallback to filename
-async function reuploadWithFallback<T>(
-  url: string,
-  uploadMethod: (...args: any[]) => Promise<T>,
-  localDir: string,
-  config: any,
-): Promise<T> {
-  try {
-    return await uploadMethod(url, { localDir, ...config });
-  } catch {
-    // Fall back to filename-based URL structure
-    return uploadMethod(url, { localDir, ...config, method: 'fallback' }) as Promise<T>;
-  }
-}
 
 cli.parse();

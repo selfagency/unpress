@@ -30,28 +30,12 @@ export async function downloadFile(url: string, dest: string): Promise<void> {
  * @returns Array of URLs.
  */
 export function findMediaUrls(markdown: string): string[] {
+  const urlPattern = /!\[[^\]]*\]\(([^)]+)\)/g;
   const urls: string[] = [];
-  const regex = /!\[([\s\S]*?)\]\(([^)]+)\)/g;
   let match: RegExpExecArray | null;
-
-  while (true) {
-    match = regex.exec(markdown);
-    if (match === null) break;
-
-    const url = match[2];
-
-    // Skip if url is undefined
-    if (!url) continue;
-
-    // Skip emoji images (they have js= in the URL)
-    if (url.includes('js=')) continue;
-    // Skip data URLs
-    if (url.startsWith('data:')) continue;
-
-    // Validate this is a proper image link
-    urls.push(url);
+  while ((match = urlPattern.exec(markdown)) !== null) {
+    if (match[1]) urls.push(match[1]);
   }
-
   return urls;
 }
 
@@ -62,8 +46,8 @@ export function findMediaUrls(markdown: string): string[] {
  * @returns The updated Markdown with URLs replaced.
  */
 export function relinkMediaUrls(markdown: string, map: Record<string, string>): string {
-  // Replace all links (image and non-image) in markdown syntax
-  return markdown.replaceAll(/(\[[^\]]*\]\()([^)]+)(\))/g, (full, prefix, url, suffix) => {
+  // Replace only URLs that appear in image/link markdown syntax
+  return markdown.replace(/(!\[[^\]]*\]\()([^)]+)(\))/g, (full, prefix, url, suffix) => {
     const replacement = Object.hasOwn(map, url) ? map[url] : undefined;
     if (replacement) return `${prefix}${replacement}${suffix}`;
     return full;

@@ -7,36 +7,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const nodeBuiltins = new Set(builtinModules.flatMap(mod => [mod, `node:${mod}`]));
-const nativeModules = new Set(['ssh2', 'cpu-features']);
 
 export default defineConfig({
   build: {
     target: 'esnext',
     sourcemap: true,
     minify: 'esbuild',
+    lib: {
+      entry: resolve(__dirname, 'src/index.ts'),
+      formats: ['es'],
+      fileName: () => 'index.js',
+    },
     rollupOptions: {
-      external: [...Array.from(nodeBuiltins), ...Array.from(nativeModules)],
-      input: {
-        main: resolve(__dirname, 'src/index.ts'),
-        search: resolve(__dirname, 'assets/search.ts'),
-      },
+      // Avoid passing non-serializable function references into the config
+      // by listing known Node builtins as externals instead of a predicate.
+      external: Array.from(nodeBuiltins),
       output: {
-        dir: resolve(__dirname, 'dist'),
-        entryFileNames: chunkInfo => {
-          // Place search.js in assets subdirectory
-          if (chunkInfo.name === 'search') {
-            return 'assets/[name].js';
-          }
-          return '[name].js';
-        },
-        assetFileNames: assetInfo => {
-          // Handle source map files for search
-          if (assetInfo.name === 'search.js.map') {
-            return 'assets/[name].map';
-          }
-          // Default asset handling
-          return '[name].[ext]';
-        },
+        exports: 'named',
       },
     },
   },

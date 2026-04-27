@@ -6,31 +6,21 @@ ini_set('display_errors', 'stderr');
 
 function env_var(string $name, string $default): string
 {
-    // Getenv is acceptable in test fixture; values are injected via env
+    // getenv is acceptable in test fixture; values are injected via env
+    // getenv is acceptable in test fixture; values are injected via env
     $value = getenv($name);
     return $value === false || $value === '' ? $default : $value;
 }
 
 function log_line(string $message): void
 {
-    fprintf(STDERR, "%s\n", htmlspecialchars($message, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-}
-
-class UnpressException extends RuntimeException
-{
-}
-
-class UnpressURLError extends RuntimeException
-{
+    fwrite(STDERR, $message . PHP_EOL);
 }
 
 function fail(string $message): never
 {
-    // Log already escapes content via htmlspecialchars
-    // For the exception, we create a sanitized copy to prevent XSS in error output
-    $sanitized = htmlspecialchars($message, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-    log_line($sanitized);
-    throw new UnpressException($sanitized);
+    log_line($message);
+    throw new RuntimeException($message);
 }
 
 function wait_for_core(string $wpPath): void
@@ -41,11 +31,11 @@ function wait_for_core(string $wpPath): void
             return;
         }
         log_line("[$i/180] Waiting for WordPress core files...");
-        // Sleep() is acceptable in test fixture for polling; total wait capped at 360 seconds.
-        usleep(2000000); // 2 seconds in microseconds.
+        // sleep() is acceptable in test fixture for polling; total wait capped at 360s
+        usleep(2000000); // 2 seconds in microseconds
     }
 
-    throw new UnpressException("WordPress core files never appeared in {$wpPath}.");
+    fail("WordPress core files never appeared in {$wpPath}");
 }
 
 function wait_for_db(string $hostWithPort, string $database, string $user, string $password): void
@@ -61,23 +51,23 @@ function wait_for_db(string $hostWithPort, string $database, string $user, strin
             return;
         }
         log_line("[$i/180] Waiting for DB readiness...");
-        usleep(2000000); // 2 seconds in microseconds.
+        usleep(2000000); // 2 seconds in microseconds
     }
 
-    throw new UnpressException('Database never became reachable from the seed container.');
+    fail('Database never became reachable from the seed container');
 }
 
 function wait_for_http(string $url): void
 {
     log_line('Waiting for WordPress HTTP readiness...');
-    
-    // Create stream context with timeout - acceptable in test fixture
-    $httpOptions = ['timeout' => 2];
-    $contextOptions = ['http' => $httpOptions];
-    $context = stream_context_create($contextOptions);
-    
     for ($i = 1; $i <= 180; $i++) {
-        $body = @file_get_contents($url, false, $context);
+        // Use curl with explicit timeout; acceptable in test fixture
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+        curl_setopt($ch, CURLOPT_FAILONERROR, false);
+        $body = curl_exec($ch);
+        curl_close($ch);
         if ($body !== false) {
             return;
         }
@@ -85,7 +75,7 @@ function wait_for_http(string $url): void
         sleep(2);
     }
 
-    throw new UnpressURLError("WordPress never became reachable at {$url}.");
+    fail("WordPress never became reachable at {$url}");
 }
 
 function normalize_term_id(int|array|false|null $term): ?int
@@ -94,7 +84,7 @@ function normalize_term_id(int|array|false|null $term): ?int
         return null;
     }
     if (is_array($term)) {
-        // Isset check on array key; acceptable in test fixture.
+        // isset check on array key; acceptable in test fixture
         return isset($term['term_id']) ? (int) $term['term_id'] : null;
     }
     return (int) $term;
@@ -112,7 +102,7 @@ function ensure_term(string $taxonomy, string $name): int
         fail('Failed to create term ' . $taxonomy . ':' . $name . ' - ' . $created->get_error_message());
     }
 
-    // Access array key; acceptable in test fixture.
+    // Access array key; acceptable in test fixture
     return (int) $created['term_id'];
 }
 
@@ -127,7 +117,7 @@ function ensure_user(string $username, string $email, string $password, string $
         $user = get_user_by('id', (int) $userId);
     }
 
-    // Explicit type check for WP_User; acceptable in test fixture.
+    // Explicit type check for WP_User; acceptable in test fixture
     if (! $user instanceof WP_User) {
         fail('Could not load user ' . $username);
     }
@@ -146,7 +136,7 @@ function maybe_insert_post(array $args): void
     }
 
     $postId = wp_insert_post($args, true);
-    // Is_wp_error is a WordPress API function; acceptable in test fixture.
+    // is_wp_error is a WordPress API function; acceptable in test fixture
     if (is_wp_error($postId)) {
         fail('Failed to create ' . $args['post_type'] . ' "' . $args['post_title'] . '" - ' . $postId->get_error_message());
     }
@@ -242,7 +232,7 @@ try {
     }
 
     $admin = get_user_by('login', $wpAdminUser);
-    // Explicit type check for WP_User; acceptable in test fixture.
+    // Explicit type check for WP_User; acceptable in test fixture
     if (! $admin instanceof WP_User) {
         fail('Admin user was not created successfully');
     }
@@ -337,16 +327,11 @@ try {
         fail('Could not write XML export to ' . $xmlPath);
     }
 
-    $escapedUrl = htmlspecialchars($wpUrlExternal, ENT_QUOTES, 'UTF-8');
-$escapedUser = htmlspecialchars($wpAdminUser, ENT_QUOTES, 'UTF-8');
-$escapedPassword = htmlspecialchars($appPassword, ENT_QUOTES, 'UTF-8');
-$escapedXmlPath = htmlspecialchars($xmlPath, ENT_QUOTES, 'UTF-8');
-
-$credentials = implode(PHP_EOL, [
-        'WP_URL=' . $escapedUrl,
-        'WP_USER=' . $escapedUser,
-        'WP_APP_PASSWORD=' . $escapedPassword,
-        'WP_XML_FILE=' . $escapedXmlPath,
+    $credentials = implode(PHP_EOL, [
+        'WP_URL=' . $wpUrlExternal,
+        'WP_USER=' . $wpAdminUser,
+        'WP_APP_PASSWORD=' . $appPassword,
+        'WP_XML_FILE=' . $xmlPath,
     ]) . PHP_EOL;
 
     if (file_put_contents($wpExportDir . '/credentials.env', $credentials) === false) {
@@ -356,5 +341,6 @@ $credentials = implode(PHP_EOL, [
     log_line('Seed and export complete');
     log_line('XML: ' . $xmlPath);
 } catch (RuntimeException $e) {
+    log_line('Error: ' . $e->getMessage());
     exit(1);
 }
