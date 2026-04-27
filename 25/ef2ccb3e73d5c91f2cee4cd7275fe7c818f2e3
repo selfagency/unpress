@@ -1,0 +1,37 @@
+src/media-adapters.ts
+  a2b65e130108a30c 6,12,57-58,98-113,118-124
+bin/cli.ts
+  a2b65e130108a30c 234-235,240-250
+tests/e2e-wordpress/scripts/seed-and-export.php
+  a2b65e130108a30c 17,22-23,34-35,38,54,57,64-70,78
+vite.config.ts
+  a2b65e130108a30c 16-20,22-24,26
+package.json
+  a2b65e130108a30c 56,59,71
+src/xml-parser.ts
+  a2b65e130108a30c 119
+src/media.ts
+  a2b65e130108a30c 33,36-37,49-50
+src/meilisearch.ts
+  a2b65e130108a30c 164,174,177-178
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "25ef2ccb3e73d5c91f2cee4cd7275fe7c818f2e3",
+  "prompts": {
+    "a2b65e130108a30c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_234cfa054ffeMsm1zAaujA2mVV",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 243,
+      "total_deletions": 849,
+      "accepted_lines": 241,
+      "overriden_lines": 2
+    }
+  }
+}
