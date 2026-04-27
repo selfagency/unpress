@@ -53,7 +53,7 @@ export class WordPressApi {
   }
 
   async fetch(path: string, init: RequestInit = {}): Promise<any> {
-    return this.requestWithRetries(path);
+    return this.fetchRaw(path, init);
   }
 
   /** Raw fetch that returns the Response object for header access. */
