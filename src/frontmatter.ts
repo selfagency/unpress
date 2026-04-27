@@ -23,7 +23,11 @@ export function metadataToFrontmatter(meta: Record<string, any>): string {
     ...rest,
   };
   // Remove undefined/null
-  Object.keys(frontmatter).forEach(k => (frontmatter[k] == null || frontmatter[k] === '') && delete frontmatter[k]);
+  for (const k of Object.keys(frontmatter)) {
+    if (frontmatter[k] == null || frontmatter[k] === '') {
+      delete frontmatter[k];
+    }
+  }
   // Use gray-matter to produce a consistent frontmatter block.
   // Trim trailing newline so callers expecting `---` at the end still work.
   const out = matter.stringify('', frontmatter);

@@ -363,6 +363,122 @@ sftp:
 - Verify user has write permissions on target directory
 - Check directory ownership and permissions
 
+## Mode 5: Reupload to SCP
+
+Upload media files to a server via SCP (Secure Copy Protocol) and automatically update URLs in Markdown.
+
+### When to Use
+
+- Direct file transfer without SSH access
+- Minimal SSH service needed (SCP protocol)
+- Simpler than SFTP for basic file uploads
+- Server with SSH but prefer SCP over interactive shell access
+- Want to use existing SSH infrastructure for file transfer
+
+### Prerequisites
+
+1. **SSH Server** - Server with SSH access enabled (SCP runs over SSH)
+2. **SCP Credentials** - Host, port, username, password/key
+3. **Directory Path** - Path where media should be uploaded
+
+### Step 1: Configure Unpress for SCP
+
+Create a config file `unpress.yml`:
+
+```yaml
+source:
+  type: api
+  api:
+    baseUrl: https://your-site.com
+
+media:
+  mode: reupload
+  reupload:
+    driver: scp
+    scp:
+      host: your-server.com
+      port: 22
+      username: your-username
+      password: your-password
+      path: /var/www/media
+```
+
+### Step 2: Add SCP credentials to `.env` (optional)
+
+You can also place SCP credentials in `.env`:
+
+```dotenv
+SCP_HOST=your-server.com
+SCP_PORT=22
+SCP_USER=your-username
+SCP_PASSWORD=your-password
+```
+
+### Step 3: Run Migration
+
+```bash
+pnpx @selfagency/unpress --config unpress.yml --generate-site
+```
+
+Unpress will:
+
+1. Download media from WordPress (to temporary folder)
+2. Upload each file to your SCP server
+3. Update URLs in Markdown to point to SCP:
+   - **Before:** `![image](https://your-site.com/wp-content/uploads/2024/01/image.jpg)`
+   - **After:** `![image](scp://your-server.com/media/uploads/2024/01/image.jpg)`
+
+### SCP Authentication Options
+
+#### Password Authentication
+
+```yaml
+scp:
+  host: your-server.com
+  username: your-username
+  password: your-password
+```
+
+#### SSH Key Authentication (Recommended)
+
+```yaml
+scp:
+  host: your-server.com
+  username: your-username
+  privateKey: /path/to/private/key.pem
+```
+
+### Pros and Cons
+
+| Pros | Cons |
+|------|------|
+| ✅ Simple folder-based upload | ❌ Requires SSH setup and maintenance |
+| ✅ Full control over media hosting | ❌ Must manage server credentials |
+| ✅ Works on standard SSH servers | ❌ Cannot list server-side files |
+| ✅ No external service costs | ❌ Server performance impacts media delivery |
+| ✅ Faster site deployment | ❌ More complex than local download |
+
+### Troubleshooting
+
+**"Connection refused" error:**
+
+- Verify SCP port is correct (default: 22)
+- Check if SSH service is enabled on your server
+- Ensure firewall allows SSH/SCP connections
+- Verify hostname resolves correctly
+
+**"Authentication failed" error:**
+
+- Check username and password/SSH key are correct
+- Verify SSH key format is supported (PEM format)
+- Test SCP connection manually: `scp ./file your-username@your-server.com:/tmp/`
+
+**"Permission denied" error:**
+
+- Check if upload path exists and is writable
+- Verify user has write permissions on target directory
+- Check directory ownership and permissions
+
 ## Mode 4: Leave URLs
 
 Keep original WordPress media URLs unchanged. This is the simplest mode and ideal for archival.
@@ -459,6 +575,7 @@ Do you want to move media?
 | **Local Download** | ⭐ Easy | ⭐⭐⭐ Good | $0 | Small sites, quick migration |
 | **Reupload to S3** | ⭐⭐⭐ Complex | ⭐⭐⭐⭐ Excellent | $0.023/GB/mo | Large sites, CDN performance |
 | **Reupload to SFTP** | ⭐⭐ Medium | ⭐⭐⭐ Good | $0 (server cost) | Existing server, full control |
+| **Reupload to SCP** | ⭐⭐ Medium | ⭐⭐⭐ Good | $0 (server cost) | Simple file transfer, SSH setup |
 | **Leave URLs** | ⭐ Easiest | ⭐⭐ Fair | $0 | Archival, minimal migration |
 
 ### Recommendations

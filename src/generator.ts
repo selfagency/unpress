@@ -43,11 +43,8 @@ async function writeCoreFiles(baseRoot: string, eleventyConfig: string, indexMd:
 async function copyCustomTemplates(root: string) {
   try {
     const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-    const templatesDir = safeResolve(packageRoot, 'templates', '11ty');
 
     if (await pathExistsSafe(packageRoot, 'templates', '11ty')) {
-      const siteDir = safeResolve(root, 'site');
-
       const templateFiles = await readdirSafe(packageRoot, 'templates', '11ty');
       for (const file of templateFiles) {
         if (file.endsWith('.njk')) {

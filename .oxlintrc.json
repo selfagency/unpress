@@ -43,6 +43,7 @@
     "plans",
     "out",
     "assets",
-    ".codacy"
+    ".codacy",
+    ".github/instructions"
   ]
 }

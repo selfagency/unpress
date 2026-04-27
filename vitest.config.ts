@@ -7,5 +7,10 @@ export default defineConfig({
     globals: false,
     clearMocks: true,
     restoreMocks: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      exclude: ['tests/**', 'node_modules/**', 'dist/**', '**/*.d.ts', '**/*.config.*'],
+    },
   },
 });

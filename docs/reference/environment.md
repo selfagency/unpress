@@ -45,6 +45,17 @@ These are used when `media.mode` is `reupload` with `driver: sftp` and no explic
 - `SFTP_PASSWORD` - SFTP password
 - `SFTP_PRIVATE_KEY` - Path to SSH private key
 
+## SCP reupload variables
+
+These are used when `media.mode` is `reupload` with `driver: scp` and no explicit credentials in `unpress.yml`:
+
+- `SCP_HOST` - SCP server hostname
+- `SCP_PORT` - SCP port (default: `22`)
+- `SCP_USER` - SCP username
+- `SCP_PASSWORD` - SCP password (when using password authentication)
+- `SCP_PRIVATE_KEY` - Path to SSH private key
+- `SCP_PORT` - SCP port (default: `22`)
+
 ## Optional Meilisearch variables
 
 - `MEILI_HOST` - Meilisearch base URL

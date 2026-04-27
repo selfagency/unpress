@@ -42,7 +42,7 @@ export class WordPressApi {
     }
 
     if (typeof (initHeaders as any).forEach === 'function') {
-      (initHeaders as any).forEach((value: string, key: string) => {
+      (initHeaders as any).forEach((value: unknown, key: string) => {
         headers[key] = String(value);
       });
       return headers;
@@ -52,42 +52,34 @@ export class WordPressApi {
     return headers;
   }
 
-  async fetch(path: string, init: RequestInit = {}) {
-    const url = `${this.baseUrl}${path}`;
-    const controller = new AbortController();
-    const timeout = (init as any).timeout ?? 30000; // 30s default
-    const signal = controller.signal;
-
-    const headers = this.buildHeaders(init.headers);
-
-    const timer = setTimeout(() => controller.abort(), timeout);
-    try {
-      const res = await fetch(url, { ...init, headers, signal } as any);
-      if (!res.ok) {
-        throw new Error(`WordPress API error: ${res.status} ${res.statusText}`);
-      }
-      return res.json();
-    } finally {
-      clearTimeout(timer);
-    }
+  async fetch(path: string, init: RequestInit = {}): Promise<any> {
+    return this.requestWithRetries(path);
   }
 
   /** Raw fetch that returns the Response object for header access. */
   private async fetchRaw(path: string, init: RequestInit = {}) {
     const url = `${this.baseUrl}${path}`;
-    const controller = new AbortController();
-    const timeout = (init as any).timeout ?? 30000;
-    const signal = controller.signal;
+    return this.fetchWithTimeout(url, init, async () => {
+      const res = await fetch(url, init);
+      return res as unknown as Response;
+    });
+  }
 
+  // Helper to handle common timeout and response handling
+  private async fetchWithTimeout<T>(url: string, init: RequestInit, fetchFn: () => Promise<Response>): Promise<T> {
+    const controller = new AbortController();
+    const timeout = ((init as Record<string, unknown>)?.timeout ?? 30000) as number;
+    const signal = controller.signal;
     const headers = this.buildHeaders(init.headers);
 
     const timer = setTimeout(() => controller.abort(), timeout);
     try {
-      const res = await fetch(url, { ...init, headers, signal } as any);
+      const res = await fetchFn();
       if (!res.ok) {
         throw new Error(`WordPress API error: ${res.status} ${res.statusText}`);
       }
-      return res;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return res as T;
     } finally {
       clearTimeout(timer);
     }
@@ -98,7 +90,10 @@ export class WordPressApi {
     let lastErr: any = null;
     for (let i = 0; i < attempts; i++) {
       try {
-        return await this.fetch(path, { method: 'GET', timeout: perTryTimeout } as any);
+        return await this.fetch(path, {
+          method: 'GET',
+          timeout: perTryTimeout,
+        } as RequestInit);
       } catch (err) {
         lastErr = err;
         // simple backoff
@@ -113,7 +108,10 @@ export class WordPressApi {
     let lastErr: any = null;
     for (let i = 0; i < attempts; i++) {
       try {
-        return await this.fetchRaw(path, { method: 'GET', timeout: perTryTimeout } as any);
+        return await this.fetchRaw(path, {
+          method: 'GET',
+          timeout: perTryTimeout,
+        } as RequestInit);
       } catch (err) {
         lastErr = err;
         const wait = 500 * Math.pow(2, i);
@@ -145,9 +143,10 @@ export class WordPressApi {
         if (page === 1) {
           // Use raw fetch on first page to read pagination headers
           const res = await this.requestRawWithRetries(url);
-          const h = res.headers.get('X-WP-TotalPages') || res.headers.get('x-wp-totalpages');
+          const response = res as unknown as Response;
+          const h = response.headers.get('X-WP-TotalPages') || response.headers.get('x-wp-totalpages');
           total = Number.parseInt(h || '1', 10);
-          data = (await res.json()) as any[];
+          data = (await response.json()) as any[];
         } else {
           data = (await this.requestWithRetries(url)) as any[];
         }

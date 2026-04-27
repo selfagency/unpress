@@ -11,11 +11,70 @@ interface MeiliConfig {
   indexName?: string;
 }
 
+interface MeiliDocument {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  date: string | null;
+  tags: string[];
+  categories: string[];
+  author: string | null;
+}
+
+interface MeiliTask {
+  status: string;
+  error?: {
+    message?: string;
+    code?: string;
+  };
+}
+
 async function readMarkdownFrontmatter(filePath: string) {
   const raw = await fs.readFile(filePath, 'utf8');
   // Use gray-matter to parse frontmatter robustly (supports YAML, TOML, etc.)
   const parsed = matter(raw);
   return { data: parsed.data || {}, content: parsed.content || '' };
+}
+
+async function parseJsonSafe(res: any) {
+  if (typeof res?.json === 'function') {
+    try {
+      return await res.json();
+    } catch {
+      // fall through to text parsing
+    }
+  }
+  if (typeof res?.text === 'function') {
+    try {
+      const raw = await res.text();
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+async function waitForTask(cfg: MeiliConfig, taskUid: number, attempts = 60, intervalMs = 250) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (cfg.apiKey) headers['Authorization'] = `Bearer ${cfg.apiKey}`;
+  for (let i = 0; i < attempts; i++) {
+    const res = await fetch(`${cfg.host}/tasks/${taskUid}`, { headers });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Failed to fetch task ${taskUid}: ${res.status} ${body}`);
+    }
+    const task = (await parseJsonSafe(res)) as MeiliTask;
+    if (task?.status === 'succeeded') return;
+    if (task?.status === 'failed') {
+      const reason = task?.error?.message || task?.error?.code || 'unknown error';
+      throw new Error(`Meilisearch task ${taskUid} failed: ${reason}`);
+    }
+    await new Promise(r => setTimeout(r, intervalMs));
+  }
+  throw new Error(`Timed out waiting for Meilisearch task ${taskUid}`);
 }
 
 export async function indexPostsFromDir(
@@ -27,7 +86,7 @@ export async function indexPostsFromDir(
     return { indexed: 0 };
   }
   const files = await fs.readdir(postsDir);
-  const docs: any[] = [];
+  const docs: MeiliDocument[] = [];
   for (const f of files) {
     if (!f.endsWith('.md')) continue;
     const full = safeResolve(postsDir, f);
@@ -50,43 +109,6 @@ export async function indexPostsFromDir(
   const index = cfg.indexName || 'posts';
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (cfg.apiKey) headers['Authorization'] = `Bearer ${cfg.apiKey}`;
-
-  async function parseJsonSafe(res: any) {
-    if (typeof res?.json === 'function') {
-      try {
-        return await res.json();
-      } catch {
-        // fall through to text parsing
-      }
-    }
-    if (typeof res?.text === 'function') {
-      try {
-        const raw = await res.text();
-        return raw ? JSON.parse(raw) : null;
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  }
-
-  async function waitForTask(taskUid: number, attempts = 60, intervalMs = 250) {
-    for (let i = 0; i < attempts; i++) {
-      const res = await fetch(`${cfg.host}/tasks/${taskUid}`, { headers });
-      if (!res.ok) {
-        const body = await res.text();
-        throw new Error(`Failed to fetch task ${taskUid}: ${res.status} ${body}`);
-      }
-      const task = (await res.json()) as any;
-      if (task?.status === 'succeeded') return;
-      if (task?.status === 'failed') {
-        const reason = task?.error?.message || task?.error?.code || 'unknown error';
-        throw new Error(`Meilisearch task ${taskUid} failed: ${reason}`);
-      }
-      await new Promise(r => setTimeout(r, intervalMs));
-    }
-    throw new Error(`Timed out waiting for Meilisearch task ${taskUid}`);
-  }
 
   async function safePost(url: string, body: any, attempts = 3) {
     for (let i = 0; i < attempts; i++) {
@@ -117,7 +139,7 @@ export async function indexPostsFromDir(
 
         if (res.ok) {
           const payload = (await parseJsonSafe(res)) as any;
-          if (typeof payload?.taskUid === 'number') await waitForTask(payload.taskUid);
+          if (typeof payload?.taskUid === 'number') await waitForTask(cfg, payload.taskUid);
           return;
         }
 
@@ -147,7 +169,7 @@ export async function indexPostsFromDir(
   await ensureIndexExists();
 
   // push documents in batches
-  const batchSize = 500;
+  const batchSpan = 500;
   if (docs.length === 0) {
     info(`No markdown documents found in ${postsDir}`);
     return { indexed: 0 };
@@ -156,26 +178,26 @@ export async function indexPostsFromDir(
   const pqOpts: any = { concurrency: cfg.concurrency || 1 };
   if (typeof cfg.intervalCap === 'number' && cfg.intervalCap > 0) pqOpts.intervalCap = cfg.intervalCap;
   if (typeof cfg.interval === 'number' && cfg.interval > 0) pqOpts.interval = cfg.interval;
-  const queue = new PQueue(pqOpts as any);
-
+  const queue = new PQueue(pqOpts);
   const uploadPromises: Promise<any>[] = [];
   const taskWaitPromises: Promise<void>[] = [];
-  for (let i = 0; i < docs.length; i += batchSize) {
-    const batch = docs.slice(i, i + batchSize);
+  for (let i = 0; i < docs.length; i += batchSpan) {
+    const batch = docs.slice(i, i + batchSpan);
     progress(`scheduling upload documents ${i}-${i + batch.length}`, (i + batch.length) / docs.length);
-    const task = async () => {
-      const res = await safePost(`${cfg.host}/indexes/${index}/documents`, batch, 5).catch(err => {
-        const msg = err instanceof Error ? err.message : String(err);
-        error('Meilisearch indexing failed for batch:', msg);
-        throw new Error(`Meilisearch indexing failed: ${msg}`);
-      });
-      const payload = (await parseJsonSafe(res)) as any;
-      if (typeof payload?.taskUid === 'number') {
-        taskWaitPromises.push(waitForTask(payload.taskUid));
-      }
-      return payload;
-    };
-    uploadPromises.push(queue.add(task));
+    uploadPromises.push(queue.add(() => uploadBatch(batch)));
+  }
+
+  async function uploadBatch(batch: any[]) {
+    const res = await safePost(`${cfg.host}/indexes/${index}/documents`, batch, 5).catch(err => {
+      const msg = err instanceof Error ? err.message : String(err);
+      error('Meilisearch indexing failed for batch:', msg);
+      throw new Error(`Meilisearch indexing failed: ${msg}`);
+    });
+    const payload = (await parseJsonSafe(res)) as any;
+    if (typeof payload?.taskUid === 'number') {
+      taskWaitPromises.push(waitForTask(cfg, payload.taskUid));
+    }
+    return payload;
   }
 
   // wait for all uploads to complete

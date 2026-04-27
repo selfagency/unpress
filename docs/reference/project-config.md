@@ -143,6 +143,24 @@ media:
     sftp:
       host: your-server.com
       path: /var/www/media
+      port: 22
+      user: your-user
+      password: your-password
+```
+
+Or use `driver: scp` with the related SCP connection details:
+
+```yaml
+media:
+  mode: reupload
+  reupload:
+    driver: scp
+    scp:
+      host: your-server.com
+      path: /var/www/media
+      port: 22
+      user: your-user
+      password: your-password
 ```
 
 Credentials for S3 or SFTP can be provided in `unpress.yml` or via environment variables. See the [Environment variables reference](./environment.md) for the full list.

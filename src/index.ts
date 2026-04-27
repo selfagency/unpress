@@ -1,9 +1,5 @@
-export { htmlToMarkdown, writePostAndAuthorFiles } from './convert.js';
-export { generate11tyProject } from './generator.js';
+// Exports for Unpress library and tools
 export { indexPostsFromDir } from './meilisearch.js';
-export { processItems } from './processor.js';
-export { downloadFile, findMediaUrls, relinkMediaUrls } from './media.js';
-export { parseWpXmlItems } from './xml-parser.js';
-export { metadataToFrontmatter } from './frontmatter.js';
-export { loadProjectConfigFromFile, mergeConfig, ProjectConfigSchema } from './config-loader.js';
-export { safeResolve, sanitizePathComponent } from './path-utils.js';
+// Client-side search utility for browser:
+// import './assets/search.js';
+// Configure via: window.MEILI_CONFIG = { host, apiKey, index };

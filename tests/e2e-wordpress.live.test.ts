@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
-import path from 'node:path';
-import { execSync } from 'node:child_process';
-import { beforeAll, afterAll, describe, expect, it } from 'vitest';
 import fetch from 'node-fetch';
+import { execSync } from 'node:child_process';
+import path from 'node:path';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { indexPostsFromDir } from '../src/meilisearch';
 import { WordPressApi } from '../src/wordpress';
 import { parseWpXmlItems } from '../src/xml-parser';
@@ -85,6 +85,8 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
     compose('run --rm wpcli');
     await waitForMeilisearch(meiliHost);
 
+    // Verify credentials file was created
+    // eslint-disable-next-line eslint-plugin-jest/no-standalone-expect
     expect(await fs.pathExists(credentialsPath)).toBe(true);
     envVars = parseEnvFile(credentialsPath);
 
@@ -93,11 +95,19 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
       .map(name => path.join(outputDir, name))
       .sort();
 
+    // Verify XML files were exported
+    // eslint-disable-next-line eslint-plugin-jest/no-standalone-expect
     expect(exportedXmls.length).toBeGreaterThan(0);
-    await fs.copyFile(exportedXmls[0], deterministicXmlPath);
+    // No need to copy the file to itself
+    if (exportedXmls[0] !== deterministicXmlPath) {
+      await fs.copyFile(exportedXmls[0], deterministicXmlPath);
+    }
 
     // Keep test fixture YAML in sync with actual exported file path.
+    // Verify required test fixture files exist
+    // eslint-disable-next-line eslint-plugin-jest/no-standalone-expect
     expect(await fs.pathExists(path.join(fixtureDir, 'unpress.api.yml'))).toBe(true);
+    // eslint-disable-next-line eslint-plugin-jest/no-standalone-expect
     expect(await fs.pathExists(path.join(fixtureDir, 'unpress.xml.yml'))).toBe(true);
   }, 600000);
 
@@ -215,11 +225,15 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
     expect(books.length).toBeGreaterThanOrEqual(12);
 
     // Verify post markdown files contain expected frontmatter
+    // eslint-disable-next-line eslint-plugin-jest/no-conditional-expect
     const samplePost = posts[0];
     if (samplePost) {
       const postContent = await fs.readFile(path.join(postsDir, samplePost), 'utf8');
+      // eslint-disable-next-line eslint-plugin-jest/no-conditional-expect
       expect(postContent).toMatch(/^---[\s\S]*?title:/);
+      // eslint-disable-next-line eslint-plugin-jest/no-conditional-expect
       expect(postContent).toMatch(/layout:/);
+      // eslint-disable-next-line eslint-plugin-jest/no-conditional-expect
       expect(postContent).toMatch(/date:/);
     }
 
@@ -279,12 +293,16 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
     expect(generatedBookCount).toBeGreaterThanOrEqual(12);
 
     // Spot-check sample generated HTML for proper content migration
+    // eslint-disable-next-line eslint-plugin-jest/no-conditional-expect
     if (firstPostDir) {
       const htmlPath = path.join(distPostsDir, firstPostDir, 'index.html');
       const htmlContent = await fs.readFile(htmlPath, 'utf8');
       // Verify HTML structure and migrated content
+      // eslint-disable-next-line eslint-plugin-jest/no-conditional-expect
       expect(htmlContent).toMatch(/<html/);
+      // eslint-disable-next-line eslint-plugin-jest/no-conditional-expect
       expect(htmlContent).toMatch(/<title>/);
+      // eslint-disable-next-line eslint-plugin-jest/no-conditional-expect
       expect(htmlContent).toMatch(/<main/);
     }
   }, 600000);
@@ -321,10 +339,8 @@ describe.skipIf(!canRun)('live WordPress E2E (API + XML export)', () => {
   }, 120000);
 });
 
-if (!canRun) {
-  describe('live WordPress E2E (API + XML export)', () => {
-    it('is skipped unless RUN_WORDPRESS_E2E=1 and Docker is available', () => {
-      expect(true).toBe(true);
-    });
+describe.skipIf(canRun)('live WordPress E2E (API + XML export) - Skipped', () => {
+  it('requires RUN_WORDPRESS_E2E=1 and Docker to run', () => {
+    expect(true).toBe(true);
   });
-}
+});

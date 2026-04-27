@@ -2,6 +2,20 @@ import { XMLParser } from 'fast-xml-parser';
 import fs from 'node:fs';
 import readline from 'node:readline';
 
+// Helper function to unwrapp XML values and handle CDATA/text fields
+function unwrapValue(value: unknown): unknown {
+  if (value && typeof value === 'object' && value !== null) {
+    if ('__cdata' in value) return (value as { __cdata: unknown }).__cdata;
+    if ('#text' in value) return (value as { '#text': unknown })['#text'];
+    const keys = Object.keys(value);
+    if (keys.length === 1) {
+      const key = keys[0] as string;
+      return unwrapValue((value as Record<string, unknown>)[key]);
+    }
+  }
+  return value;
+}
+
 export interface XmlParseOptions {
   checkpointPath?: string;
   resume?: boolean;
@@ -25,8 +39,8 @@ export async function parseWpXmlItems(
   let buffer = '';
   let inItem = false;
   let index = 0;
-  let lastPostId: any = undefined;
-  let lastGuid: any = undefined;
+  let lastPostId: any;
+  let lastGuid: any;
   const parseErrors: { index: number; error: string }[] = [];
 
   // fast-xml-parser options: strip namespace prefixes and preserve CDATA
@@ -37,19 +51,6 @@ export async function parseWpXmlItems(
     // strip namespace prefixes
     tagNameProcessor: (name: string) => name.replace(/^.*:/, ''),
   } as any);
-
-  const unwrapValue = (value: any): any => {
-    if (value && typeof value === 'object') {
-      if ('__cdata' in value) return value.__cdata;
-      if ('#text' in value) return value['#text'];
-      const keys = Object.keys(value);
-      if (keys.length === 1) {
-        const key = keys[0] as string;
-        return unwrapValue(value[key]);
-      }
-    }
-    return value;
-  };
 
   for await (const line of rl) {
     if (!inItem) {
@@ -75,33 +76,22 @@ export async function parseWpXmlItems(
           try {
             const parsed = parser.parse(itemXml);
             // XML structure places item fields under 'item'
-            const raw = parsed && parsed.item ? parsed.item : parsed;
+            const raw = parsed?.item ?? parsed;
 
             // normalize a few common fields for downstream use
             const normalized: any = { ...raw };
 
             // content may be under content -> encoded
             // content may be under content -> encoded, or 'content:encoded' depending on parser
-            if (raw['content'] && raw['content']['encoded']) {
-              const enc = raw['content']['encoded'];
+            const enc = raw?.content?.encoded ?? raw['content:encoded'] ?? raw?.encoded;
+            if (enc) {
               normalized.content = unwrapValue(enc);
               normalized['content:encoded'] = normalized.content;
-            } else if (raw['content:encoded']) {
-              const enc = raw['content:encoded'];
-              normalized.content = unwrapValue(enc);
-              normalized['content:encoded'] = normalized.content;
-            } else if (raw['encoded']) {
-              normalized.content = unwrapValue(raw['encoded']);
-              normalized['encoded'] = normalized.content;
             }
 
             // excerpt
-            if (raw['excerpt'] && raw['excerpt']['encoded']) {
-              const exc = raw['excerpt']['encoded'];
-              normalized.excerpt = unwrapValue(exc);
-              normalized['excerpt:encoded'] = normalized.excerpt;
-            } else if (raw['excerpt:encoded']) {
-              const exc = raw['excerpt:encoded'];
+            const exc = raw?.excerpt?.encoded ?? raw['excerpt:encoded'];
+            if (exc) {
               normalized.excerpt = unwrapValue(exc);
               normalized['excerpt:encoded'] = normalized.excerpt;
             }
@@ -127,7 +117,9 @@ export async function parseWpXmlItems(
               for (const c of cats) {
                 const domain = c['@_domain'] || 'category';
                 const label =
-                  typeof c === 'string' ? c : unwrapValue(c['#text'] || c['text'] || Object.values(c).find(Boolean));
+                  typeof c === 'string'
+                    ? c
+                    : (unwrapValue(c['#text'] || c['text'] || Object.values(c).find(Boolean)) as string);
                 terms[domain] = terms[domain] || [];
                 if (label) terms[domain].push(label);
               }
