@@ -1,0 +1,23 @@
+src/meilisearch.ts
+  a2b65e130108a30c 113,191
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "9dbcc8870816b22028f57e5b35198131de658212",
+  "prompts": {
+    "a2b65e130108a30c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_234cfa054ffeMsm1zAaujA2mVV",
+        "model": "deepinfra/zai-org/GLM-4.7-Flash"
+      },
+      "human_author": "Daniel Sieradski",
+      "messages": [],
+      "total_additions": 233,
+      "total_deletions": 4,
+      "accepted_lines": 232,
+      "overriden_lines": 0
+    }
+  }
+}
