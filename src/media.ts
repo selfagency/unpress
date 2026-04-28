@@ -30,11 +30,13 @@ export async function downloadFile(url: string, dest: string): Promise<void> {
  * @returns Array of URLs.
  */
 export function findMediaUrls(markdown: string): string[] {
-  const urlPattern = /!\[[^\]]*\]\(([^)]+)\)/g;
+  const regex = /!\[[^\]]*?\]\(([^)]+)\)/g;
   const urls: string[] = [];
-  let match: RegExpExecArray | null;
-  while ((match = urlPattern.exec(markdown)) !== null) {
-    if (match[1]) urls.push(match[1]);
+  let match;
+  while ((match = regex.exec(markdown)) !== null) {
+    if (match[1]) {
+      urls.push(match[1]);
+    }
   }
   return urls;
 }
@@ -46,10 +48,11 @@ export function findMediaUrls(markdown: string): string[] {
  * @returns The updated Markdown with URLs replaced.
  */
 export function relinkMediaUrls(markdown: string, map: Record<string, string>): string {
-  // Replace only URLs that appear in image/link markdown syntax
-  return markdown.replace(/(!\[[^\]]*\]\()([^)]+)(\))/g, (full, prefix, url, suffix) => {
-    const replacement = Object.hasOwn(map, url) ? map[url] : undefined;
-    if (replacement) return `${prefix}${replacement}${suffix}`;
-    return full;
+  return markdown.replace(/!\[([^\]]*?)\]\(([^)]+)\)/g, (_, altText, url) => {
+    const replacement = map[url];
+    if (replacement !== undefined && replacement !== null) {
+      return `![${altText}](${replacement})`;
+    }
+    return markdown;
   });
 }

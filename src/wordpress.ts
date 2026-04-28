@@ -69,8 +69,8 @@ export class WordPressApi {
   private async fetchWithTimeout<T>(url: string, init: RequestInit, fetchFn: () => Promise<Response>): Promise<T> {
     const controller = new AbortController();
     const timeout = ((init as Record<string, unknown>)?.timeout ?? 30000) as number;
-    const signal = controller.signal;
-    const headers = this.buildHeaders(init.headers);
+    const _signal = controller.signal;
+    const _headers = this.buildHeaders(init.headers);
 
     const timer = setTimeout(() => controller.abort(), timeout);
     try {
