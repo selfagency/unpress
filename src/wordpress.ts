@@ -55,11 +55,11 @@ export class WordPressApi {
   async fetch(path: string, init: RequestInit = {}): Promise<any> {
     const res = await this.fetchRaw(path, init);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return (res as unknown as Response).json();
+    return res.json();
   }
 
   /** Raw fetch that returns the Response object for header access. */
-  private async fetchRaw(path: string, init: RequestInit = {}) {
+  private async fetchRaw(path: string, init: RequestInit = {}): Promise<Response> {
     const url = `${this.baseUrl}${path}`;
     const headers = this.buildHeaders(init.headers);
     const controller = new AbortController();
