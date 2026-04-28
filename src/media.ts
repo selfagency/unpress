@@ -32,7 +32,7 @@ export async function downloadFile(url: string, dest: string): Promise<void> {
 export function findMediaUrls(markdown: string): string[] {
   const regex = /!\[[^\]]*?\]\(([^)]+)\)/g;
   const urls: string[] = [];
-  let match;
+  let match: RegExpExecArray | null;
   while ((match = regex.exec(markdown)) !== null) {
     if (match[1]) {
       urls.push(match[1]);
@@ -48,11 +48,11 @@ export function findMediaUrls(markdown: string): string[] {
  * @returns The updated Markdown with URLs replaced.
  */
 export function relinkMediaUrls(markdown: string, map: Record<string, string>): string {
-  return markdown.replace(/!\[([^\]]*?)\]\(([^)]+)\)/g, (_, altText, url) => {
+  return markdown.replace(/!\[([^\]]*?)\]\(([^)]+)\)/g, (match, altText, url) => {
     const replacement = map[url];
     if (replacement !== undefined && replacement !== null) {
       return `![${altText}](${replacement})`;
     }
-    return markdown;
+    return match;
   });
 }
