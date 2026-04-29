@@ -257,3 +257,4 @@ tests/meili-retry/
 #Ignore vscode AI rules
 .github/instructions/codacy.instructions.md
 /assets/search.js
+package-lock.json

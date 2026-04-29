@@ -53,33 +53,29 @@ export class WordPressApi {
   }
 
   async fetch(path: string, init: RequestInit = {}): Promise<any> {
-    return this.fetchRaw(path, init);
+    const res = await this.fetchRaw(path, init);
+    return (res as unknown as Response).json();
   }
 
   /** Raw fetch that returns the Response object for header access. */
-  private async fetchRaw(path: string, init: RequestInit = {}) {
+  private async fetchRaw(path: string, init: RequestInit = {}): Promise<Response> {
     const url = `${this.baseUrl}${path}`;
-    return this.fetchWithTimeout(url, init, async () => {
-      const res = await fetch(url, init);
-      return res as unknown as Response;
-    });
+    return this.fetchWithTimeout(url, init);
   }
 
   // Helper to handle common timeout and response handling
-  private async fetchWithTimeout<T>(url: string, init: RequestInit, fetchFn: () => Promise<Response>): Promise<T> {
+  private async fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
     const controller = new AbortController();
     const timeout = ((init as Record<string, unknown>)?.timeout ?? 30000) as number;
-    const signal = controller.signal;
     const headers = this.buildHeaders(init.headers);
 
     const timer = setTimeout(() => controller.abort(), timeout);
     try {
-      const res = await fetchFn();
+      const res = await fetch(url, { ...init, headers, signal: controller.signal } as RequestInit);
       if (!res.ok) {
         throw new Error(`WordPress API error: ${res.status} ${res.statusText}`);
       }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return res as T;
+      return res as unknown as Response;
     } finally {
       clearTimeout(timer);
     }
