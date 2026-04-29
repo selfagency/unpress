@@ -1,8 +1,8 @@
-# VitePress build output
-.vitepress
-
-# VitePress cache
+# VitePress output/cache (keep config tracked)
+.vitepress/*
+!.vitepress/config.ts
 .vitepress/cache
+.vitepress/dist
 
 # Node
 node_modules
