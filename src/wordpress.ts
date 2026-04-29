@@ -54,16 +54,34 @@ export class WordPressApi {
 
   async fetch(path: string, init: RequestInit = {}): Promise<any> {
     const res = await this.fetchRaw(path, init);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return res.json();
+    return (res as unknown as Response).json();
   }
 
   /** Raw fetch that returns the Response object for header access. */
   private async fetchRaw(path: string, init: RequestInit = {}): Promise<Response> {
     const url = `${this.baseUrl}${path}`;
-    const headers = this.buildHeaders(init.headers);
+    return this.fetchWithTimeout(url, init, async () => {
+      const timeout = (init as Record<string, unknown>)?.timeout;
+      const { timeout: _timeout, ...rest } = (init as Record<string, unknown>) ?? {};
+      const reqInit: RequestInit = {
+        ...(rest as RequestInit),
+        headers: this.buildHeaders(init.headers),
+      };
+      if (timeout != null) {
+        (reqInit as Record<string, unknown>).timeout = timeout;
+      }
+      const res = await fetch(url, reqInit);
+      return res as unknown as Response;
+    });
+  }
+
+  // Helper to handle common timeout and response handling
+  private async fetchWithTimeout<T>(url: string, init: RequestInit, fetchFn: () => Promise<Response>): Promise<T> {
     const controller = new AbortController();
     const timeout = ((init as Record<string, unknown>)?.timeout ?? 30000) as number;
+    void url;
+    void controller;
+
     const timer = setTimeout(() => controller.abort(), timeout);
     try {
       const res = await fetch(url, { ...init, headers, signal: controller.signal } as RequestInit);
