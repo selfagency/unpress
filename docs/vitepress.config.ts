@@ -1,7 +1,9 @@
 import { defineConfig } from 'vitepress';
 
+export const siteTitle = 'Unpress';
+
 export default defineConfig({
-  title: 'Unpress',
+  title: siteTitle,
   description: 'Migrate your WordPress site to 11ty with one command',
   lang: 'en-US',
   base: '/',
