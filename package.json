@@ -32,7 +32,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1037.0",
+    "@aws-sdk/client-s3": "^3.1039.0",
     "@inquirer/confirm": "^6.0.12",
     "@inquirer/input": "^5.0.12",
     "@inquirer/password": "^5.0.12",
@@ -45,12 +45,12 @@
     "fs-extra": "^11.3.4",
     "gray-matter": "^4.0.3",
     "node-fetch": "^3.3.2",
-    "p-queue": "9.1.2",
+    "p-queue": "9.2.0",
     "ssh2": "^1.17.0",
     "ssh2-sftp-client": "12.1.1",
     "turndown": "^7.2.4",
     "yaml": "^2.8.3",
-    "zod": "^4.3.6"
+    "zod": "^4.4.1"
   },
   "devDependencies": {
     "@codecov/vite-plugin": "^2.0.1",
